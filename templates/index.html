@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reforesta Manabí (Flask)</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <style>
+        /* Define una altura fija para el mapa */
+        #map { height: 400px; }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900">
+
+    <main class="container mx-auto p-6">
+        <h1 class="text-3xl font-bold text-green-600 text-center">
+            Plataforma de Reforestación Manabí 🌳
+        </h1>
+
+        <div id="map" class="mt-8 w-full rounded-lg shadow-lg bg-white"></div>
+
+        <div class="mt-8 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Registrar Siembra</h2>
+            <form id="form-plantar">
+                <div class="mb-4">
+                    <label for="especie" class="block text-sm font-medium text-gray-700">Especie:</label>
+                    <input type="text" id="especie" name="especie" required
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700">Ubicación (Haz clic en el mapa):</label>
+                    <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
+                    <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                    Plantar Árbol
+                </button>
+            </form>
+        </div>
+
+        <div class="mt-8 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto text-center">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Estadísticas (IA)</h2>
+            <p>Árboles Totales: <b id="stat-arboles">Cargando...</b></p>
+            <p>Horas Estimadas: <b id="stat-horas">Cargando...</b></p>
+        </div>
+
+    </main>
+
+    <script src="{{ url_for('static', filename='main.js') }}"></script>
+</body>
+</html>
