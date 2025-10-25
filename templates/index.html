@@ -4,52 +4,179 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reforesta Manabí (Flask)</title>
-
+    
     <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
+    <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
 
     <style>
         /* Define una altura fija para el mapa */
         #map { height: 400px; }
+        /* Oculta elementos por defecto */
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 text-gray-900">
 
-    <main class="container mx-auto p-6">
-        <h1 class="text-3xl font-bold text-green-600 text-center">
-            Plataforma de Reforestación Manabí 🌳
-        </h1>
+    <div id="auth-container" class="flex items-center justify-center min-h-screen">
+        <div class="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-xl">
+            
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-green-600">
+                    Reforesta Manabí 🌳
+                </h1>
+                <p class="mt-2 text-gray-600">Bienvenido. Por favor, inicia sesión.</p>
+            </div>
 
-        <div id="map" class="mt-8 w-full rounded-lg shadow-lg bg-white"></div>
-
-        <div class="mt-8 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Registrar Siembra</h2>
-            <form id="form-plantar">
-                <div class="mb-4">
-                    <label for="especie" class="block text-sm font-medium text-gray-700">Especie:</label>
-                    <input type="text" id="especie" name="especie" required
+            <form id="form-login" class="space-y-6">
+                <div>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="login-email" name="email" required autocomplete="email"
                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
                 </div>
-                <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700">Ubicación (Haz clic en el mapa):</label>
-                    <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
-                    <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
+                <div>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700">Contraseña</label>
+                    <input type="password" id="login-password" name="password" required autocomplete="current-password"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
                 </div>
-                <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
-                    Plantar Árbol
-                </button>
+                <div>
+                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                        Iniciar Sesión
+                    </button>
+                </div>
+                <p id="login-error" class="text-sm text-red-600 text-center hidden"></p>
             </form>
-        </div>
+            
+            <div class="text-center text-sm text-gray-500">
+                ¿No tienes cuenta? 
+                <button id="show-register" class="font-medium text-green-600 hover:underline">Regístrate</button>
+            </div>
 
-        <div class="mt-8 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto text-center">
-            <h2 class="text-2xl font-bold text-gray-800 mb-4">Estadísticas (IA)</h2>
-            <p>Árboles Totales: <b id="stat-arboles">Cargando...</b></p>
-            <p>Horas Estimadas: <b id="stat-horas">Cargando...</b></p>
-        </div>
+            <form id="form-register" class="space-y-6 hidden">
+                <div>
+                    <label for="register-email" class="block text-sm font-medium text-gray-700">Email</label>
+                    <input type="email" id="register-email" name="email" required autocomplete="email"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div>
+                    <label for="register-password" class="block text-sm font-medium text-gray-700">Contraseña (Mín. 6 caracteres)</label>
+                    <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password"
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                </div>
+                <div>
+                    <button type="submit" class="w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">
+                        Crear Cuenta
+                    </button>
+                </div>
+                <p id="register-error" class="text-sm text-red-600 text-center hidden"></p>
+            </form>
 
-    </main>
+            <div class="text-center text-sm text-gray-500 hidden" id="show-login-div">
+                ¿Ya tienes cuenta? 
+                <button id="show-login" class="font-medium text-green-600 hover:underline">Inicia Sesión</button>
+            </div>
+        </div>
+    </div>
+
+
+    <div id="app-container" class="hidden">
+        
+        <header class="bg-white shadow-md p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10">
+            <div class="flex items-center space-x-2">
+                <span class="text-2xl">🌳</span>
+                <span class="text-xl font-bold text-green-700">Reforesta Manabí</span>
+            </div>
+            <div>
+                <span id="user-email" class="text-sm text-gray-600"></span>
+                <button id="btn-logout" class="ml-4 text-sm text-red-600 hover:underline">Cerrar Sesión</button>
+            </div>
+        </header>
+        
+        <div class="flex" style="padding-top: 64px;"> 
+
+            <aside class="w-64 bg-gray-800 text-white min-h-screen p-4">
+                <nav>
+                    <ul>
+                        <li class="mb-2">
+                            <button id="sidebar-link-map" class="w-full flex items-center p-2 rounded hover:bg-gray-700">
+                                <ion-icon name="map-outline" class="mr-3"></ion-icon>
+                                Registrar Siembra
+                            </button>
+                        </li>
+                        <li class="mb-2">
+                            <button id="sidebar-link-table" class="w-full flex items-center p-2 rounded hover:bg-gray-700">
+                                <ion-icon name="list-outline" class="mr-3"></ion-icon>
+                                Ver Registros
+                            </button>
+                        </li>
+                    </ul>
+                </nav>
+            </aside>
+
+            <main class="flex-1 p-6">
+
+                <div id="page-map">
+                    <h2 class="text-2xl font-bold mb-4">Dashboard: Registrar Siembra</h2>
+                    
+                    <div id="map" class="w-full rounded-lg shadow-lg bg-white"></div>
+            
+                    <div class="mt-8 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto">
+                        <h3 class="text-xl font-bold text-gray-800 mb-4">Formulario de Siembra</h3>
+                        <form id="form-plantar">
+                            <div class="mb-4">
+                                <label for="especie" class="block text-sm font-medium text-gray-700">Especie:</label>
+                                <input type="text" id="especie" name="especie" required
+                                       class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                            </div>
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700">Ubicación (Haz clic en el mapa):</label>
+                                <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
+                                <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
+                            </div>
+                            <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
+                                Plantar Árbol
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="page-table" class="hidden">
+                    <h2 class="text-2xl font-bold mb-4">Tabla de Registros de Siembra</h2>
+                    
+                    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especie</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latitud</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Longitud</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Siembra</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-body" class="bg-white divide-y divide-gray-200">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="mt-8 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto text-center">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Estadísticas (IA)</h2>
+                    <p>Árboles Totales: <b id="stat-arboles">Cargando...</b></p>
+                    <p>Horas Estimadas: <b id="stat-horas">Cargando...</b></p>
+                </div>
+            </main>
+        </div>
+        
+        <footer class="w-full bg-gray-900 text-white text-center p-4 mt-8">
+            <p>Plataforma Reforesta Manabí © 2025 - Desarrollado por [Tu Equipo]</p>
+            <p class="text-sm text-gray-400">Términos y Uso | Política de Privacidad</p>
+        </footer>
+    </div>
 
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
