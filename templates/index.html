@@ -3,231 +3,401 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reforesta Manabí (Flask)</title>
+    <title>Reforesta Manabí</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'repsol-green': '#007a33', 
+              'repsol-light-green': '#a4d65e',
+              'repsol-gray': '#f8f9fa', 
+            },
+          }
+        }
+      }
+    </script>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        /* Define una altura fija para el mapa */
-        #map { height: 400px; }
-        /* Oculta elementos por defecto */
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        #map { height: 450px; }
         .hidden { display: none; }
-        /* Estilo para el botón activo del sidebar */
-        .sidebar-active { background-color: #4a5568; } /* gray-700 */
+        .sidebar-active { background-color: #007a33; color: white; }
+        
+        /* Fondo con imagen de naturaleza */
+        #auth-container {
+            background-image: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        /* Overlay oscuro sobre la imagen */
+        #auth-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 50, 20, 0.75);
+        }
+        
+        /* Inputs con iconos y mejor diseño */
+        .input-wrapper {
+            position: relative;
+        }
+        
+        .input-icon {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #9ca3af;
+            font-size: 18px;
+        }
+        
+        /* Inputs estilizados profesionalmente */
+        input[type="email"], input[type="password"], input[type="text"], input[type="date"], select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #D1D5DB;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            background-color: white;
+            margin-top: 4px;
+        }
+        
+        input.with-icon {
+            padding-left: 42px;
+        }
+        
+        input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus {
+            border-color: #007a33;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1);
+        }
+        
+        /* Toggle password visibility */
+        .password-wrapper {
+            position: relative;
+        }
+        
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #9ca3af;
+            font-size: 18px;
+        }
+        
+        .toggle-password:hover {
+            color: #6b7280;
+        }
+        
+        /* Botones principales destacados - 100% ancho */
+        .btn { 
+            width: 100%;
+            font-weight: 700;
+            padding: 14px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-primary { 
+            background-color: #007a33;
+            color: white;
+        }
+        
+        .btn-primary:hover { 
+            background-color: #005a24;
+            box-shadow: 0 4px 8px rgba(0, 122, 51, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .btn-primary:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn-secondary { 
+            background-color: #4b5563;
+            color: white;
+        }
+        
+        .btn-secondary:hover { 
+            background-color: #374151;
+            box-shadow: 0 4px 8px rgba(75, 85, 99, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        /* Enlaces secundarios con color verde de marca */
+        .link { 
+            color: #007a33;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            text-decoration: none;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+        
+        .link:hover {
+            color: #005a24;
+            text-decoration: underline;
+        }
     </style>
 </head>
-<body class="bg-gray-100 text-gray-900">
+<body class="bg-repsol-gray text-gray-800 antialiased"> 
 
-    <div id="auth-container" class="flex items-center justify-center min-h-screen">
-        <div class="w-full max-w-md p-8 space-y-6 bg-white shadow-lg rounded-xl">
+    <div id="auth-container" class="flex items-center justify-center min-h-screen p-4">
+        <div class="w-full max-w-md p-8 space-y-6 bg-white shadow-2xl rounded-2xl border border-gray-100 relative z-10"> 
             
             <div class="text-center">
-                <h1 class="text-3xl font-bold text-green-600">
-                    Reforesta Manabí 🌳
+                <div class="inline-flex items-center justify-center w-20 h-20 bg-repsol-green rounded-full mb-6 shadow-lg">
+                    <span class="text-4xl">🌳</span>
+                </div>
+                <h1 class="text-3xl font-bold text-repsol-green mb-2">
+                    Reforesta Manabí 
                 </h1>
-                <p id="auth-title" class="mt-2 text-gray-600">Bienvenido. Por favor, inicia sesión.</p>
+                <p id="auth-title" class="text-gray-600 text-base">Bienvenido. Por favor, inicia sesión.</p>
             </div>
 
-            <form id="form-login" class="space-y-6">
+            <form id="form-login" class="space-y-5 mt-8">
                 <div>
-                    <label for="login-email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="login-email" name="email" required autocomplete="email"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                </div>
-                <div>
-                    <label for="login-password" class="block text-sm font-medium text-gray-700">Contraseña</label>
-                    <input type="password" id="login-password" name="password" required autocomplete="current-password"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
-                </div>
-                <div class="text-right text-sm">
-                    <button type="button" id="show-forgot-password" class="font-medium text-green-600 hover:underline">
-                        ¿Olvidaste tu contraseña?
-                    </button>
+                    <label for="login-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="mail-outline" class="input-icon"></ion-icon>
+                        <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                    </div>
                 </div>
                 <div>
-                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
-                        Iniciar Sesión
-                    </button>
+                    <label for="login-password" class="block text-sm font-medium text-gray-700 mb-2">Contraseña</label>
+                    <div class="password-wrapper">
+                        <div class="input-wrapper">
+                            <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
+                            <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••" class="with-icon">
+                        </div>
+                        <ion-icon name="eye-outline" class="toggle-password" id="toggle-login-password"></ion-icon>
+                    </div>
                 </div>
+                <div class="text-right">
+                    <button type="button" id="show-forgot-password" class="link text-sm">¿Olvidaste tu contraseña?</button> 
+                </div>
+                <div class="pt-4">
+                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button> 
+                </div> 
                 <p id="login-error" class="text-sm text-red-600 text-center hidden"></p>
             </form>
             
-            <div id="register-link" class="text-center text-sm text-gray-500">
+            <div id="register-link" class="text-center text-sm text-gray-600 pt-6">
                 ¿No tienes cuenta? 
-                <button id="show-register" class="font-medium text-green-600 hover:underline">Regístrate</button>
+                <button id="show-register" class="link">Regístrate</button> 
             </div>
 
-            <form id="form-register" class="space-y-6 hidden">
-                <div>
-                    <label for="register-email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="register-email" name="email" required autocomplete="email"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            <form id="form-register" class="space-y-5 hidden mt-8">
+                 <div>
+                    <label for="register-name" class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="person-outline" class="input-icon"></ion-icon>
+                        <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Juan Pérez" class="with-icon">
+                    </div>
                 </div>
                 <div>
-                    <label for="register-password" class="block text-sm font-medium text-gray-700">Contraseña (Mín. 6 caracteres)</label>
-                    <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                    <label for="register-birth-date" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="calendar-outline" class="input-icon"></ion-icon>
+                        <input type="date" id="register-birth-date" name="birthDate" required class="with-icon">
+                    </div>
+                </div>
+                 <div>
+                    <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="mail-outline" class="input-icon"></ion-icon>
+                        <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                    </div>
                 </div>
                 <div>
-                    <button type="submit" class="w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">
-                        Crear Cuenta
-                    </button>
+                    <label for="register-password" class="block text-sm font-medium text-gray-700 mb-2">Contraseña (Mín. 6 caracteres)</label>
+                    <div class="password-wrapper">
+                        <div class="input-wrapper">
+                            <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
+                            <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="with-icon">
+                        </div>
+                        <ion-icon name="eye-outline" class="toggle-password" id="toggle-register-password"></ion-icon>
+                    </div>
                 </div>
+                <div class="pt-4">
+                    <button type="submit" class="btn btn-primary">Crear Cuenta</button> 
+                </div> 
                 <p id="register-error" class="text-sm text-red-600 text-center hidden"></p>
             </form>
 
-            <form id="form-forgot-password" class="space-y-6 hidden">
-                <div>
-                    <label for="forgot-email" class="block text-sm font-medium text-gray-700">Email</label>
-                    <input type="email" id="forgot-email" name="email" required autocomplete="email"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+            <form id="form-forgot-password" class="space-y-5 hidden mt-8">
+                 <div>
+                    <label for="forgot-email" class="block text-sm font-medium text-gray-700 mb-2">Email Registrado</label>
+                    <div class="input-wrapper">
+                        <ion-icon name="mail-outline" class="input-icon"></ion-icon>
+                        <input type="email" id="forgot-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                    </div>
                 </div>
-                <div>
-                    <button type="submit" class="w-full bg-gray-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-gray-700">
-                        Enviar Correo de Recuperación
-                    </button>
-                </div>
+                <div class="pt-4">
+                    <button type="submit" class="btn btn-primary">Enviar Correo de Recuperación</button> 
+                </div> 
                 <p id="forgot-error" class="text-sm text-red-600 text-center hidden"></p>
                 <p id="forgot-success" class="text-sm text-green-600 text-center hidden"></p>
             </form>
 
-            <form id="form-update-password" class="space-y-6 hidden">
+            <form id="form-update-password" class="space-y-5 hidden mt-8">
                 <div>
-                    <label for="update-password" class="block text-sm font-medium text-gray-700">Nueva Contraseña (Mín. 6 caracteres)</label>
-                    <input type="password" id="update-password" name="password" required minlength="6" autocomplete="new-password"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                    <label for="update-password" class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña (Mín. 6 caracteres)</label>
+                    <div class="password-wrapper">
+                        <div class="input-wrapper">
+                            <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
+                            <input type="password" id="update-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="with-icon">
+                        </div>
+                        <ion-icon name="eye-outline" class="toggle-password" id="toggle-update-password"></ion-icon>
+                    </div>
                 </div>
-                <div>
-                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
-                        Restablecer Contraseña
-                    </button>
-                </div>
+                <div class="pt-4">
+                    <button type="submit" class="btn btn-primary">Restablecer Contraseña</button> 
+                </div> 
                 <p id="update-error" class="text-sm text-red-600 text-center hidden"></p>
             </form>
 
-            <div class="text-center text-sm text-gray-500 hidden" id="show-login-div">
-                <button id="show-login" class="font-medium text-green-600 hover:underline">Volver a Iniciar Sesión</button>
+            <div class="text-center text-sm text-gray-600 hidden pt-6" id="show-login-div">
+                <button id="show-login" class="link">Volver a Iniciar Sesión</button> 
             </div>
         </div>
     </div>
 
-
     <div id="app-container" class="hidden">
-        
-        <header class="bg-white shadow-md p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10">
+        <header class="bg-white shadow p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10 h-16">
             <div class="flex items-center space-x-3">
-                <span class="text-3xl">🌳</span> <span class="text-xl font-bold text-green-700">Reforesta Manabí</span>
+                <span class="text-3xl">🌳</span> 
+                <span class="text-xl font-bold text-repsol-green">Reforesta Manabí</span>
             </div>
-            
             <div class="relative flex-1 max-w-xs mx-4">
-                <input type="text" placeholder="Buscar..." 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500">
+                <input type="text" placeholder="Buscar..." class="w-full px-4 py-2 border rounded-lg text-sm">
                 <ion-icon name="search-outline" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></ion-icon>
             </div>
-            
             <div class="flex items-center space-x-4">
-                <select class="text-sm border border-gray-300 rounded px-2 py-1 focus:outline-none">
-                    <option>Español</option>
-                    <option>English</option>
-                </select>
+                <select class="text-sm border rounded px-2 py-1"> <option>Español</option> <option>English</option> </select>
                 <span id="user-email" class="text-sm text-gray-600"></span>
                 <button id="btn-logout" class="text-sm text-red-600 hover:underline">Cerrar Sesión</button>
             </div>
         </header>
         
-        <div class="flex" style="padding-top: 64px;"> 
-
-            <aside class="w-64 bg-gray-800 text-gray-300 min-h-screen p-4 flex flex-col"> <nav class="flex-1"> <ul>
-                        <li class="mb-2">
-                            <button data-page="page-map" class="sidebar-link w-full flex items-center p-2 rounded hover:bg-gray-700 hover:text-white">
-                                <ion-icon name="map-outline" class="mr-3 text-lg"></ion-icon>
-                                Registrar Siembra
-                            </button>
-                        </li>
-                        <li class="mb-2">
-                            <button data-page="page-table" class="sidebar-link w-full flex items-center p-2 rounded hover:bg-gray-700 hover:text-white">
-                                <ion-icon name="list-outline" class="mr-3 text-lg"></ion-icon>
-                                Ver Registros
-                            </button>
-                        </li>
-                        </ul>
+        <div class="flex pt-16"> 
+            <aside class="w-60 bg-gray-800 text-gray-300 min-h-[calc(100vh-64px)] p-4 flex flex-col shadow-lg"> 
+                <nav class="flex-1 space-y-2"> 
+                    <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                        <ion-icon name="map-outline" class="mr-3 text-xl"></ion-icon> Registrar Siembra
+                    </button>
+                    <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded hover:bg-gray-700 hover:text-white transition-colors duration-200">
+                        <ion-icon name="list-outline" class="mr-3 text-xl"></ion-icon> Ver Registros
+                    </button>
                 </nav>
-                <div class="mt-auto text-xs text-gray-500">
-                    Versión 1.0
-                </div>
+                <div class="mt-auto text-xs text-gray-500">Versión 1.2</div>
             </aside>
 
-            <main class="flex-1 p-6">
-
+            <main class="flex-1 p-8 overflow-y-auto bg-repsol-gray"> 
                 <div id="page-map" class="page-content">
-                    <h2 class="text-2xl font-bold mb-4">¡Hola, <span id="welcome-user-email">Usuario</span>! 👋</h2>
-                    <p class="text-gray-600 mb-6">Listo para registrar una nueva siembra.</p>
-                    
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <h3 class="text-xl font-semibold mb-2">Mapa de Siembra</h3>
-                            <div id="map" class="w-full rounded-lg shadow-lg bg-white"></div>
+                    <h2 class="text-3xl font-bold mb-2 text-gray-800">¡Hola, <span id="welcome-user-name">Usuario</span>! 👋</h2>
+                    <p class="text-gray-600 mb-8">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        <div class="lg:col-span-2">
+                            <h3 class="text-xl font-semibold mb-3 text-gray-700">Mapa Interactivo de Siembra</h3>
+                            <div id="map" class="w-full rounded-lg shadow-lg bg-white border border-gray-200"></div>
                         </div>
-                        <div>
-                            <div class="p-6 bg-white rounded-lg shadow-lg">
-                                <h3 class="text-xl font-bold text-gray-800 mb-4">Formulario de Siembra</h3>
-                                <form id="form-plantar">
-                                    <div class="mb-4">
+                        <div class="lg:col-span-1 space-y-8"> 
+                             <div class="p-6 bg-white rounded-lg shadow-lg border border-gray-200">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-4">Formulario de Siembra</h3>
+                                <form id="form-plantar" class="space-y-4">
+                                    <div>
                                         <label for="especie" class="block text-sm font-medium text-gray-700">Especie:</label>
-                                        <input type="text" id="especie" name="especie" required
-                                               class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                                        <input type="text" id="especie" name="especie" required>
                                     </div>
-                                    <div class="mb-4">
+                                    <div>
                                         <label class="block text-sm font-medium text-gray-700">Ubicación (Haz clic en el mapa):</label>
-                                        <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
-                                        <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="mt-1 block w-full bg-gray-100 rounded-md border-gray-300">
+                                        <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="bg-gray-100">
+                                        <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="bg-gray-100">
                                     </div>
-                                    <button type="submit" class="w-full bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700">
-                                        Plantar Árbol
-                                    </button>
+                                    <button type="submit" class="btn btn-primary">Plantar Árbol</button> 
                                 </form>
+                            </div>
+                             <div class="p-6 bg-white rounded-lg shadow-lg border border-gray-200 text-center">
+                                <h3 class="text-xl font-semibold text-gray-800 mb-4">Estadísticas (IA)</h3>
+                                <p>Árboles Totales: <b id="stat-arboles" class="text-repsol-green text-lg">0</b></p>
+                                <p>Horas Estimadas: <b id="stat-horas" class="text-repsol-green text-lg">0.0</b></p>
                             </div>
                         </div>
                     </div>
                 </div>
-
                 <div id="page-table" class="page-content hidden">
-                    <h2 class="text-2xl font-bold mb-4">Tabla de Registros de Siembra</h2>
-                    <div class="bg-white shadow-lg rounded-lg overflow-x-auto"> <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
+                    <h2 class="text-3xl font-bold mb-6 text-gray-800">Registros de Siembra</h2>
+                    <div class="bg-white shadow-lg rounded-lg overflow-x-auto border border-gray-200">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-gray-100"> 
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Especie</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Latitud</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Longitud</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha de Siembra</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ID</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Especie</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Latitud</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Longitud</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Fecha Siembra</th>
                                 </tr>
                             </thead>
-                            <tbody id="table-body" class="bg-white divide-y divide-gray-200">
-                                </tbody>
+                            <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
                         </table>
                     </div>
                 </div>
-
-                <div class="mt-8 p-6 bg-white rounded-lg shadow-lg max-w-md mx-auto text-center">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Estadísticas (IA)</h2>
-                    <p>Árboles Totales: <b id="stat-arboles">Cargando...</b></p>
-                    <p>Horas Estimadas: <b id="stat-horas">Cargando...</b></p>
-                </div>
             </main>
         </div>
-        
-        <footer class="w-full bg-gray-900 text-white text-center p-4 mt-auto"> <p>Plataforma Reforesta Manabí © 2025 - Desarrollado por [Tu Equipo]</p>
-            <p class="text-sm text-gray-400">Términos y Uso | Política de Privacidad</p>
+        <footer class="w-full bg-gray-200 text-gray-600 text-center p-4 text-sm border-t border-gray-300">
+            Plataforma Reforesta Manabí © 2025 | <a href="#" class="hover:underline">Términos</a> | <a href="#" class="hover:underline">Privacidad</a>
         </footer>
     </div>
-
+    
+    <script>
+        // Toggle password visibility
+        document.querySelectorAll('.toggle-password').forEach(icon => {
+            icon.addEventListener('click', function() {
+                const wrapper = this.parentElement;
+                const input = wrapper.querySelector('input');
+                
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    this.name = 'eye-off-outline';
+                } else {
+                    input.type = 'password';
+                    this.name = 'eye-outline';
+                }
+            });
+        });
+    </script>
     <script src="{{ url_for('static', filename='main.js') }}"></script>
 </body>
 </html>

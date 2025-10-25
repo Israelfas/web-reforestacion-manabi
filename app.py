@@ -16,7 +16,6 @@ app = Flask(__name__) # Inicializa Flask
 # --- 2. Ruta Principal (Sirve la página web) ---
 @app.route("/")
 def home():
-    # 'render_template' busca en la carpeta 'templates'
     return render_template("index.html")
 
 # --- 3. API: Obtener todos los árboles ---
@@ -24,7 +23,7 @@ def home():
 def obtener_arboles():
     try:
         data = supabase.table("arboles_sembrados").select("*").execute()
-        return jsonify(data.data) # Devuelve los datos como JSON
+        return jsonify(data.data) 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -32,15 +31,12 @@ def obtener_arboles():
 @app.route("/api/plantar_arbol", methods=['POST'])
 def plantar_arbol():
     try:
-        datos = request.json # Obtiene el JSON enviado desde la web
-        
+        datos = request.json 
         nuevo_arbol = {
             "especie": datos.get("especie"),
             "latitud": datos.get("latitud"),
             "longitud": datos.get("longitud"),
         }
-        
-        # Inserta en la tabla 'arboles_sembrados'
         data = supabase.table("arboles_sembrados").insert(nuevo_arbol).execute()
         return jsonify(data.data)
     except Exception as e:
@@ -50,13 +46,9 @@ def plantar_arbol():
 @app.route("/api/predecir_horas", methods=['GET'])
 def predecir_horas():
     try:
-        # Lógica simple: Contar cuántos árboles hay en la BD
         data_arboles = supabase.table("arboles_sembrados").select("id", count='exact').execute()
         conteo_actual = data_arboles.count
-        
-        # Predicción simple: Asumir que cada árbol toma 1.5 horas
         horas_estimadas = conteo_actual * 1.5
-        
         return jsonify({
             "arboles_totales": conteo_actual,
             "horas_estimadas": horas_estimadas,
@@ -65,28 +57,35 @@ def predecir_horas():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- 6. API: Registro de Nuevo Usuario ---
+# --- 6. API: Registro de Nuevo Usuario (ACTUALIZADO) ---
 @app.route("/api/register", methods=['POST'])
 def register_user():
     try:
         datos = request.json
         email = datos.get("email")
         password = datos.get("password")
+        name = datos.get("name")            # NUEVO
+        birthdate = datos.get("birthdate")  # NUEVO
         
-        # Usamos Supabase Auth para crear el usuario
-        user_response = supabase.auth.sign_up({
-            "email": email,
-            "password": password,
-        })
-        
-        # Convertimos el objeto Pydantic a JSON
+        # Pasamos name y birthdate como metadata. El trigger los usará.
+        user_response = supabase.auth.sign_up(
+            {
+                "email": email,
+                "password": password,
+                "options": {
+                    "data": {
+                        "name": name,
+                        "birthdate": birthdate
+                    }
+                }
+            }
+        )
         return jsonify(user_response.model_dump())
     
     except Exception as e:
-        # Manejamos errores, ej: "User already registered"
         return jsonify({"error": str(e)}), 400
 
-# --- 7. API: Inicio de Sesión de Usuario ---
+# --- 7. API: Inicio de Sesión de Usuario (ACTUALIZADO) ---
 @app.route("/api/login", methods=['POST'])
 def login_user():
     try:
@@ -94,17 +93,34 @@ def login_user():
         email = datos.get("email")
         password = datos.get("password")
         
-        # Usamos Supabase Auth para iniciar sesión
         session_response = supabase.auth.sign_in_with_password({
             "email": email,
             "password": password,
         })
         
-        # Convertimos el objeto Pydantic a JSON
-        return jsonify(session_response.model_dump())
+        session_data = session_response.model_dump()
+        
+        # --- ¡¡AQUÍ ESTÁ EL CAMBIO!! ---
+        # Si el login fue exitoso, buscamos el nombre en la tabla 'profiles'
+        if session_data.get("user") and session_data["user"].get("id"):
+            user_id = session_data["user"]["id"]
+            try:
+                # Consultamos la tabla profiles
+                profile_response = supabase.table("profiles").select("name").eq("id", user_id).single().execute()
+                if profile_response.data and profile_response.data.get("name"):
+                    session_data["user"]["name"] = profile_response.data["name"] # Añadimos el nombre a la respuesta
+                else:
+                    # Si no hay perfil o nombre, usamos el email como fallback
+                    session_data["user"]["name"] = session_data["user"]["email"].split('@')[0] 
+            except Exception as profile_error:
+                 # Si falla la búsqueda de perfil, usamos el email como fallback
+                 print(f"Error al buscar perfil: {profile_error}")
+                 session_data["user"]["name"] = session_data["user"]["email"].split('@')[0]
+        # --- FIN DEL CAMBIO ---
+
+        return jsonify(session_data)
     
     except Exception as e:
-        # Manejamos errores, ej: "Invalid login credentials"
         return jsonify({"error": "Credenciales inválidas"}), 401
 
 # --- 8. API para Pedir Recuperación de Contraseña ---
@@ -113,20 +129,9 @@ def send_recovery_email():
     try:
         datos = request.json
         email = datos.get("email")
-        
-        # --- ¡¡AQUÍ ESTÁ LA CORRECCIÓN!! ---
-        # La función correcta es 'reset_password_email'
         supabase.auth.reset_password_email(email)
-        # --- FIN DE LA CORRECCIÓN ---
-        
-        return jsonify({"message": "Correo de recuperación enviado. Revisa tu bandeja de entrada."})
-    
+        return jsonify({"message": "Correo de recuperación enviado."})
     except Exception as e:
-        # Imprimimos el error en la terminal para saber qué pasa.
-        print("!!!!!!!!!! ERROR DE RECUPERACIÓN (FORGOT PW) !!!!!!!!!!")
-        print(f"Detalle del error: {e}")
-        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
-        
         return jsonify({"error": str(e)}), 400
 
 # --- 9. API para Actualizar la Contraseña ---
@@ -136,21 +141,12 @@ def update_password():
         datos = request.json
         access_token = datos.get("access_token")
         new_password = datos.get("new_password")
-        
-        # 1. Usamos el token para establecer la sesión del usuario
-        # ¡¡CORRECCIÓN AQUÍ TAMBIÉN!! set_session no devuelve nada.
-        supabase.auth.set_session(access_token=access_token, refresh_token=access_token) # Usamos el token para ambas
-        
-        # 2. Una vez la sesión está activa, actualizamos el usuario
-        updated_user = supabase.auth.update_user(
-            {"password": new_password}
-        )
-        
+        supabase.auth.set_session(access_token=access_token, refresh_token=access_token)
+        updated_user = supabase.auth.update_user({"password": new_password})
         return jsonify(updated_user.model_dump())
-        
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
 # --- 10. Ejecutar la Aplicación ---
 if __name__ == "__main__":
-    app.run(debug=True) # debug=True te ayuda a ver errores
+    app.run(debug=True)
