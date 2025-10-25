@@ -72,8 +72,9 @@
             font-size: 18px;
         }
         
+        /* --- INICIO DEL CAMBIO --- */
         /* Inputs estilizados profesionalmente */
-        input[type="email"], input[type="password"], input[type="text"], input[type="date"], select {
+        .input-styled {
             width: 100%;
             padding: 12px 16px;
             border: 1px solid #D1D5DB;
@@ -84,16 +85,25 @@
             margin-top: 4px;
         }
         
+        /* Estilo para los inputs de Auth que SÍ llevan icono */
         input.with-icon {
             padding-left: 42px;
         }
         
-        input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus {
+        .input-styled:focus {
             border-color: #007a33;
             outline: none;
             box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1);
         }
-        
+
+        /* Estilo para inputs deshabilitados (readonly) */
+        .input-styled[readonly] {
+            background-color: #f3f4f6; /* bg-gray-100 */
+            color: #6b7280; /* text-gray-500 */
+            cursor: not-allowed;
+        }
+        /* --- FIN DEL CAMBIO --- */
+
         /* Toggle password visibility */
         .password-wrapper {
             position: relative;
@@ -191,7 +201,7 @@
                     <label for="login-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <div class="input-wrapper">
                         <ion-icon name="mail-outline" class="input-icon"></ion-icon>
-                        <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                        <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="input-styled with-icon">
                     </div>
                 </div>
                 <div>
@@ -199,7 +209,7 @@
                     <div class="password-wrapper">
                         <div class="input-wrapper">
                             <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
-                            <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••" class="with-icon">
+                            <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••" class="input-styled with-icon">
                         </div>
                         <ion-icon name="eye-outline" class="toggle-password" id="toggle-login-password"></ion-icon>
                     </div>
@@ -223,21 +233,21 @@
                     <label for="register-name" class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
                     <div class="input-wrapper">
                         <ion-icon name="person-outline" class="input-icon"></ion-icon>
-                        <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Juan Pérez" class="with-icon">
+                        <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Juan Pérez" class="input-styled with-icon">
                     </div>
                 </div>
                 <div>
                     <label for="register-birth-date" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento</label>
                     <div class="input-wrapper">
                         <ion-icon name="calendar-outline" class="input-icon"></ion-icon>
-                        <input type="date" id="register-birth-date" name="birthDate" required class="with-icon">
+                        <input type="date" id="register-birth-date" name="birthDate" required class="input-styled with-icon">
                     </div>
                 </div>
                  <div>
                     <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <div class="input-wrapper">
                         <ion-icon name="mail-outline" class="input-icon"></ion-icon>
-                        <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                        <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="input-styled with-icon">
                     </div>
                 </div>
                 <div>
@@ -245,7 +255,7 @@
                     <div class="password-wrapper">
                         <div class="input-wrapper">
                             <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
-                            <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="with-icon">
+                            <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="input-styled with-icon">
                         </div>
                         <ion-icon name="eye-outline" class="toggle-password" id="toggle-register-password"></ion-icon>
                     </div>
@@ -261,7 +271,7 @@
                     <label for="forgot-email" class="block text-sm font-medium text-gray-700 mb-2">Email Registrado</label>
                     <div class="input-wrapper">
                         <ion-icon name="mail-outline" class="input-icon"></ion-icon>
-                        <input type="email" id="forgot-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                        <input type="email" id="forgot-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="input-styled with-icon">
                     </div>
                 </div>
                 <div class="pt-4">
@@ -277,7 +287,7 @@
                     <div class="password-wrapper">
                         <div class="input-wrapper">
                             <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
-                            <input type="password" id="update-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="with-icon">
+                            <input type="password" id="update-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="input-styled with-icon">
                         </div>
                         <ion-icon name="eye-outline" class="toggle-password" id="toggle-update-password"></ion-icon>
                     </div>
@@ -339,12 +349,12 @@
                                 <form id="form-plantar" class="space-y-4">
                                     <div>
                                         <label for="especie" class="block text-sm font-medium text-gray-700">Especie:</label>
-                                        <input type="text" id="especie" name="especie" required>
+                                        <input type="text" id="especie" name="especie" required class="input-styled" placeholder="Ej: Guayacán">
                                     </div>
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700">Ubicación (Haz clic en el mapa):</label>
-                                        <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="bg-gray-100">
-                                        <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="bg-gray-100">
+                                        <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="input-styled">
+                                        <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
                                     </div>
                                     <button type="submit" class="btn btn-primary">Plantar Árbol</button> 
                                 </form>
