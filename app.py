@@ -107,22 +107,29 @@ def login_user():
         # Manejamos errores, ej: "Invalid login credentials"
         return jsonify({"error": "Credenciales inválidas"}), 401
 
-# --- 8. NUEVO: API para Pedir Recuperación de Contraseña ---
+# --- 8. API para Pedir Recuperación de Contraseña ---
 @app.route("/api/forgot_password", methods=['POST'])
 def send_recovery_email():
     try:
         datos = request.json
         email = datos.get("email")
         
-        # Esto envía el correo de recuperación
-        supabase.auth.send_magic_link_email(email)
+        # --- ¡¡AQUÍ ESTÁ LA CORRECCIÓN!! ---
+        # La función correcta es 'reset_password_email'
+        supabase.auth.reset_password_email(email)
+        # --- FIN DE LA CORRECCIÓN ---
         
         return jsonify({"message": "Correo de recuperación enviado. Revisa tu bandeja de entrada."})
     
     except Exception as e:
+        # Imprimimos el error en la terminal para saber qué pasa.
+        print("!!!!!!!!!! ERROR DE RECUPERACIÓN (FORGOT PW) !!!!!!!!!!")
+        print(f"Detalle del error: {e}")
+        print("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
+        
         return jsonify({"error": str(e)}), 400
 
-# --- 9. NUEVO: API para Actualizar la Contraseña ---
+# --- 9. API para Actualizar la Contraseña ---
 @app.route("/api/update_password", methods=['POST'])
 def update_password():
     try:
@@ -131,7 +138,8 @@ def update_password():
         new_password = datos.get("new_password")
         
         # 1. Usamos el token para establecer la sesión del usuario
-        session = supabase.auth.set_session(access_token, None)
+        # ¡¡CORRECCIÓN AQUÍ TAMBIÉN!! set_session no devuelve nada.
+        supabase.auth.set_session(access_token=access_token, refresh_token=access_token) # Usamos el token para ambas
         
         # 2. Una vez la sesión está activa, actualizamos el usuario
         updated_user = supabase.auth.update_user(

@@ -108,6 +108,26 @@ document.addEventListener('DOMContentLoaded', () => {
         authTitle.textContent = "Crea tu nueva contraseña";
         formUpdatePassword.classList.remove('hidden');
     }
+    
+    // --- FUNCIÓN DE NAVEGACIÓN DE PÁGINAS ---
+    function showPage(pageId) {
+        // Oculta todas las páginas
+        pageMap.classList.add('hidden');
+        pageTable.classList.add('hidden');
+        
+        // Muestra la página solicitada
+        if (pageId === 'page-map') {
+            pageMap.classList.remove('hidden');
+            
+            // Inicializa el mapa SÓLO la primera vez que se muestra
+            if (!map) {
+                initializeMap();
+                cargarArboles();
+            }
+        } else if (pageId === 'page-table') {
+            pageTable.classList.remove('hidden');
+        }
+    }
 
     // --- 3. LÓGICA DE AUTENTICACIÓN (API) ---
 
@@ -174,7 +194,7 @@ document.addEventListener('DOMContentLoaded', () => {
     showLoginBtn.addEventListener('click', showLoginForm);
     showForgotPasswordBtn.addEventListener('click', showForgotPasswordForm);
 
-    // (E) NUEVO: Manejar "Olvidé Contraseña"
+    // (E) Manejar "Olvidé Contraseña"
     formForgotPassword.addEventListener('submit', async (e) => {
         e.preventDefault();
         forgotErrorEl.classList.add('hidden');
@@ -198,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // (F) NUEVO: Manejar "Actualizar Contraseña"
+    // (F) Manejar "Actualizar Contraseña"
     formUpdatePassword.addEventListener('submit', async (e) => {
         e.preventDefault();
         updateErrorEl.classList.add('hidden');
@@ -305,20 +325,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const especie = document.getElementById('especie').value;
         const latitud = document.getElementById('latitud').value;
         const longitud = document.getElementById('longitud').value;
+        
         if (!especie || !latitud || !longitud) {
             alert('Por favor, complete la especie y seleccione un punto en el mapa.');
             return;
         }
+
         const datosArbol = {
             especie: especie,
             latitud: parseFloat(latitud),
-            longitud: parseFloat(longitud)
+            longitud: parseFloat(longitud) // <-- ¡AQUÍ ESTABA EL ERROR!
         };
+
         const response = await fetch('/api/plantar_arbol', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosArbol)
         });
+
         if (response.ok) {
             alert('¡Árbol plantado con éxito!');
             document.getElementById('form-plantar').reset();
@@ -336,7 +360,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 5. INICIO DE LA APP ---
     
-    // NUEVO: Verificador de Token de Reseteo
+    // Verificador de Token de Reseteo
     function checkUrlForToken() {
         const hash = window.location.hash.substring(1); // Quita el '#'
         if (hash) {
