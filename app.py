@@ -16,7 +16,7 @@ app = Flask(__name__) # Inicializa Flask
 # --- 2. Ruta Principal (Sirve la página web) ---
 @app.route("/")
 def home():
-    # Busca 'index.html' en la carpeta 'templates'
+    # 'render_template' busca en la carpeta 'templates'
     return render_template("index.html")
 
 # --- 3. API: Obtener todos los árboles ---
@@ -33,13 +33,13 @@ def obtener_arboles():
 def plantar_arbol():
     try:
         datos = request.json # Obtiene el JSON enviado desde la web
-
+        
         nuevo_arbol = {
             "especie": datos.get("especie"),
             "latitud": datos.get("latitud"),
             "longitud": datos.get("longitud"),
         }
-
+        
         # Inserta en la tabla 'arboles_sembrados'
         data = supabase.table("arboles_sembrados").insert(nuevo_arbol).execute()
         return jsonify(data.data)
@@ -53,10 +53,10 @@ def predecir_horas():
         # Lógica simple: Contar cuántos árboles hay en la BD
         data_arboles = supabase.table("arboles_sembrados").select("id", count='exact').execute()
         conteo_actual = data_arboles.count
-
+        
         # Predicción simple: Asumir que cada árbol toma 1.5 horas
         horas_estimadas = conteo_actual * 1.5
-
+        
         return jsonify({
             "arboles_totales": conteo_actual,
             "horas_estimadas": horas_estimadas,
@@ -65,7 +65,84 @@ def predecir_horas():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+# --- 6. API: Registro de Nuevo Usuario ---
+@app.route("/api/register", methods=['POST'])
+def register_user():
+    try:
+        datos = request.json
+        email = datos.get("email")
+        password = datos.get("password")
+        
+        # Usamos Supabase Auth para crear el usuario
+        user_response = supabase.auth.sign_up({
+            "email": email,
+            "password": password,
+        })
+        
+        # Convertimos el objeto Pydantic a JSON
+        return jsonify(user_response.model_dump())
+    
+    except Exception as e:
+        # Manejamos errores, ej: "User already registered"
+        return jsonify({"error": str(e)}), 400
 
-# --- 6. Ejecutar la Aplicación ---
+# --- 7. API: Inicio de Sesión de Usuario ---
+@app.route("/api/login", methods=['POST'])
+def login_user():
+    try:
+        datos = request.json
+        email = datos.get("email")
+        password = datos.get("password")
+        
+        # Usamos Supabase Auth para iniciar sesión
+        session_response = supabase.auth.sign_in_with_password({
+            "email": email,
+            "password": password,
+        })
+        
+        # Convertimos el objeto Pydantic a JSON
+        return jsonify(session_response.model_dump())
+    
+    except Exception as e:
+        # Manejamos errores, ej: "Invalid login credentials"
+        return jsonify({"error": "Credenciales inválidas"}), 401
+
+# --- 8. NUEVO: API para Pedir Recuperación de Contraseña ---
+@app.route("/api/forgot_password", methods=['POST'])
+def send_recovery_email():
+    try:
+        datos = request.json
+        email = datos.get("email")
+        
+        # Esto envía el correo de recuperación
+        supabase.auth.send_magic_link_email(email)
+        
+        return jsonify({"message": "Correo de recuperación enviado. Revisa tu bandeja de entrada."})
+    
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+# --- 9. NUEVO: API para Actualizar la Contraseña ---
+@app.route("/api/update_password", methods=['POST'])
+def update_password():
+    try:
+        datos = request.json
+        access_token = datos.get("access_token")
+        new_password = datos.get("new_password")
+        
+        # 1. Usamos el token para establecer la sesión del usuario
+        session = supabase.auth.set_session(access_token, None)
+        
+        # 2. Una vez la sesión está activa, actualizamos el usuario
+        updated_user = supabase.auth.update_user(
+            {"password": new_password}
+        )
+        
+        return jsonify(updated_user.model_dump())
+        
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+
+# --- 10. Ejecutar la Aplicación ---
 if __name__ == "__main__":
     app.run(debug=True) # debug=True te ayuda a ver errores

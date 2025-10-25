@@ -6,23 +6,31 @@ document.addEventListener('DOMContentLoaded', () => {
     // Contenedores principales
     const authContainer = document.getElementById('auth-container');
     const appContainer = document.getElementById('app-container');
+    const authTitle = document.getElementById('auth-title');
     
     // Formularios Auth
     const formLogin = document.getElementById('form-login');
     const formRegister = document.getElementById('form-register');
+    const formForgotPassword = document.getElementById('form-forgot-password');
+    const formUpdatePassword = document.getElementById('form-update-password');
     
     // Botones Auth
     const showRegisterBtn = document.getElementById('show-register');
+    const registerLink = document.getElementById('register-link');
     const showLoginBtn = document.getElementById('show-login');
     const showLoginDiv = document.getElementById('show-login-div');
+    const showForgotPasswordBtn = document.getElementById('show-forgot-password');
     const btnLogout = document.getElementById('btn-logout');
     
-    // Elementos UI
+    // Elementos UI Auth
     const userEmailEl = document.getElementById('user-email');
     const loginErrorEl = document.getElementById('login-error');
     const registerErrorEl = document.getElementById('register-error');
+    const forgotErrorEl = document.getElementById('forgot-error');
+    const forgotSuccessEl = document.getElementById('forgot-success');
+    const updateErrorEl = document.getElementById('update-error');
 
-    // --- NUEVOS ELEMENTOS DEL DASHBOARD ---
+    // Elementos del Dashboard
     const sidebarLinkMap = document.getElementById('sidebar-link-map');
     const sidebarLinkTable = document.getElementById('sidebar-link-table');
     
@@ -33,8 +41,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Variables de la App (Mapa, etc.)
     let map = null;
     let marcadorTemporal = null;
+    let currentAccessToken = null; // Para guardar el token de reseteo
 
     // --- 2. LÓGICA DE VISTAS (Mostrar/Ocultar) ---
+
+    // Oculta todos los formularios de autenticación
+    function hideAllAuthForms() {
+        formLogin.classList.add('hidden');
+        formRegister.classList.add('hidden');
+        formForgotPassword.classList.add('hidden');
+        formUpdatePassword.classList.add('hidden');
+        registerLink.classList.add('hidden');
+        showLoginDiv.classList.add('hidden');
+    }
 
     // Muestra la App (mapa) y oculta el Login
     function showApp(user) {
@@ -42,10 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         appContainer.classList.remove('hidden');
         userEmailEl.textContent = user.email; // Muestra el email del usuario
         
-        // Carga la página inicial del mapa y los datos de la tabla en segundo plano
         showPage('page-map');
         loadTableData();
-        cargarStats(); // Carga las estadísticas (IA)
+        cargarStats(); 
     }
 
     // Muestra el Login y oculta la App
@@ -57,44 +75,38 @@ document.addEventListener('DOMContentLoaded', () => {
             map.remove();
             map = null;
         }
+        showLoginForm(); // Muestra el formulario de login por defecto
     }
 
     // Muestra el formulario de Registro
     function showRegisterForm() {
-        formLogin.classList.add('hidden');
-        showRegisterBtn.parentElement.classList.add('hidden');
+        hideAllAuthForms();
+        authTitle.textContent = "Crea tu cuenta";
         formRegister.classList.remove('hidden');
         showLoginDiv.classList.remove('hidden');
     }
 
     // Muestra el formulario de Login
     function showLoginForm() {
+        hideAllAuthForms();
+        authTitle.textContent = "Bienvenido. Por favor, inicia sesión.";
         formLogin.classList.remove('hidden');
-        showRegisterBtn.parentElement.classList.remove('hidden');
-        formRegister.classList.add('hidden');
-        showLoginDiv.classList.add('hidden');
+        registerLink.classList.remove('hidden');
     }
 
-    // --- NUEVA FUNCIÓN: NAVEGACIÓN DE PÁGINAS ---
-    function showPage(pageId) {
-        // Oculta todas las páginas
-        pageMap.classList.add('hidden');
-        pageTable.classList.add('hidden');
-        
-        // Muestra la página solicitada
-        if (pageId === 'page-map') {
-            pageMap.classList.remove('hidden');
-            
-            // Inicializa el mapa SÓLO la primera vez que se muestra
-            if (!map) {
-                initializeMap();
-                cargarArboles();
-            }
-        } else if (pageId === 'page-table') {
-            pageTable.classList.remove('hidden');
-            // Opcional: recargar datos de la tabla cada vez que se visita
-            // loadTableData(); 
-        }
+    // Muestra el formulario de Olvidé Contraseña
+    function showForgotPasswordForm() {
+        hideAllAuthForms();
+        authTitle.textContent = "Recuperar Contraseña";
+        formForgotPassword.classList.remove('hidden');
+        showLoginDiv.classList.remove('hidden');
+    }
+
+    // Muestra el formulario de Actualizar Contraseña
+    function showUpdatePasswordForm() {
+        hideAllAuthForms();
+        authTitle.textContent = "Crea tu nueva contraseña";
+        formUpdatePassword.classList.remove('hidden');
     }
 
     // --- 3. LÓGICA DE AUTENTICACIÓN (API) ---
@@ -103,7 +115,6 @@ document.addEventListener('DOMContentLoaded', () => {
     formRegister.addEventListener('submit', async (e) => {
         e.preventDefault();
         registerErrorEl.classList.add('hidden');
-        
         const email = document.getElementById('register-email').value;
         const password = document.getElementById('register-password').value;
 
@@ -115,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await response.json();
 
         if (response.ok) {
-            alert('¡Registro exitoso! Por favor, inicia sesión.');
+            alert('¡Registro exitoso! Revisa tu email para confirmar la cuenta y luego inicia sesión.');
             formRegister.reset();
             showLoginForm();
         } else {
@@ -129,7 +140,6 @@ document.addEventListener('DOMContentLoaded', () => {
     formLogin.addEventListener('submit', async (e) => {
         e.preventDefault();
         loginErrorEl.classList.add('hidden');
-        
         const email = document.getElementById('login-email').value;
         const password = document.getElementById('login-password').value;
 
@@ -152,26 +162,80 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // (C) Manejar Logout
     btnLogout.addEventListener('click', () => {
+        currentAccessToken = null; // Olvida el token de reseteo
         showAuth();
         formLogin.reset();
         registerErrorEl.classList.add('hidden');
         loginErrorEl.classList.add('hidden');
     });
 
-    // (D) Manejar botones de cambio de vista (Login/Registro)
+    // (D) Botones de cambio de vista
     showRegisterBtn.addEventListener('click', showRegisterForm);
     showLoginBtn.addEventListener('click', showLoginForm);
+    showForgotPasswordBtn.addEventListener('click', showForgotPasswordForm);
 
-    // --- NUEVO: Manejar navegación del Sidebar ---
-    sidebarLinkMap.addEventListener('click', () => showPage('page-map'));
-    sidebarLinkTable.addEventListener('click', () => showPage('page-table'));
+    // (E) NUEVO: Manejar "Olvidé Contraseña"
+    formForgotPassword.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        forgotErrorEl.classList.add('hidden');
+        forgotSuccessEl.classList.add('hidden');
+
+        const email = document.getElementById('forgot-email').value;
+        
+        const response = await fetch('/api/forgot_password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        
+        if (response.ok) {
+            forgotSuccessEl.textContent = "Correo enviado. Revisa tu bandeja de entrada.";
+            forgotSuccessEl.classList.remove('hidden');
+            formForgotPassword.reset();
+        } else {
+            forgotErrorEl.textContent = "Error al enviar el correo.";
+            forgotErrorEl.classList.remove('hidden');
+        }
+    });
+
+    // (F) NUEVO: Manejar "Actualizar Contraseña"
+    formUpdatePassword.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        updateErrorEl.classList.add('hidden');
+
+        const new_password = document.getElementById('update-password').value;
+
+        if (!currentAccessToken) {
+            updateErrorEl.textContent = "Token inválido o expirado. Vuelve a pedir un correo de recuperación.";
+            updateErrorEl.classList.remove('hidden');
+            return;
+        }
+
+        const response = await fetch('/api/update_password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ access_token: currentAccessToken, new_password })
+        });
+
+        if (response.ok) {
+            alert("¡Contraseña actualizada con éxito! Por favor, inicia sesión.");
+            currentAccessToken = null; // Limpia el token
+            showLoginForm();
+        } else {
+            updateErrorEl.textContent = "Error al actualizar la contraseña.";
+            updateErrorEl.classList.remove('hidden');
+        }
+    });
 
 
     // --- 4. LÓGICA DE LA APLICACIÓN (MAPA Y FORMULARIOS) ---
 
+    // (Manejar navegación del Sidebar)
+    sidebarLinkMap.addEventListener('click', () => showPage('page-map'));
+    sidebarLinkTable.addEventListener('click', () => showPage('page-table'));
+
     function initializeMap() {
         const centerManabi = [-0.9338, -80.4530];
-        // Asignamos el mapa a la variable global 'map'
         map = L.map('map').setView(centerManabi, 13);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -181,10 +245,8 @@ document.addEventListener('DOMContentLoaded', () => {
         map.on('click', (e) => {
             const lat = e.latlng.lat;
             const lng = e.latlng.lng;
-
             document.getElementById('latitud').value = lat.toFixed(6);
             document.getElementById('longitud').value = lng.toFixed(6);
-
             if (marcadorTemporal) {
                 marcadorTemporal.setLatLng(e.latlng);
             } else {
@@ -196,9 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function cargarArboles() {
         const response = await fetch('/api/obtener_arboles'); 
         const arboles = await response.json();
-        
-        if (!map) return; // Seguridad por si el mapa no está listo
-        
+        if (!map) return;
         arboles.forEach(arbol => {
             L.marker([arbol.latitud, arbol.longitud]).addTo(map)
                 .bindPopup(`<b>Especie:</b> ${arbol.especie}`);
@@ -208,28 +268,21 @@ document.addEventListener('DOMContentLoaded', () => {
     async function cargarStats() {
         const response = await fetch('/api/predecir_horas'); 
         const stats = await response.json();
-        
         document.getElementById('stat-arboles').textContent = stats.arboles_totales;
         document.getElementById('stat-horas').textContent = stats.horas_estimadas.toFixed(1);
     }
     
-    // --- NUEVA FUNCIÓN: Cargar datos en la tabla ---
     async function loadTableData() {
         try {
             const response = await fetch('/api/obtener_arboles');
             const arboles = await response.json();
-
-            tableBody.innerHTML = ''; // Limpia la tabla antes de cargar
-
+            tableBody.innerHTML = ''; 
             if (arboles.length === 0) {
                 tableBody.innerHTML = '<tr><td colspan="5" class="text-center p-4">No hay árboles registrados todavía.</td></tr>';
                 return;
             }
-
             arboles.forEach(arbol => {
-                // Formatea la fecha para que sea legible
                 const fecha = new Date(arbol.fecha_siembra).toLocaleString('es-ES');
-                
                 const fila = `
                     <tr class="hover:bg-gray-50">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${arbol.id}</td>
@@ -249,42 +302,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.getElementById('form-plantar').addEventListener('submit', async (e) => {
         e.preventDefault(); 
-        
         const especie = document.getElementById('especie').value;
         const latitud = document.getElementById('latitud').value;
         const longitud = document.getElementById('longitud').value;
-
         if (!especie || !latitud || !longitud) {
             alert('Por favor, complete la especie y seleccione un punto en el mapa.');
             return;
         }
-
         const datosArbol = {
             especie: especie,
             latitud: parseFloat(latitud),
             longitud: parseFloat(longitud)
         };
-
         const response = await fetch('/api/plantar_arbol', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(datosArbol)
         });
-
         if (response.ok) {
             alert('¡Árbol plantado con éxito!');
-            
-            // Limpia el formulario
             document.getElementById('form-plantar').reset();
-            
-            // Añade el marcador al mapa
             L.marker([latitud, longitud]).addTo(map).bindPopup(`<b>Especie:</b> ${especie}`);
             if (marcadorTemporal) {
                 marcadorTemporal.remove();
                 marcadorTemporal = null;
             }
-            
-            // Recarga las estadísticas y la tabla
             cargarStats();
             loadTableData();
         } else {
@@ -293,7 +335,31 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- 5. INICIO DE LA APP ---
-    // Por defecto, siempre mostramos el login al cargar.
-    showAuth(); 
+    
+    // NUEVO: Verificador de Token de Reseteo
+    function checkUrlForToken() {
+        const hash = window.location.hash.substring(1); // Quita el '#'
+        if (hash) {
+            const params = new URLSearchParams(hash);
+            const accessToken = params.get('access_token');
+            const type = params.get('type');
+
+            if (type === 'recovery' && accessToken) {
+                console.log("Token de recuperación detectado:", accessToken);
+                currentAccessToken = accessToken; // Guarda el token
+                showUpdatePasswordForm(); // Muestra el formulario para actualizar
+            } else {
+                // Si hay hash pero no es de recovery, limpia la URL y muestra login
+                window.history.pushState("", document.title, window.location.pathname + window.location.search);
+                showAuth();
+            }
+        } else {
+            // No hay hash, muestra el login normal
+            showAuth(); 
+        }
+    }
+    
+    // Inicia la verificación en cuanto carga la página
+    checkUrlForToken();
 
 });
