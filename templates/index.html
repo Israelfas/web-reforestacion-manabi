@@ -14,7 +14,7 @@
               'repsol-green': '#007a33', 
               'repsol-light-green': '#a4d65e',
               'repsol-gray': '#f8f9fa', 
-            },
+            }
           }
         }
       }
@@ -22,167 +22,124 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
     <script type="module" src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js"></script>
     <script nomodule src="https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js"></script>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
-        * {
-            font-family: 'Poppins', sans-serif;
-        }
-        
-        #map { height: 450px; }
+        * { font-family: 'Poppins', sans-serif; }
+        #map { height: 500px; }
         .hidden { display: none; }
-        .sidebar-active { background-color: #007a33; color: white; }
+        .sidebar-active { background-color: #007a33; color: white; border-left: 4px solid #a4d65e; }
         
-        /* Fondo con imagen de naturaleza */
         #auth-container {
-            background-image: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074');
-            background-size: cover;
-            background-position: center;
+            background: url('https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?q=80&w=2074') center/cover;
             position: relative;
         }
+        #auth-container::before { content: ''; position: absolute; inset: 0; background: rgba(0, 50, 20, 0.75); }
         
-        /* Overlay oscuro sobre la imagen */
-        #auth-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 50, 20, 0.75);
+        .input-wrapper { position: relative; }
+        .input-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; font-size: 18px; }
+        .input-styled {
+            width: 100%; padding: 12px 16px; border: 1px solid #D1D5DB; border-radius: 8px;
+            font-size: 14px; transition: all 0.2s ease; background: white; margin-top: 4px;
         }
-        
-        /* Inputs con iconos y mejor diseño */
-        .input-wrapper {
-            position: relative;
-        }
-        
-        .input-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #9ca3af;
-            font-size: 18px;
-        }
-        
-        /* Inputs estilizados profesionalmente */
-        input[type="email"], input[type="password"], input[type="text"], input[type="date"], select {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #D1D5DB;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: all 0.2s ease;
-            background-color: white;
-            margin-top: 4px;
-        }
-        
-        input.with-icon {
-            padding-left: 42px;
-        }
-        
-        input[type="email"]:focus, input[type="password"]:focus, input[type="text"]:focus, input[type="date"]:focus, select:focus {
-            border-color: #007a33;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1);
-        }
-        
-        /* Toggle password visibility */
-        .password-wrapper {
-            position: relative;
-        }
-        
+        input.with-icon { padding-left: 42px; }
+        .input-styled:focus { border-color: #007a33; outline: none; box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1); }
+        .input-styled[readonly] { background-color: #f3f4f6; color: #6b7280; cursor: not-allowed; }
+
+        .password-wrapper { position: relative; }
         .toggle-password {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            cursor: pointer;
-            color: #9ca3af;
-            font-size: 18px;
+            position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+            cursor: pointer; color: #9ca3af; font-size: 18px;
         }
+        .toggle-password:hover { color: #6b7280; }
         
-        .toggle-password:hover {
-            color: #6b7280;
-        }
-        
-        /* Botones principales destacados - 100% ancho */
         .btn { 
-            width: 100%;
-            font-weight: 700;
-            padding: 14px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            border: none;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            width: 100%; font-weight: 700; padding: 14px 24px; border-radius: 8px; font-size: 16px;
+            cursor: pointer; border: none; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
+        .btn-primary { background-color: #007a33; color: white; }
+        .btn-primary:hover { background-color: #005a24; box-shadow: 0 4px 8px rgba(0, 122, 51, 0.3); transform: translateY(-2px); }
+        .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
+        .btn-secondary { background-color: #4b5563; color: white; }
+        .btn-secondary:hover { background-color: #374151; box-shadow: 0 4px 8px rgba(75, 85, 99, 0.3); transform: translateY(-2px); }
         
-        .btn-primary { 
-            background-color: #007a33;
-            color: white;
-        }
-        
-        .btn-primary:hover { 
-            background-color: #005a24;
-            box-shadow: 0 4px 8px rgba(0, 122, 51, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        .btn-primary:active {
-            transform: translateY(0);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        
-        .btn-secondary { 
-            background-color: #4b5563;
-            color: white;
-        }
-        
-        .btn-secondary:hover { 
-            background-color: #374151;
-            box-shadow: 0 4px 8px rgba(75, 85, 99, 0.3);
-            transform: translateY(-2px);
-        }
-        
-        /* Enlaces secundarios con color verde de marca */
         .link { 
-            color: #007a33;
-            font-weight: 500;
-            cursor: pointer;
-            transition: color 0.2s ease;
-            text-decoration: none;
-            background: none;
-            border: none;
-            padding: 0;
+            color: #007a33; font-weight: 500; cursor: pointer; transition: color 0.2s ease;
+            text-decoration: none; background: none; border: none; padding: 0;
         }
-        
-        .link:hover {
-            color: #005a24;
-            text-decoration: underline;
+        .link:hover { color: #005a24; text-decoration: underline; }
+
+        .search-input { transition: all 0.3s ease; }
+        .search-input:focus { box-shadow: 0 0 0 3px rgba(0, 122, 51, 0.1); border-color: #007a33; }
+
+        .sidebar-link { position: relative; overflow: hidden; }
+        .sidebar-link::before {
+            content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 0;
+            background-color: rgba(164, 214, 94, 0.1); transition: width 0.3s ease;
         }
+        .sidebar-link:hover::before { width: 100%; }
+
+        .card {
+            background: white; border-radius: 16px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease; border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        .card:hover { box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12); }
+
+        .stat-card {
+            background: linear-gradient(135deg, #007a33 0%, #00a043 100%); color: white;
+            border-radius: 16px; padding: 28px; box-shadow: 0 8px 24px rgba(0, 122, 51, 0.25);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0, 122, 51, 0.35); }
+        .stat-number { font-size: 3rem; font-weight: 700; line-height: 1; }
+        .stat-label { font-size: 0.875rem; opacity: 0.95; margin-top: 12px; font-weight: 500; }
+
+        .user-dropdown { position: relative; }
+        .user-menu {
+            position: absolute; right: 0; top: 100%; margin-top: 12px; background: white;
+            border-radius: 12px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15); min-width: 260px;
+            padding: 8px; opacity: 0; transform: translateY(-10px); pointer-events: none;
+            transition: all 0.3s ease; z-index: 50; border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .user-menu.active { opacity: 1; transform: translateY(0); pointer-events: all; }
+        .user-menu-item {
+            padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; font-size: 14px; color: #374151;
+        }
+        .user-menu-item:hover { background-color: #f3f4f6; }
+        .user-menu-item.danger { color: #dc2626; }
+        .user-menu-item.danger:hover { background-color: #fee2e2; }
+        .user-menu-divider { height: 1px; background-color: #e5e7eb; margin: 8px 0; }
+
+        .user-avatar {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, #007a33 0%, #00a043 100%); color: white;
+            display: flex; align-items: center; justify-content: center; font-weight: 600;
+            font-size: 16px; cursor: pointer; transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 122, 51, 0.3);
+        }
+        .user-avatar:hover { transform: scale(1.05); box-shadow: 0 4px 12px rgba(0, 122, 51, 0.4); }
+
+        .lang-selector {
+            padding: 8px 16px; border: 1px solid #d1d5db; border-radius: 8px; background: white;
+            font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 6px;
+        }
+        .lang-selector:hover { border-color: #007a33; background-color: #f9fafb; }
+        .help-text { font-size: 12px; color: #6b7280; margin-top: 4px; display: flex; align-items: center; gap: 4px; }
     </style>
 </head>
-<body class="bg-repsol-gray text-gray-800 antialiased"> 
+<body class="bg-gray-50 text-gray-800 antialiased"> 
 
     <div id="auth-container" class="flex items-center justify-center min-h-screen p-4">
         <div class="w-full max-w-md p-8 space-y-6 bg-white shadow-2xl rounded-2xl border border-gray-100 relative z-10"> 
-            
             <div class="text-center">
                 <div class="inline-flex items-center justify-center w-20 h-20 bg-repsol-green rounded-full mb-6 shadow-lg">
                     <span class="text-4xl">🌳</span>
                 </div>
-                <h1 class="text-3xl font-bold text-repsol-green mb-2">
-                    Reforesta Manabí 
-                </h1>
+                <h1 class="text-3xl font-bold text-repsol-green mb-2">Reforesta Manabí</h1>
                 <p id="auth-title" class="text-gray-600 text-base">Bienvenido. Por favor, inicia sesión.</p>
             </div>
 
@@ -191,7 +148,7 @@
                     <label for="login-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <div class="input-wrapper">
                         <ion-icon name="mail-outline" class="input-icon"></ion-icon>
-                        <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                        <input type="email" id="login-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="input-styled with-icon">
                     </div>
                 </div>
                 <div>
@@ -199,45 +156,44 @@
                     <div class="password-wrapper">
                         <div class="input-wrapper">
                             <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
-                            <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••" class="with-icon">
+                            <input type="password" id="login-password" name="password" required autocomplete="current-password" placeholder="••••••••" class="input-styled with-icon">
                         </div>
                         <ion-icon name="eye-outline" class="toggle-password" id="toggle-login-password"></ion-icon>
                     </div>
                 </div>
                 <div class="text-right">
-                    <button type="button" id="show-forgot-password" class="link text-sm">¿Olvidaste tu contraseña?</button> 
+                    <button type="button" id="show-forgot-password" class="link text-sm">¿Olvidaste tu contraseña?</button>
                 </div>
                 <div class="pt-4">
-                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button> 
-                </div> 
+                    <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+                </div>
                 <p id="login-error" class="text-sm text-red-600 text-center hidden"></p>
             </form>
             
             <div id="register-link" class="text-center text-sm text-gray-600 pt-6">
-                ¿No tienes cuenta? 
-                <button id="show-register" class="link">Regístrate</button> 
+                ¿No tienes cuenta? <button id="show-register" class="link">Regístrate</button>
             </div>
 
             <form id="form-register" class="space-y-5 hidden mt-8">
-                 <div>
+                <div>
                     <label for="register-name" class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
                     <div class="input-wrapper">
                         <ion-icon name="person-outline" class="input-icon"></ion-icon>
-                        <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Juan Pérez" class="with-icon">
+                        <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Juan Pérez" class="input-styled with-icon">
                     </div>
                 </div>
                 <div>
                     <label for="register-birth-date" class="block text-sm font-medium text-gray-700 mb-2">Fecha de Nacimiento</label>
                     <div class="input-wrapper">
                         <ion-icon name="calendar-outline" class="input-icon"></ion-icon>
-                        <input type="date" id="register-birth-date" name="birthDate" required class="with-icon">
+                        <input type="date" id="register-birth-date" name="birthDate" required class="input-styled with-icon">
                     </div>
                 </div>
-                 <div>
+                <div>
                     <label for="register-email" class="block text-sm font-medium text-gray-700 mb-2">Email</label>
                     <div class="input-wrapper">
                         <ion-icon name="mail-outline" class="input-icon"></ion-icon>
-                        <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                        <input type="email" id="register-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="input-styled with-icon">
                     </div>
                 </div>
                 <div>
@@ -245,28 +201,28 @@
                     <div class="password-wrapper">
                         <div class="input-wrapper">
                             <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
-                            <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="with-icon">
+                            <input type="password" id="register-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="input-styled with-icon">
                         </div>
                         <ion-icon name="eye-outline" class="toggle-password" id="toggle-register-password"></ion-icon>
                     </div>
                 </div>
                 <div class="pt-4">
-                    <button type="submit" class="btn btn-primary">Crear Cuenta</button> 
-                </div> 
+                    <button type="submit" class="btn btn-primary">Crear Cuenta</button>
+                </div>
                 <p id="register-error" class="text-sm text-red-600 text-center hidden"></p>
             </form>
 
             <form id="form-forgot-password" class="space-y-5 hidden mt-8">
-                 <div>
+                <div>
                     <label for="forgot-email" class="block text-sm font-medium text-gray-700 mb-2">Email Registrado</label>
                     <div class="input-wrapper">
                         <ion-icon name="mail-outline" class="input-icon"></ion-icon>
-                        <input type="email" id="forgot-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="with-icon">
+                        <input type="email" id="forgot-email" name="email" required autocomplete="email" placeholder="correo@ejemplo.com" class="input-styled with-icon">
                     </div>
                 </div>
                 <div class="pt-4">
-                    <button type="submit" class="btn btn-primary">Enviar Correo de Recuperación</button> 
-                </div> 
+                    <button type="submit" class="btn btn-primary">Enviar Correo de Recuperación</button>
+                </div>
                 <p id="forgot-error" class="text-sm text-red-600 text-center hidden"></p>
                 <p id="forgot-success" class="text-sm text-green-600 text-center hidden"></p>
             </form>
@@ -277,124 +233,223 @@
                     <div class="password-wrapper">
                         <div class="input-wrapper">
                             <ion-icon name="lock-closed-outline" class="input-icon"></ion-icon>
-                            <input type="password" id="update-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="with-icon">
+                            <input type="password" id="update-password" name="password" required minlength="6" autocomplete="new-password" placeholder="••••••••" class="input-styled with-icon">
                         </div>
                         <ion-icon name="eye-outline" class="toggle-password" id="toggle-update-password"></ion-icon>
                     </div>
                 </div>
                 <div class="pt-4">
-                    <button type="submit" class="btn btn-primary">Restablecer Contraseña</button> 
-                </div> 
+                    <button type="submit" class="btn btn-primary">Restablecer Contraseña</button>
+                </div>
                 <p id="update-error" class="text-sm text-red-600 text-center hidden"></p>
             </form>
 
             <div class="text-center text-sm text-gray-600 hidden pt-6" id="show-login-div">
-                <button id="show-login" class="link">Volver a Iniciar Sesión</button> 
+                <button id="show-login" class="link">Volver a Iniciar Sesión</button>
             </div>
         </div>
     </div>
 
     <div id="app-container" class="hidden">
-        <header class="bg-white shadow p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10 h-16">
+        <header class="bg-white shadow-md p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10 h-16 border-b border-gray-200">
             <div class="flex items-center space-x-3">
-                <span class="text-3xl">🌳</span> 
+                <div class="w-10 h-10 bg-repsol-green rounded-lg flex items-center justify-center">
+                    <span class="text-2xl">🌳</span>
+                </div>
                 <span class="text-xl font-bold text-repsol-green">Reforesta Manabí</span>
             </div>
-            <div class="relative flex-1 max-w-xs mx-4">
-                <input type="text" placeholder="Buscar..." class="w-full px-4 py-2 border rounded-lg text-sm">
-                <ion-icon name="search-outline" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400"></ion-icon>
-            </div>
             <div class="flex items-center space-x-4">
-                <select class="text-sm border rounded px-2 py-1"> <option>Español</option> <option>English</option> </select>
-                <span id="user-email" class="text-sm text-gray-600"></span>
-                <button id="btn-logout" class="text-sm text-red-600 hover:underline">Cerrar Sesión</button>
+                <div class="relative flex-1 max-w-md mx-4">
+                    <input type="text" id="header-search" placeholder="Buscar..." class="search-input w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none">
+                    <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></ion-icon>
+                </div>
+                
+                <div class="user-dropdown">
+                    <div class="lang-selector" id="lang-selector">
+                        <ion-icon name="globe-outline" class="text-lg"></ion-icon>
+                        <span id="current-lang">Español</span>
+                        <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+                    </div>
+                    <div class="user-menu" id="lang-menu" style="min-width: 180px;">
+                        <div class="user-menu-item" data-lang="es">
+                            <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green" id="check-es"></ion-icon>
+                            <span>Español</span>
+                        </div>
+                        <div class="user-menu-item" data-lang="en">
+                            <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green hidden" id="check-en"></ion-icon>
+                            <span>English</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="user-dropdown">
+                    <div class="user-avatar" id="user-avatar">
+                        <span id="user-initials">U</span>
+                    </div>
+                    <div class="user-menu" id="user-menu">
+                        <div class="user-menu-item" style="cursor: default; background: #f9fafb;">
+                            <ion-icon name="person-circle-outline" class="text-xl mr-3 text-repsol-green"></ion-icon>
+                            <div>
+                                <div class="font-semibold text-gray-900" id="user-name-menu">Usuario</div>
+                                <div class="text-xs text-gray-500" id="user-email-menu">usuario@ejemplo.com</div>
+                            </div>
+                        </div>
+                        <div class="user-menu-divider"></div>
+                        <div class="user-menu-item" id="btn-config">
+                            <ion-icon name="settings-outline" class="text-lg mr-3"></ion-icon>
+                            <span>Configuración</span>
+                        </div>
+                        <div class="user-menu-item" id="btn-help">
+                            <ion-icon name="help-circle-outline" class="text-lg mr-3"></ion-icon>
+                            <span>Ayuda</span>
+                        </div>
+                        <div class="user-menu-divider"></div>
+                        <div class="user-menu-item danger" id="btn-logout">
+                            <ion-icon name="log-out-outline" class="text-lg mr-3"></ion-icon>
+                            <span>Cerrar Sesión</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </header>
         
-        <div class="flex pt-16"> 
-            <aside class="w-60 bg-gray-800 text-gray-300 min-h-[calc(100vh-64px)] p-4 flex flex-col shadow-lg"> 
-                <nav class="flex-1 space-y-2"> 
-                    <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded hover:bg-gray-700 hover:text-white transition-colors duration-200">
-                        <ion-icon name="map-outline" class="mr-3 text-xl"></ion-icon> Registrar Siembra
+        <div class="flex pt-16">
+            <aside class="w-64 bg-gray-900 text-gray-300 min-h-[calc(100vh-64px)] p-4 flex flex-col shadow-xl">
+                <nav class="flex-1 space-y-1">
+                    <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
+                        <ion-icon name="map-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                        <span class="relative z-10 font-medium">Registrar Siembra</span>
                     </button>
-                    <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded hover:bg-gray-700 hover:text-white transition-colors duration-200">
-                        <ion-icon name="list-outline" class="mr-3 text-xl"></ion-icon> Ver Registros
+                    <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
+                        <ion-icon name="list-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                        <span class="relative z-10 font-medium">Ver Registros</span>
                     </button>
                 </nav>
-                <div class="mt-auto text-xs text-gray-500">Versión 1.2</div>
+                <div class="mt-auto pt-4 border-t border-gray-800">
+                    <p class="text-xs text-gray-500 text-center">Versión 1.2</p>
+                    <p class="text-xs text-gray-600 text-center mt-1">© 2025 Reforesta Manabí</p>
+                </div>
             </aside>
 
-            <main class="flex-1 p-8 overflow-y-auto bg-repsol-gray"> 
+            <main class="flex-1 p-8 overflow-y-auto bg-gray-50">
                 <div id="page-map" class="page-content">
-                    <h2 class="text-3xl font-bold mb-2 text-gray-800">¡Hola, <span id="welcome-user-name">Usuario</span>! 👋</h2>
-                    <p class="text-gray-600 mb-8">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
-                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        <div class="lg:col-span-2">
-                            <h3 class="text-xl font-semibold mb-3 text-gray-700">Mapa Interactivo de Siembra</h3>
-                            <div id="map" class="w-full rounded-lg shadow-lg bg-white border border-gray-200"></div>
-                        </div>
-                        <div class="lg:col-span-1 space-y-8"> 
-                             <div class="p-6 bg-white rounded-lg shadow-lg border border-gray-200">
-                                <h3 class="text-xl font-semibold text-gray-800 mb-4">Formulario de Siembra</h3>
-                                <form id="form-plantar" class="space-y-4">
-                                    <div>
-                                        <label for="especie" class="block text-sm font-medium text-gray-700">Especie:</label>
-                                        <input type="text" id="especie" name="especie" required>
-                                    </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700">Ubicación (Haz clic en el mapa):</label>
-                                        <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="bg-gray-100">
-                                        <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="bg-gray-100">
-                                    </div>
-                                    <button type="submit" class="btn btn-primary">Plantar Árbol</button> 
-                                </form>
+                    <div class="mb-8">
+                        <h2 class="text-4xl font-bold mb-2 text-gray-900">
+                            ¡Hola, <span id="welcome-user-name" class="text-repsol-green">Usuario</span>! 👋
+                        </h2>
+                        <p class="text-gray-600 text-lg">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <div class="stat-card">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="stat-number" id="stat-arboles">0</div>
+                                    <div class="stat-label">Árboles Plantados</div>
+                                </div>
+                                <ion-icon name="leaf" class="text-6xl opacity-20"></ion-icon>
                             </div>
-                             <div class="p-6 bg-white rounded-lg shadow-lg border border-gray-200 text-center">
-                                <h3 class="text-xl font-semibold text-gray-800 mb-4">Estadísticas (IA)</h3>
-                                <p>Árboles Totales: <b id="stat-arboles" class="text-repsol-green text-lg">0</b></p>
-                                <p>Horas Estimadas: <b id="stat-horas" class="text-repsol-green text-lg">0.0</b></p>
+                        </div>
+                        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <div class="stat-number" id="stat-horas">0.0</div>
+                                    <div class="stat-label">Horas de Trabajo Estimadas</div>
+                                </div>
+                                <ion-icon name="time" class="text-6xl opacity-20"></ion-icon>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2">
+                            <div class="card p-6">
+                                <h3 class="text-xl font-semibold mb-4 text-gray-900 flex items-center">
+                                    <ion-icon name="location" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                    Mapa Interactivo de Siembra
+                                </h3>
+                                <div id="map" class="w-full rounded-lg shadow-inner border border-gray-200"></div>
+                            </div>
+                        </div>
+
+                        <div class="lg:col-span-1">
+                            <div class="card p-6">
+                                <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                                    <ion-icon name="add-circle" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                    Formulario de Siembra
+                                </h3>
+                                <form id="form-plantar" class="space-y-5">
+                                    <div>
+                                        <label for="especie" class="block text-sm font-semibold text-gray-700 mb-2">Especie del Árbol</label>
+                                        <input type="text" id="especie" name="especie" required class="input-styled" placeholder="Ej: Guayacán, Ceibo">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación GPS</label>
+                                        <p class="help-text mb-3">
+                                            <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
+                                            Haz clic en el mapa para seleccionar la ubicación
+                                        </p>
+                                        <div class="space-y-3">
+                                            <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="input-styled">
+                                            <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
+                                        </div>
+                                    </div>
+                                    
+                                    <button type="submit" class="btn btn-primary mt-6">
+                                        <ion-icon name="leaf-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
+                                        Plantar Árbol
+                                    </button>
+                                </form>
                             </div>
                         </div>
                     </div>
                 </div>
+
                 <div id="page-table" class="page-content hidden">
-                    <h2 class="text-3xl font-bold mb-6 text-gray-800">Registros de Siembra</h2>
-                    <div class="bg-white shadow-lg rounded-lg overflow-x-auto border border-gray-200">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-100"> 
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">ID</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Especie</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Latitud</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Longitud</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-600 uppercase tracking-wider">Fecha Siembra</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                        </table>
+                    <div class="mb-6">
+                        <h2 class="text-4xl font-bold mb-2 text-gray-900">Registros de Siembra</h2>
+                        <p class="text-gray-600">Historial completo de todos los árboles plantados</p>
+                    </div>
+                    <div class="card overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Especie</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Latitud</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Longitud</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fecha Siembra</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </main>
         </div>
-        <footer class="w-full bg-gray-200 text-gray-600 text-center p-4 text-sm border-t border-gray-300">
-            Plataforma Reforesta Manabí © 2025 | <a href="#" class="hover:underline">Términos</a> | <a href="#" class="hover:underline">Privacidad</a>
+
+        <footer class="w-full bg-white text-gray-600 text-center py-6 text-sm border-t border-gray-200 shadow-inner">
+            <p class="font-medium">Plataforma Reforesta Manabí © 2025</p>
+            <p class="mt-2">
+                <a href="#" class="hover:text-repsol-green hover:underline">Términos de Servicio</a>
+                <span class="mx-2">•</span>
+                <a href="#" class="hover:text-repsol-green hover:underline">Política de Privacidad</a>
+                <span class="mx-2">•</span>
+                <a href="#" class="hover:text-repsol-green hover:underline">Contacto</a>
+            </p>
         </footer>
     </div>
     
     <script>
-        // Toggle password visibility
         document.querySelectorAll('.toggle-password').forEach(icon => {
             icon.addEventListener('click', function() {
-                const wrapper = this.parentElement;
-                const input = wrapper.querySelector('input');
-                
-                if (input.type === 'password') {
-                    input.type = 'text';
-                    this.name = 'eye-off-outline';
-                } else {
-                    input.type = 'password';
-                    this.name = 'eye-outline';
-                }
+                const input = this.parentElement.querySelector('input');
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                this.name = isPassword ? 'eye-off-outline' : 'eye-outline';
             });
         });
     </script>
