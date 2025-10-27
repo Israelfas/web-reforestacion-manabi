@@ -175,7 +175,7 @@
             </div>
 
             <form id="form-register" class="space-y-5 hidden mt-8">
-                <div>
+                 <div>
                     <label for="register-name" class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
                     <div class="input-wrapper">
                         <ion-icon name="person-outline" class="input-icon"></ion-icon>
@@ -213,7 +213,7 @@
             </form>
 
             <form id="form-forgot-password" class="space-y-5 hidden mt-8">
-                <div>
+                 <div>
                     <label for="forgot-email" class="block text-sm font-medium text-gray-700 mb-2">Email Registrado</label>
                     <div class="input-wrapper">
                         <ion-icon name="mail-outline" class="input-icon"></ion-icon>
@@ -228,7 +228,7 @@
             </form>
 
             <form id="form-update-password" class="space-y-5 hidden mt-8">
-                <div>
+                 <div>
                     <label for="update-password" class="block text-sm font-medium text-gray-700 mb-2">Nueva Contraseña (Mín. 6 caracteres)</label>
                     <div class="password-wrapper">
                         <div class="input-wrapper">
@@ -252,84 +252,82 @@
 
     <div id="app-container" class="hidden">
         <header class="bg-white shadow-md p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10 h-16 border-b border-gray-200">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-repsol-green rounded-lg flex items-center justify-center">
-                    <span class="text-2xl">🌳</span>
-                </div>
-                <span class="text-xl font-bold text-repsol-green">Reforesta Manabí</span>
-            </div>
-            <div class="flex items-center space-x-4">
-                <div class="relative flex-1 max-w-md mx-4">
-                    <input type="text" id="header-search" placeholder="Buscar..." class="search-input w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none">
-                    <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></ion-icon>
-                </div>
-                
-                <div class="user-dropdown">
-                    <div class="lang-selector" id="lang-selector">
-                        <ion-icon name="globe-outline" class="text-lg"></ion-icon>
-                        <span id="current-lang">Español</span>
-                        <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
-                    </div>
-                    <div class="user-menu" id="lang-menu" style="min-width: 180px;">
-                        <div class="user-menu-item" data-lang="es">
-                            <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green" id="check-es"></ion-icon>
-                            <span>Español</span>
-                        </div>
-                        <div class="user-menu-item" data-lang="en">
-                            <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green hidden" id="check-en"></ion-icon>
-                            <span>English</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="user-dropdown">
-                    <div class="user-avatar" id="user-avatar">
-                        <span id="user-initials">U</span>
-                    </div>
-                    <div class="user-menu" id="user-menu">
-                        <div class="user-menu-item" style="cursor: default; background: #f9fafb;">
-                            <ion-icon name="person-circle-outline" class="text-xl mr-3 text-repsol-green"></ion-icon>
-                            <div>
-                                <div class="font-semibold text-gray-900" id="user-name-menu">Usuario</div>
-                                <div class="text-xs text-gray-500" id="user-email-menu">usuario@ejemplo.com</div>
-                            </div>
-                        </div>
-                        <div class="user-menu-divider"></div>
-                        <div class="user-menu-item" id="btn-config">
-                            <ion-icon name="settings-outline" class="text-lg mr-3"></ion-icon>
-                            <span>Configuración</span>
-                        </div>
-                        <div class="user-menu-item" id="btn-help">
-                            <ion-icon name="help-circle-outline" class="text-lg mr-3"></ion-icon>
-                            <span>Ayuda</span>
-                        </div>
-                        <div class="user-menu-divider"></div>
-                        <div class="user-menu-item danger" id="btn-logout">
-                            <ion-icon name="log-out-outline" class="text-lg mr-3"></ion-icon>
-                            <span>Cerrar Sesión</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
+             <div class="flex items-center space-x-3">
+                 <div class="w-10 h-10 bg-repsol-green rounded-lg flex items-center justify-center">
+                     <span class="text-2xl">🌳</span>
+                 </div>
+                 <span class="text-xl font-bold text-repsol-green">Reforesta Manabí</span>
+             </div>
+             <div class="flex items-center space-x-4">
+                 <div class="relative flex-1 max-w-md mx-4">
+                     <input type="text" id="header-search" placeholder="Buscar..." class="search-input w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none">
+                     <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></ion-icon>
+                 </div>
+                 <div class="user-dropdown">
+                     <div class="lang-selector" id="lang-selector">
+                         <ion-icon name="globe-outline" class="text-lg"></ion-icon>
+                         <span id="current-lang">Español</span>
+                         <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+                     </div>
+                     <div class="user-menu" id="lang-menu" style="min-width: 180px;">
+                         <div class="user-menu-item" data-lang="es">
+                             <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green" id="check-es"></ion-icon>
+                             <span>Español</span>
+                         </div>
+                         <div class="user-menu-item" data-lang="en">
+                             <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green hidden" id="check-en"></ion-icon>
+                             <span>English</span>
+                         </div>
+                     </div>
+                 </div>
+                 <div class="user-dropdown">
+                     <div class="user-avatar" id="user-avatar">
+                         <span id="user-initials">U</span>
+                     </div>
+                     <div class="user-menu" id="user-menu">
+                         <div class="user-menu-item" style="cursor: default; background: #f9fafb;">
+                             <ion-icon name="person-circle-outline" class="text-xl mr-3 text-repsol-green"></ion-icon>
+                             <div>
+                                 <div class="font-semibold text-gray-900" id="user-name-menu">Usuario</div>
+                                 <div class="text-xs text-gray-500" id="user-email-menu">usuario@ejemplo.com</div>
+                             </div>
+                         </div>
+                         <div class="user-menu-divider"></div>
+                         <div class="user-menu-item" id="btn-config">
+                             <ion-icon name="settings-outline" class="text-lg mr-3"></ion-icon>
+                             <span>Configuración</span>
+                         </div>
+                         <div class="user-menu-item" id="btn-help">
+                             <ion-icon name="help-circle-outline" class="text-lg mr-3"></ion-icon>
+                             <span>Ayuda</span>
+                         </div>
+                         <div class="user-menu-divider"></div>
+                         <div class="user-menu-item danger" id="btn-logout">
+                             <ion-icon name="log-out-outline" class="text-lg mr-3"></ion-icon>
+                             <span>Cerrar Sesión</span>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+         </header>
         
         <div class="flex pt-16">
             <aside class="w-64 bg-gray-900 text-gray-300 min-h-[calc(100vh-64px)] p-4 flex flex-col shadow-xl">
-                <nav class="flex-1 space-y-1">
-                    <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
-                        <ion-icon name="map-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                        <span class="relative z-10 font-medium">Registrar Siembra</span>
-                    </button>
-                    <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
-                        <ion-icon name="list-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                        <span class="relative z-10 font-medium">Ver Registros</span>
-                    </button>
-                </nav>
-                <div class="mt-auto pt-4 border-t border-gray-800">
-                    <p class="text-xs text-gray-500 text-center">Versión 1.2</p>
-                    <p class="text-xs text-gray-600 text-center mt-1">© 2025 Reforesta Manabí</p>
-                </div>
-            </aside>
+                 <nav class="flex-1 space-y-1">
+                     <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
+                         <ion-icon name="map-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                         <span class="relative z-10 font-medium">Registrar Siembra</span>
+                     </button>
+                     <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
+                         <ion-icon name="list-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                         <span class="relative z-10 font-medium">Ver Registros</span>
+                     </button>
+                 </nav>
+                 <div class="mt-auto pt-4 border-t border-gray-800">
+                     <p class="text-xs text-gray-500 text-center">Versión 1.2</p>
+                     <p class="text-xs text-gray-600 text-center mt-1">© 2025 Reforesta Manabí</p>
+                 </div>
+             </aside>
 
             <main class="flex-1 p-8 overflow-y-auto bg-gray-50">
                 <div id="page-map" class="page-content">
@@ -339,7 +337,6 @@
                         </h2>
                         <p class="text-gray-600 text-lg">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
                     </div>
-
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div class="stat-card">
                             <div class="flex items-center justify-between">
@@ -360,7 +357,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                         <div class="lg:col-span-2">
                             <div class="card p-6">
@@ -371,7 +367,6 @@
                                 <div id="map" class="w-full rounded-lg shadow-inner border border-gray-200"></div>
                             </div>
                         </div>
-
                         <div class="lg:col-span-1">
                             <div class="card p-6">
                                 <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
@@ -383,7 +378,6 @@
                                         <label for="especie" class="block text-sm font-semibold text-gray-700 mb-2">Especie del Árbol</label>
                                         <input type="text" id="especie" name="especie" required class="input-styled" placeholder="Ej: Guayacán, Ceibo">
                                     </div>
-                                    
                                     <div>
                                         <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación GPS</label>
                                         <p class="help-text mb-3">
@@ -395,7 +389,6 @@
                                             <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
                                         </div>
                                     </div>
-                                    
                                     <button type="submit" class="btn btn-primary mt-6">
                                         <ion-icon name="leaf-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
                                         Plantar Árbol
@@ -421,6 +414,8 @@
                                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Latitud</th>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Longitud</th>
                                         <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fecha Siembra</th>
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Plantado Por</th> 
+                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Acciones</th> 
                                     </tr>
                                 </thead>
                                 <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
@@ -432,18 +427,19 @@
         </div>
 
         <footer class="w-full bg-white text-gray-600 text-center py-6 text-sm border-t border-gray-200 shadow-inner">
-            <p class="font-medium">Plataforma Reforesta Manabí © 2025</p>
-            <p class="mt-2">
-                <a href="#" class="hover:text-repsol-green hover:underline">Términos de Servicio</a>
-                <span class="mx-2">•</span>
-                <a href="#" class="hover:text-repsol-green hover:underline">Política de Privacidad</a>
-                <span class="mx-2">•</span>
-                <a href="#" class="hover:text-repsol-green hover:underline">Contacto</a>
-            </p>
-        </footer>
+             <p class="font-medium">Plataforma Reforesta Manabí © 2025</p>
+             <p class="mt-2">
+                 <a href="#" class="hover:text-repsol-green hover:underline">Términos de Servicio</a>
+                 <span class="mx-2">•</span>
+                 <a href="#" class="hover:text-repsol-green hover:underline">Política de Privacidad</a>
+                 <span class="mx-2">•</span>
+                 <a href="#" class="hover:text-repsol-green hover:underline">Contacto</a>
+             </p>
+         </footer>
     </div>
     
     <script>
+        // Toggle password visibility sin cambios
         document.querySelectorAll('.toggle-password').forEach(icon => {
             icon.addEventListener('click', function() {
                 const input = this.parentElement.querySelector('input');

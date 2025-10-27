@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showLoginBtn: document.getElementById('show-login'),
         showLoginDiv: document.getElementById('show-login-div'),
         showForgotPasswordBtn: document.getElementById('show-forgot-password'),
-        btnLogout: document.getElementById('btn-logout'),
+        btnLogout: document.getElementById('btn-logout'), // Dentro del dropdown ahora
         welcomeUserNameEl: document.getElementById('welcome-user-name'),
         loginErrorEl: document.getElementById('login-error'),
         registerErrorEl: document.getElementById('register-error'),
@@ -29,7 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
         userInitials: document.getElementById('user-initials'),
         userNameMenu: document.getElementById('user-name-menu'),
         userEmailMenu: document.getElementById('user-email-menu'),
-        headerSearch: document.getElementById('header-search')
+        headerSearch: document.getElementById('header-search'),
+        statArboles: document.getElementById('stat-arboles'), // Añadido para caché
+        statHoras: document.getElementById('stat-horas') // Añadido para caché
     };
     
     let map = null, marcadorTemporal = null, currentAccessToken = null;
@@ -48,325 +50,112 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 2. FUNCIONES AUXILIARES ---
     const getInitials = (name) => {
-        if (!name) return 'U';
-        const parts = name.trim().split(' ');
-        return parts.length >= 2 ? (parts[0][0] + parts[1][0]).toUpperCase() : name.substring(0, 2).toUpperCase();
+        if (!name || typeof name !== 'string') return '?';
+        const parts = name.trim().split(' ').filter(part => part.length > 0);
+        if (parts.length === 0) return '?';
+        if (parts.length === 1) return parts[0][0].toUpperCase();
+        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     };
 
     const updateUserInfo = (userName, userEmail) => {
-        if (els.userNameMenu) els.userNameMenu.textContent = userName;
-        if (els.userEmailMenu) els.userEmailMenu.textContent = userEmail;
-        if (els.userInitials) els.userInitials.textContent = getInitials(userName);
-        if (els.welcomeUserNameEl) els.welcomeUserNameEl.textContent = userName.split(' ')[0];
+        const nameToDisplay = userName || userEmail?.split('@')[0] || 'Usuario';
+        const emailToDisplay = userEmail || 'correo@ejemplo.com';
+        
+        if (els.userNameMenu) els.userNameMenu.textContent = nameToDisplay;
+        if (els.userEmailMenu) els.userEmailMenu.textContent = emailToDisplay;
+        if (els.userInitials) els.userInitials.textContent = getInitials(nameToDisplay);
+        if (els.welcomeUserNameEl) els.welcomeUserNameEl.textContent = nameToDisplay.split(' ')[0];
     };
 
     const hideAllAuthForms = () => {
         [els.formLogin, els.formRegister, els.formForgotPassword, els.formUpdatePassword, els.registerLink, els.showLoginDiv]
+            .filter(Boolean) // Filtrar elementos nulos si algún ID no existe
             .forEach(el => el.classList.add('hidden'));
     };
 
     // --- 3. LÓGICA DE VISTAS ---
     const showApp = (user) => {
-        els.authContainer.classList.add('hidden');
-        els.appContainer.classList.remove('hidden');
-        updateUserInfo(user.name || user.email.split('@')[0], user.email);
-        showPage('page-map');
-        loadTableData();
-        cargarStats();
+        els.authContainer?.classList.add('hidden');
+        els.appContainer?.classList.remove('hidden');
+        if (user) {
+            updateUserInfo(user.name || user.email?.split('@')[0], user.email);
+        }
+        showPage('page-map'); // Mostrar mapa por defecto
+        initializeMapIfNeeded(); // Asegurar que el mapa se inicializa
+        loadAppData(); // Cargar datos necesarios para la app
     };
 
     const showAuth = () => {
-        els.authContainer.classList.remove('hidden');
-        els.appContainer.classList.add('hidden');
-        updateUserInfo('Usuario', 'usuario@ejemplo.com');
-        if (els.userMenu) els.userMenu.classList.remove('active');
-        if (map) { map.remove(); map = null; }
-        showLoginForm();
+        els.authContainer?.classList.remove('hidden');
+        els.appContainer?.classList.add('hidden');
+        updateUserInfo('Usuario', 'usuario@ejemplo.com'); // Resetear UI
+        els.userMenu?.classList.remove('active');
+        els.langMenu?.classList.remove('active'); // Cerrar menú de idioma también
+        if (map) { map.remove(); map = null; marcadorTemporal = null;} // Limpiar mapa
+        showLoginForm(); // Mostrar login por defecto
     };
 
-    const showRegisterForm = () => {
-        hideAllAuthForms();
-        els.authTitle.textContent = "Crea tu cuenta";
-        els.formRegister.classList.remove('hidden');
-        els.showLoginDiv.classList.remove('hidden');
-    };
+    const showAuthForm = (formId, title) => {
+         hideAllAuthForms();
+         if (els.authTitle) els.authTitle.textContent = title;
 
-    const showLoginForm = () => {
-        hideAllAuthForms();
-        els.authTitle.textContent = "Bienvenido. Por favor, inicia sesión.";
-        els.formLogin.classList.remove('hidden');
-        els.registerLink.classList.remove('hidden');
-    };
+         const formElement = els[formId]; // Usar caché
+         if (formElement) {
+             formElement.classList.remove('hidden');
+             // Podríamos añadir FormValidator.clearAllErrors(formElement) aquí si lo tuviéramos
+         } else {
+              console.error(`Auth form with ID "${formId}" not found in els.`);
+          }
 
-    const showForgotPasswordForm = () => {
-        hideAllAuthForms();
-        els.authTitle.textContent = "Recuperar Contraseña";
-        els.formForgotPassword.classList.remove('hidden');
-        els.showLoginDiv.classList.remove('hidden');
-    };
+         if (formId === 'formLogin') {
+             els.registerLink?.classList.remove('hidden');
+         } else {
+             els.showLoginDiv?.classList.remove('hidden');
+         }
+     };
 
-    const showUpdatePasswordForm = () => {
-        hideAllAuthForms();
-        els.authTitle.textContent = "Crea tu nueva contraseña";
-        els.formUpdatePassword.classList.remove('hidden');
-    };
+     const showLoginForm = () => showAuthForm('formLogin', "Bienvenido. Por favor, inicia sesión.");
+     const showRegisterForm = () => showAuthForm('formRegister', "Crea tu cuenta");
+     const showForgotPasswordForm = () => showAuthForm('formForgotPassword', "Recuperar Contraseña");
+     const showUpdatePasswordForm = () => showAuthForm('formUpdatePassword', "Crea tu nueva contraseña");
     
     const showPage = (pageId) => {
-        els.pageContents.forEach(page => page.classList.add('hidden'));
-        const pageToShow = document.getElementById(pageId);
-        if (pageToShow) pageToShow.classList.remove('hidden');
-        if (pageId === 'page-map' && !map) { initializeMap(); cargarArboles(); }
-        els.sidebarLinks.forEach(link => {
+        els.pageContents?.forEach(page => page.classList.add('hidden'));
+        const pageToShow = document.getElementById(pageId); // Re-buscar por si acaso
+        if (pageToShow) {
+             pageToShow.classList.remove('hidden');
+        } else {
+            // Fallback a mapa si la página no existe
+            pageId = 'page-map';
+            document.getElementById(pageId)?.classList.remove('hidden');
+        }
+
+        // Initialize map only when navigating to it and it doesn't exist
+        if (pageId === 'page-map') {
+            setTimeout(initializeMapIfNeeded, 50); // Delay slightly for render
+        }
+        // Refresh table data when navigating to table
+        if (pageId === 'page-table') {
+            loadTableData();
+        }
+
+        // Update sidebar
+        els.sidebarLinks?.forEach(link => {
             const isActive = link.dataset.page === pageId;
             link.classList.toggle('sidebar-active', isActive);
-            link.classList.toggle('text-white', isActive);
+            // text-white is handled by sidebar-active now? Check CSS
         });
+
+        // Clear search on page change
+        if (els.headerSearch) els.headerSearch.value = '';
+        if (pageId === 'page-table') filterTable(''); // Reset table filter
     };
 
-    // --- 4. LÓGICA DEL DROPDOWN DE USUARIO ---
-    if (els.userAvatar && els.userMenu) {
-        els.userAvatar.addEventListener('click', (e) => {
-            e.stopPropagation();
-            els.userMenu.classList.toggle('active');
-            const langMenu = document.getElementById('lang-menu');
-            if (langMenu) langMenu.classList.remove('active');
-        });
+    // --- 4. LÓGICA DEL MAPA ---
+    const initializeMapIfNeeded = () => {
+        if (map || !document.getElementById('map')) return; // Check if already exists or container is gone
 
-        document.addEventListener('click', (e) => {
-            if (!els.userMenu.contains(e.target) && !els.userAvatar.contains(e.target)) {
-                els.userMenu.classList.remove('active');
-            }
-        });
-
-        els.userMenu.addEventListener('click', (e) => {
-            if (!e.target.closest('#btn-logout') && !e.target.closest('#btn-config') && !e.target.closest('#btn-help')) {
-                e.stopPropagation();
-            }
-        });
-    }
-
-    // --- CONFIGURACIÓN Y AYUDA ---
-    document.getElementById('btn-config')?.addEventListener('click', () => {
-        els.userMenu.classList.remove('active');
-        alert('Función de Configuración en desarrollo.\n\nAquí podrás editar tu perfil, cambiar contraseña y ajustar preferencias.');
-    });
-
-    document.getElementById('btn-help')?.addEventListener('click', () => {
-        els.userMenu.classList.remove('active');
-        alert(`📚 AYUDA - Reforesta Manabí
-
-🌳 Cómo usar la plataforma:
-
-1. REGISTRAR SIEMBRA:
-   - Haz clic en el mapa para seleccionar ubicación
-   - Ingresa la especie del árbol
-   - Presiona "Plantar Árbol"
-
-2. VER REGISTROS:
-   - Consulta todos los árboles plantados
-   - Filtra por especie, fecha o usuario
-
-3. ESTADÍSTICAS:
-   - Visualiza árboles totales plantados
-   - Horas de trabajo estimadas
-
-¿Necesitas más ayuda?
-Contacta: soporte@reforestamanabi.ec`);
-    });
-
-    // --- SELECTOR DE IDIOMA ---
-    const langSelector = document.getElementById('lang-selector');
-    const langMenu = document.getElementById('lang-menu');
-    const currentLangEl = document.getElementById('current-lang');
-    
-    if (langSelector && langMenu) {
-        langSelector.addEventListener('click', (e) => {
-            e.stopPropagation();
-            langMenu.classList.toggle('active');
-            if (els.userMenu) els.userMenu.classList.remove('active');
-        });
-
-        document.addEventListener('click', (e) => {
-            if (!langMenu.contains(e.target) && !langSelector.contains(e.target)) {
-                langMenu.classList.remove('active');
-            }
-        });
-
-        langMenu.querySelectorAll('[data-lang]').forEach(item => {
-            item.addEventListener('click', function() {
-                const lang = this.dataset.lang;
-                const [checkEs, checkEn] = [document.getElementById('check-es'), document.getElementById('check-en')];
-                
-                if (lang === 'es') {
-                    currentLangEl.textContent = 'Español';
-                    checkEs?.classList.remove('hidden');
-                    checkEn?.classList.add('hidden');
-                    alert('Idioma cambiado a Español ✓');
-                } else {
-                    currentLangEl.textContent = 'English';
-                    checkEn?.classList.remove('hidden');
-                    checkEs?.classList.add('hidden');
-                    alert('Language changed to English ✓\n\n(Full translation coming soon)');
-                }
-                langMenu.classList.remove('active');
-            });
-        });
-    }
-
-    // --- BÚSQUEDA EN HEADER ---
-    const filterTable = (searchTerm) => {
-        const rows = els.tableBody.querySelectorAll('tr');
-        let visibleCount = 0;
-        
-        rows.forEach(row => {
-            const isVisible = row.textContent.toLowerCase().includes(searchTerm);
-            row.style.display = isVisible ? '' : 'none';
-            if (isVisible) visibleCount++;
-        });
-
-        const noResultsRow = els.tableBody.querySelector('.no-results-row');
-        if (visibleCount === 0 && searchTerm !== '') {
-            if (!noResultsRow) {
-                els.tableBody.innerHTML += `<tr class="no-results-row"><td colspan="6" class="text-center p-4 text-gray-500">No se encontraron resultados para "${searchTerm}"</td></tr>`;
-            }
-        } else if (noResultsRow) {
-            noResultsRow.remove();
-        }
-    };
-
-    if (els.headerSearch) {
-        els.headerSearch.addEventListener('input', (e) => {
-            const currentPage = document.querySelector('.page-content:not(.hidden)');
-            if (currentPage?.id === 'page-table') filterTable(e.target.value.toLowerCase());
-        });
-
-        els.sidebarLinks.forEach(link => {
-            link.addEventListener('click', () => { els.headerSearch.value = ''; });
-        });
-    }
-
-    // --- 5. AUTENTICACIÓN (API) ---
-    els.formRegister.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        els.registerErrorEl.classList.add('hidden');
-        const [email, password, name, birthdate] = [
-            document.getElementById('register-email').value,
-            document.getElementById('register-password').value,
-            document.getElementById('register-name').value,
-            document.getElementById('register-birth-date').value
-        ];
-
-        if (!birthdate) {
-            els.registerErrorEl.textContent = "Por favor, selecciona tu fecha de nacimiento.";
-            els.registerErrorEl.classList.remove('hidden');
-            return;
-        }
-
-        const response = await fetch('/api/register', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, name, birthdate })
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            alert('¡Registro exitoso! Revisa tu email para confirmar y luego inicia sesión.');
-            els.formRegister.reset();
-            showLoginForm();
-        } else {
-            els.registerErrorEl.textContent = data.error.includes("already registered") ? "Email ya registrado." : "Error al registrar.";
-            els.registerErrorEl.classList.remove('hidden');
-        }
-    });
-
-    els.formLogin.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        els.loginErrorEl.classList.add('hidden');
-        const [email, password] = [
-            document.getElementById('login-email').value,
-            document.getElementById('login-password').value
-        ];
-
-        const response = await fetch('/api/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password })
-        });
-        const data = await response.json();
-
-        if (response.ok) {
-            showApp(data.user);
-        } else {
-            els.loginErrorEl.textContent = "Email o contraseña incorrectos.";
-            els.loginErrorEl.classList.remove('hidden');
-        }
-    });
-
-    els.btnLogout.addEventListener('click', () => {
-        currentAccessToken = null;
-        showAuth();
-        els.formLogin.reset();
-        [els.registerErrorEl, els.loginErrorEl].forEach(el => el.classList.add('hidden'));
-    });
-
-    els.showRegisterBtn.addEventListener('click', showRegisterForm);
-    els.showLoginBtn.addEventListener('click', showLoginForm);
-    els.showForgotPasswordBtn.addEventListener('click', showForgotPasswordForm);
-
-    els.formForgotPassword.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        [els.forgotErrorEl, els.forgotSuccessEl].forEach(el => el.classList.add('hidden'));
-        const email = document.getElementById('forgot-email').value;
-        
-        const response = await fetch('/api/forgot_password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email })
-        });
-
-        if (response.ok) {
-            els.forgotSuccessEl.textContent = "Correo enviado.";
-            els.forgotSuccessEl.classList.remove('hidden');
-            els.formForgotPassword.reset();
-        } else {
-            els.forgotErrorEl.textContent = "Error al enviar.";
-            els.forgotErrorEl.classList.remove('hidden');
-        }
-    });
-
-    els.formUpdatePassword.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        els.updateErrorEl.classList.add('hidden');
-        const new_password = document.getElementById('update-password').value;
-
-        if (!currentAccessToken) {
-            els.updateErrorEl.textContent = "Token inválido.";
-            els.updateErrorEl.classList.remove('hidden');
-            return;
-        }
-
-        const response = await fetch('/api/update_password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ access_token: currentAccessToken, new_password })
-        });
-
-        if (response.ok) {
-            alert("Contraseña actualizada. Inicia sesión.");
-            currentAccessToken = null;
-            showLoginForm();
-        } else {
-            els.updateErrorEl.textContent = "Error al actualizar.";
-            els.updateErrorEl.classList.remove('hidden');
-        }
-    });
-
-    // --- 6. MAPA Y FORMULARIOS ---
-    els.sidebarLinks.forEach(link => {
-        link.addEventListener('click', () => showPage(link.dataset.page));
-    });
-
-    const initializeMap = () => {
+        console.log('Initializing map...');
         map = L.map('map').setView([-0.958, -80.714], 13);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap'
@@ -385,98 +174,458 @@ Contacta: soporte@reforestamanabi.ec`);
             if (marcadorTemporal) {
                 marcadorTemporal.setLatLng(e.latlng);
             } else {
-                marcadorTemporal = L.marker(e.latlng, { draggable: true }).addTo(map);
+                // Usar icono rojo para el temporal
+                const redIcon = L.icon({
+                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                 });
+                marcadorTemporal = L.marker(e.latlng, { draggable: true, icon: redIcon }).addTo(map);
+                 // Actualizar coords al arrastrar
+                 marcadorTemporal.on('dragend', (ev) => {
+                     const movedLatLng = ev.target.getLatLng();
+                     document.getElementById('latitud').value = movedLatLng.lat.toFixed(6);
+                     document.getElementById('longitud').value = movedLatLng.lng.toFixed(6);
+                 });
             }
+             map.panTo(e.latlng); // Centrar en el marcador temporal
         });
+         map.invalidateSize(); // Asegurar tamaño correcto
+        cargarArboles(); // Cargar árboles existentes al iniciar
     };
 
+    // --- 5. CARGA DE DATOS ---
     const cargarArboles = async () => {
-        const response = await fetch('/api/obtener_arboles');
-        const arboles = await response.json();
-        if (!map) return;
-        arboles.forEach(arbol => {
-            L.marker([arbol.latitud, arbol.longitud]).addTo(map)
-                .bindPopup(`<b>Especie:</b> ${arbol.especie}`);
-        });
+        if (!map) return; // No cargar si el mapa no está listo
+        console.log("Cargando árboles plantados...");
+        try {
+            const response = await fetch('/api/obtener_arboles');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const arboles = await response.json();
+            
+            // Limpiar marcadores anteriores (excepto los predefinidos y el temporal)
+            map.eachLayer(layer => {
+                 if (layer instanceof L.Marker && layer !== marcadorTemporal && !layer.options.icon?.options?.iconUrl.includes('green')) {
+                     map.removeLayer(layer);
+                 }
+             });
+
+            arboles.forEach(arbol => {
+                 // Usar icono azul por defecto para árboles plantados
+                 const blueIcon = L.icon({
+                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                 });
+                L.marker([arbol.latitud, arbol.longitud], { icon: blueIcon })
+                    .addTo(map)
+                    .bindPopup(`<b>Especie:</b> ${arbol.especie || 'N/A'}<br><b>ID:</b> ${arbol.id}`);
+            });
+             console.log(`${arboles.length} árboles cargados en el mapa.`);
+        } catch (error) {
+             console.error("Error al cargar árboles:", error);
+             alert("Error al cargar los árboles en el mapa.");
+         }
     };
 
     const cargarStats = async () => {
-        const response = await fetch('/api/predecir_horas');
-        const stats = await response.json();
-        document.getElementById('stat-arboles').textContent = stats.arboles_totales;
-        document.getElementById('stat-horas').textContent = stats.horas_estimadas.toFixed(1);
+        try {
+            const response = await fetch('/api/predecir_horas');
+             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            const stats = await response.json();
+            if (els.statArboles) els.statArboles.textContent = stats.arboles_totales ?? '0';
+            if (els.statHoras) els.statHoras.textContent = (stats.horas_estimadas ?? 0).toFixed(1);
+        } catch (error) {
+             console.error("Error al cargar estadísticas:", error);
+             // Reset stats on error
+             if (els.statArboles) els.statArboles.textContent = '0';
+             if (els.statHoras) els.statHoras.textContent = '0.0';
+             // alert("Error al cargar estadísticas."); // Puede ser molesto
+         }
     };
 
     const loadTableData = async () => {
+        if (!els.tableBody) return;
+        console.log("Cargando datos de la tabla...");
+        // Podríamos añadir un estado de carga aquí
+        els.tableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-500">Cargando...</td></tr>'; // Colspan 7 ahora
+
         try {
             const response = await fetch('/api/obtener_arboles');
+            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const arboles = await response.json();
-            els.tableBody.innerHTML = '';
+            els.tableBody.innerHTML = ''; // Limpiar tabla
 
-            if (arboles.length === 0) {
-                els.tableBody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-gray-500">No hay árboles registrados.</td></tr>';
+            if (!arboles || arboles.length === 0) {
+                els.tableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-gray-500">No hay árboles registrados.</td></tr>'; // Colspan 7
                 return;
             }
 
+             // Ordenar por fecha más reciente (el backend ya lo hace, pero doble seguro)
+             arboles.sort((a, b) => new Date(b.fecha_siembra) - new Date(a.fecha_siembra));
+
             arboles.forEach(arbol => {
-                const fecha = new Date(arbol.fecha_siembra).toLocaleString('es-ES', {
-                    dateStyle: 'short',
-                    timeStyle: 'short'
-                });
+                let fecha = 'Inválida';
+                try {
+                     fecha = new Date(arbol.fecha_siembra).toLocaleString('es-ES', { dateStyle: 'short', timeStyle: 'short', hour12: true });
+                } catch (e) { console.warn(`Fecha inválida: ${arbol.fecha_siembra}`); }
+                
                 const usuario = arbol.user_email || 'Desconocido';
+
                 els.tableBody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition-colors">
+                    <tr class="hover:bg-gray-50 transition-colors" data-id="${arbol.id}">
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${arbol.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.especie}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.latitud.toFixed(6)}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.longitud.toFixed(6)}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${arbol.especie || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.latitud?.toFixed(6) || 'N/A'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.longitud?.toFixed(6) || 'N/A'}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fecha}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${usuario}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate" title="${usuario}">${usuario}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <button class="btn-delete text-red-600 hover:text-red-800 transition duration-150" data-id="${arbol.id}" title="Eliminar ${arbol.id}">
+                                <ion-icon name="trash-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
+                            </button>
+                            <button class="btn-edit text-blue-600 hover:text-blue-800 transition duration-150 ml-3" data-id="${arbol.id}" title="Editar ${arbol.id}">
+                                <ion-icon name="create-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
+             console.log(`${arboles.length} filas añadidas a la tabla.`);
         } catch (error) {
             console.error("Error al cargar la tabla:", error);
-            els.tableBody.innerHTML = '<tr><td colspan="6" class="text-center p-4 text-red-600">Error al cargar datos.</td></tr>';
+            els.tableBody.innerHTML = '<tr><td colspan="7" class="text-center p-4 text-red-600">Error al cargar datos.</td></tr>'; // Colspan 7
         }
     };
 
-    document.getElementById('form-plantar').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const [especie, latitud, longitud] = [
-            document.getElementById('especie').value,
-            document.getElementById('latitud').value,
-            document.getElementById('longitud').value
-        ];
+     // Carga inicial de datos al mostrar la app
+     const loadAppData = async () => {
+         console.log("Cargando datos iniciales de la aplicación...");
+         // Podríamos mostrar un spinner global aquí
+         try {
+             await Promise.all([
+                 cargarStats(),
+                 loadTableData() // Carga la tabla por defecto
+             ]);
+         } catch(error) {
+              console.error("Error al cargar datos de la app:", error);
+              alert("Error al cargar los datos iniciales de la aplicación.");
+          } finally {
+              // Ocultar spinner global
+          }
+      };
 
-        if (!especie || !latitud || !longitud) {
-            alert('Completa la especie y selecciona un punto.');
+    // --- 6. DIÁLOGO DE CONFIRMACIÓN ---
+    const showConfirmDialog = (message, onConfirm) => {
+         const existingDialog = document.getElementById('confirm-dialog');
+         if (existingDialog) existingDialog.remove(); // Remove previous if any
+
+        const dialog = document.createElement('div');
+        dialog.id = 'confirm-dialog';
+        dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+        dialog.innerHTML = `
+            <div class="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl animate-fade-in-up">
+                <h3 class="text-xl font-bold mb-4 text-gray-900">Confirmar Acción</h3>
+                <p class="text-gray-600 mb-6">${message}</p>
+                <div class="flex gap-3 justify-end">
+                    <button class="btn-cancel px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-medium">Cancelar</button>
+                    <button class="btn-confirm px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium">Confirmar</button> 
+                </div>
+            </div>
+            <style>@keyframes fade-in-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.animate-fade-in-up{animation:fade-in-up .3s ease-out}</style>
+        `;
+        document.body.appendChild(dialog);
+
+         const closeDialog = (callback) => {
+             dialog.remove();
+             document.removeEventListener('keydown', escKeyHandler);
+             if (callback) callback();
+         };
+
+        dialog.querySelector('.btn-cancel').onclick = () => closeDialog();
+        dialog.querySelector('.btn-confirm').onclick = () => closeDialog(onConfirm);
+        dialog.addEventListener('click', (e) => { if (e.target === dialog) closeDialog(); }); // Click outside
+
+         const escKeyHandler = (e) => { if (e.key === 'Escape') closeDialog(); };
+        document.addEventListener('keydown', escKeyHandler);
+    };
+
+    // --- 7. EVENT LISTENERS ---
+    
+    // Auth Forms
+    els.formRegister?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (els.registerErrorEl) els.registerErrorEl.classList.add('hidden');
+        const [email, password, name, birthdate] = ['register-email', 'register-password', 'register-name', 'register-birth-date'].map(id => document.getElementById(id)?.value);
+
+        if (!birthdate) {
+            if (els.registerErrorEl) {
+                 els.registerErrorEl.textContent = "Fecha de nacimiento requerida.";
+                 els.registerErrorEl.classList.remove('hidden');
+            }
             return;
         }
+        
+        // Podríamos añadir validación aquí con FormValidator si lo tuviéramos
+        
+        // Mostrar spinner si tuviéramos LoadingManager
+        try {
+            const response = await fetch('/api/register', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, name, birthdate })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Error desconocido');
 
-        const response = await fetch('/api/plantar_arbol', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                especie,
-                latitud: parseFloat(latitud),
-                longitud: parseFloat(longitud)
-            })
-        });
-
-        if (response.ok) {
-            alert('¡Árbol plantado exitosamente!');
-            document.getElementById('form-plantar').reset();
-            L.marker([latitud, longitud]).addTo(map).bindPopup(`<b>Especie:</b> ${especie}`);
-            if (marcadorTemporal) { marcadorTemporal.remove(); marcadorTemporal = null; }
-            cargarStats();
-            loadTableData();
-        } else {
-            alert('Error al plantar árbol.');
+            alert('¡Registro exitoso! Revisa tu email para confirmar y luego inicia sesión.');
+            els.formRegister?.reset();
+            showLoginForm();
+        } catch (error) {
+            console.error("Error registro:", error);
+            if (els.registerErrorEl) {
+                els.registerErrorEl.textContent = error.message.includes("already registered") ? "Email ya registrado." : `Error: ${error.message}`;
+                els.registerErrorEl.classList.remove('hidden');
+            } else {
+                 alert(`Error al registrar: ${error.message}`);
+             }
+        } finally {
+            // Ocultar spinner
         }
     });
 
-    // --- 7. INICIO DE LA APP ---
+    els.formLogin?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (els.loginErrorEl) els.loginErrorEl.classList.add('hidden');
+        const [email, password] = ['login-email', 'login-password'].map(id => document.getElementById(id)?.value);
+        
+        // Podríamos añadir validación aquí
+        
+        // Mostrar spinner
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Credenciales inválidas');
+            
+            showApp(data.user); // Llama a cargar datos dentro
+        } catch (error) {
+             console.error("Error login:", error);
+             if (els.loginErrorEl) {
+                 els.loginErrorEl.textContent = error.message;
+                 els.loginErrorEl.classList.remove('hidden');
+             } else {
+                 alert(`Error al iniciar sesión: ${error.message}`);
+             }
+        } finally {
+             // Ocultar spinner
+         }
+    });
+
+    els.formForgotPassword?.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         if (els.forgotErrorEl) els.forgotErrorEl.classList.add('hidden');
+         if (els.forgotSuccessEl) els.forgotSuccessEl.classList.add('hidden');
+         const email = document.getElementById('forgot-email')?.value;
+         
+         // Validación básica
+         if (!email || !email.includes('@')) {
+              if(els.forgotErrorEl) {
+                   els.forgotErrorEl.textContent = 'Email inválido.';
+                   els.forgotErrorEl.classList.remove('hidden');
+               }
+              return;
+          }
+
+         // Mostrar spinner
+         try {
+             const response = await fetch('/api/forgot_password', {
+                 method: 'POST', headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ email })
+             });
+             const data = await response.json();
+             if (!response.ok) throw new Error(data.error || 'Error del servidor');
+
+             if (els.forgotSuccessEl) {
+                  els.forgotSuccessEl.textContent = data.message || "Correo enviado.";
+                  els.forgotSuccessEl.classList.remove('hidden');
+              }
+             els.formForgotPassword?.reset();
+         } catch (error) {
+              console.error("Error forgot password:", error);
+              if (els.forgotErrorEl) {
+                  els.forgotErrorEl.textContent = `Error: ${error.message}`;
+                  els.forgotErrorEl.classList.remove('hidden');
+              } else {
+                   alert(`Error al solicitar recuperación: ${error.message}`);
+               }
+         } finally {
+              // Ocultar spinner
+          }
+     });
+
+     els.formUpdatePassword?.addEventListener('submit', async (e) => {
+         e.preventDefault();
+         if (els.updateErrorEl) els.updateErrorEl.classList.add('hidden');
+         const new_password = document.getElementById('update-password')?.value;
+
+         if (!currentAccessToken) {
+              if (els.updateErrorEl) {
+                  els.updateErrorEl.textContent = 'Token inválido o expirado.';
+                  els.updateErrorEl.classList.remove('hidden');
+              }
+             return;
+         }
+         if (!new_password || new_password.length < 6) {
+              if (els.updateErrorEl) {
+                  els.updateErrorEl.textContent = 'Contraseña debe tener al menos 6 caracteres.';
+                  els.updateErrorEl.classList.remove('hidden');
+              }
+              return;
+          }
+
+         // Mostrar spinner
+         try {
+             const response = await fetch('/api/update_password', {
+                 method: 'POST', headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({ access_token: currentAccessToken, new_password })
+             });
+             const data = await response.json();
+             if (!response.ok) throw new Error(data.error || 'Error del servidor');
+
+             alert(data.message || "Contraseña actualizada. Inicia sesión.");
+             currentAccessToken = null;
+             showLoginForm();
+         } catch (error) {
+              console.error("Error update password:", error);
+              if (els.updateErrorEl) {
+                  els.updateErrorEl.textContent = `Error: ${error.message}`;
+                  els.updateErrorEl.classList.remove('hidden');
+              } else {
+                  alert(`Error al actualizar contraseña: ${error.message}`);
+              }
+         } finally {
+              // Ocultar spinner
+          }
+     });
+
+    // Auth Navigation Buttons
+    els.showRegisterBtn?.addEventListener('click', showRegisterForm);
+    els.showLoginBtn?.addEventListener('click', showLoginForm);
+    els.showForgotPasswordBtn?.addEventListener('click', showForgotPasswordForm);
+    
+    // Logout Button (inside dropdown)
+    els.btnLogout?.addEventListener('click', () => {
+         // showConfirmDialog ya está definido arriba
+         showConfirmDialog(
+             '¿Estás seguro de que deseas cerrar sesión?',
+             () => { // onConfirm
+                 currentAccessToken = null; // Clear any recovery token
+                 // Podríamos llamar a una API de logout si existiera
+                 showAuth(); // Muestra pantalla de login y limpia UI
+                 alert('Has cerrado sesión.'); // Usamos alert por ahora
+             }
+         );
+     });
+
+    // Sidebar Page Navigation
+    els.sidebarLinks?.forEach(link => {
+        link.addEventListener('click', () => showPage(link.dataset.page));
+    });
+
+    // Plantar Árbol Form
+    document.getElementById('form-plantar')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const [especie, latitud, longitud] = ['especie', 'latitud', 'longitud'].map(id => document.getElementById(id)?.value);
+
+        if (!especie || !latitud || !longitud) {
+            alert('Completa la especie y selecciona un punto en el mapa.');
+            return;
+        }
+         if (especie.trim().length < 2) {
+             alert('La especie debe tener al menos 2 caracteres.');
+             return;
+         }
+         // Podríamos añadir validación de coordenadas aquí si fuera necesario
+
+        // Mostrar spinner
+        try {
+            const response = await fetch('/api/plantar_arbol', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    especie: especie.trim(),
+                    latitud: parseFloat(latitud),
+                    longitud: parseFloat(longitud),
+                    // user_email y foto_url se añadirán aquí cuando se implemente
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Error del servidor');
+            
+            alert(`¡Árbol "${especie}" plantado exitosamente!`);
+            form.reset(); // Limpiar formulario
+            
+            // Añadir marcador azul al mapa
+             if (map) {
+                 const blueIcon = L.icon({ /* ... icono azul ... */ }); // Definir icono azul si no está global
+                  L.marker([data.latitud, data.longitud], { /* icon: blueIcon */ }) // Usar datos de la respuesta
+                      .addTo(map)
+                      .bindPopup(`<b>Especie:</b> ${data.especie}<br><b>ID:</b> ${data.id}`);
+              }
+            if (marcadorTemporal) { marcadorTemporal.remove(); marcadorTemporal = null; } // Limpiar marcador rojo
+            
+            // Recargar datos
+            await cargarStats();
+            await loadTableData();
+        } catch (error) {
+             console.error("Error al plantar:", error);
+             alert(`Error al plantar árbol: ${error.message}`);
+         } finally {
+             // Ocultar spinner
+         }
+    });
+
+    // Table Action Buttons (Delete/Edit) - Delegación de eventos
+    els.tableBody?.addEventListener('click', async (e) => {
+        const deleteButton = e.target.closest('.btn-delete');
+        const editButton = e.target.closest('.btn-edit');
+
+        if (deleteButton) {
+            const arbolId = deleteButton.dataset.id;
+            const filaArbol = deleteButton.closest('tr');
+            const especie = filaArbol?.cells[1]?.textContent || `ID ${arbolId}`;
+
+            showConfirmDialog(
+                `¿Seguro que quieres eliminar "${especie}" (ID: ${arbolId})?`,
+                async () => { // onConfirm
+                    // Mostrar spinner
+                    try {
+                        const response = await fetch(`/api/eliminar_arbol/${arbolId}`, { method: 'DELETE' });
+                        const result = await response.json();
+                        if (!response.ok) throw new Error(result.error || 'Error del servidor');
+                        
+                        alert(result.message || 'Árbol eliminado.');
+                        await loadTableData(); // Recargar tabla
+                        await cargarStats(); // Recargar stats
+                        // Falta eliminar marcador del mapa
+                    } catch (error) {
+                         console.error("Error al eliminar:", error);
+                         alert(`Error al eliminar: ${error.message}`);
+                     } finally {
+                         // Ocultar spinner
+                     }
+                }
+            );
+        } else if (editButton) {
+             const arbolId = editButton.dataset.id;
+             alert(`Editar árbol ID ${arbolId} - Próximamente...`);
+             // Aquí se abriría el modal de edición
+         }
+    });
+
+    // --- 8. INICIO DE LA APP ---
     const checkUrlForToken = () => {
         const hash = window.location.hash.substring(1);
         if (hash) {
@@ -484,17 +633,21 @@ Contacta: soporte@reforestamanabi.ec`);
             const accessToken = params.get('access_token');
             const type = params.get('type');
             
+            // Limpiar hash de la URL
+             window.history.replaceState(null, '', window.location.pathname + window.location.search);
+
             if (type === 'recovery' && accessToken) {
                 currentAccessToken = accessToken;
-                showUpdatePasswordForm();
+                 showAuth(); // Asegurar que se muestra el contenedor auth
+                showUpdatePasswordForm(); // Mostrar el form específico
             } else {
-                window.history.pushState("", document.title, window.location.pathname + window.location.search);
-                showAuth();
-            }
+                 showAuth(); // Hash inválido o no de recuperación, ir a login
+             }
         } else {
-            showAuth();
+            showAuth(); // Sin hash, mostrar login
         }
     };
 
-    checkUrlForToken();
-});
+    checkUrlForToken(); // Verificar token al cargar la página
+
+}); // Fin DOMContentLoaded
