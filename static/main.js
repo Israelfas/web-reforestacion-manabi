@@ -633,7 +633,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (pageId === 'page-charts') {
                 setTimeout(() => {
-                    if (typeofif (typeof Chart !== 'undefined')) {
+                    
+                    if (typeof Chart !== 'undefined') {
                         loadCharts();
                     } else {
                         console.error('Chart.js no está cargado');
