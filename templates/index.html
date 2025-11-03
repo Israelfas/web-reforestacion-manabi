@@ -30,66 +30,649 @@
     <style>
         * { font-family: 'Poppins', sans-serif; }
         
-        /* Dark Mode Styles */
-        :root {
-            --bg-primary: #ffffff;
-            --bg-secondary: #f9fafb;
-            --bg-tertiary: #f3f4f6;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --border-color: #e5e7eb;
-        }
-        [data-theme="dark"] {
-            --bg-primary: #1f2937;
-            --bg-secondary: #111827;
-            --bg-tertiary: #374151;
-            --text-primary: #f9fafb;
-            --text-secondary: #d1d5db;
-            --border-color: #4b5563;
-        }
-        body {
-            background-color: var(--bg-secondary);
-            color: var(--text-primary);
-            transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        .card {
-            background: var(--bg-primary) !important;
-            border-color: var(--border-color) !important;
-        }
-        [data-theme="dark"] .input-styled {
-            background-color: var(--bg-tertiary);
-            border-color: var(--border-color);
-            color: var(--text-primary);
-        }
-        [data-theme="dark"] .input-styled:focus {
-            border-color: #007a33;
-            background-color: var(--bg-primary);
-        }
-        [data-theme="dark"] .user-menu {
-            background-color: var(--bg-primary);
-            border-color: var(--border-color);
-        }
-        [data-theme="dark"] .user-menu-item {
-            color: var(--text-primary);
-        }
-        [data-theme="dark"] .user-menu-item:hover {
-            background-color: var(--bg-tertiary);
-        }
-        [data-theme="dark"] header {
-            background-color: var(--bg-primary);
-            border-color: var(--border-color);
-        }
-        [data-theme="dark"] table thead {
-            background-color: var(--bg-tertiary);
-        }
-        [data-theme="dark"] table tbody {
-            background-color: var(--bg-primary);
-        }
-        [data-theme="dark"] table tbody tr:hover {
-            background-color: var(--bg-tertiary);
-        }
-        /* Fin Dark Mode */
+    /* ============================================
+    SISTEMA DE MODO OSCURO CORREGIDO COMPLETAMENTE
+    Reemplaza las variables CSS existentes en tu index.html
+    ============================================ */
 
+    :root {
+        /* MODO CLARO */
+        --bg-primary: #ffffff;
+        --bg-secondary: #f9fafb;
+        --bg-tertiary: #f3f4f6;
+        --bg-hover: #e5e7eb;
+        --text-primary: #111827;
+        --text-secondary: #6b7280;
+        --text-tertiary: #9ca3af;
+        --border-color: #e5e7eb;
+        --border-hover: #d1d5db;
+        --input-bg: #ffffff;
+        --input-border: #d1d5db;
+        --input-focus-border: #007a33;
+        --input-placeholder: #9ca3af;
+        --link-color: #007a33;
+        --link-hover-color: #005a24;
+        --success-bg: #d1fae5;
+        --success-border: #10b981;
+        --success-text: #065f46;
+        --error-bg: #fee2e2;
+        --error-border: #ef4444;
+        --error-text: #991b1b;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        --sidebar-bg: #1f2937;
+        --sidebar-text: #d1d5db;
+    }
+
+    [data-theme="dark"] {
+        /* MODO OSCURO COMPLETAMENTE CORREGIDO */
+        --bg-primary: #1e293b;      /* Cards, modales, header */
+        --bg-secondary: #0f172a;    /* Fondo principal */
+        --bg-tertiary: #334155;     /* Inputs, hover */
+        --bg-hover: #475569;
+        --text-primary: #f1f5f9;    /* Texto principal - BLANCO BRILLANTE */
+        --text-secondary: #cbd5e1;  /* Texto secundario - GRIS MUY CLARO */
+        --text-tertiary: #94a3b8;
+        --border-color: #475569;    /* Bordes MÁS VISIBLES */
+        --border-hover: #64748b;
+        --input-bg: #1e293b;
+        --input-border: #475569;
+        --input-focus-border: #22c55e;
+        --input-placeholder: #94a3b8;
+        --link-color: #4ade80;
+        --link-hover-color: #22c55e;
+        --success-bg: #14532d;
+        --success-border: #22c55e;
+        --success-text: #86efac;
+        --error-bg: #450a0a;
+        --error-border: #ef4444;
+        --error-text: #fca5a5;
+        --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+        --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
+        --sidebar-bg: #0f172a;      /* Sidebar MÁS OSCURO que el contenido */
+        --sidebar-text: #cbd5e1;
+    }
+
+    /* ============================================
+    APLICACIÓN DE VARIABLES
+    ============================================ */
+
+    body {
+        background-color: var(--bg-secondary);
+        color: var(--text-primary);
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* CONTENEDORES PRINCIPALES */
+    .card {
+        background: var(--bg-primary) !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: var(--shadow-md);
+    }
+
+    header {
+        background-color: var(--bg-primary) !important;
+        border-bottom: 1px solid var(--border-color) !important;
+        box-shadow: var(--shadow-sm);
+    }
+
+    /* SIDEBAR CORREGIDO */
+    aside {
+        background-color: var(--sidebar-bg) !important;
+        border-right: 1px solid var(--border-color);
+    }
+
+    aside nav button {
+        color: var(--sidebar-text) !important;
+        transition: all 0.2s ease;
+    }
+
+    aside nav button:hover {
+        background-color: var(--bg-hover) !important;
+        color: var(--text-primary) !important;
+    }
+
+    aside .text-gray-300 {
+        color: var(--sidebar-text) !important;
+    }
+
+    aside .text-gray-500 {
+        color: var(--text-tertiary) !important;
+    }
+
+    aside .text-gray-600 {
+        color: var(--text-tertiary) !important;
+    }
+
+    /* INPUTS Y FORMULARIOS */
+    .input-styled,
+    input[type="text"],
+    input[type="email"],
+    input[type="password"],
+    input[type="date"],
+    input[type="search"],
+    textarea,
+    select {
+        background: var(--input-bg) !important;
+        border: 1px solid var(--input-border) !important;
+        color: var(--text-primary) !important;
+        transition: all 0.2s ease;
+    }
+
+    .input-styled::placeholder,
+    input::placeholder,
+    textarea::placeholder {
+        color: var(--input-placeholder) !important;
+    }
+
+    .input-styled:focus,
+    input:focus,
+    textarea:focus,
+    select:focus {
+        border-color: var(--input-focus-border) !important;
+        background-color: var(--bg-primary) !important;
+        box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important;
+        outline: none !important;
+    }
+
+    .input-styled[disabled],
+    .input-styled[readonly],
+    input[disabled],
+    input[readonly] {
+        background-color: var(--bg-tertiary) !important;
+        color: var(--text-tertiary) !important;
+        cursor: not-allowed;
+        opacity: 0.7;
+        border-color: var(--border-color) !important;
+    }
+
+    /* SEARCH INPUT DEL HEADER */
+    #header-search,
+    .search-input {
+        background-color: var(--input-bg) !important;
+        border: 1px solid var(--input-border) !important;
+        color: var(--text-primary) !important;
+    }
+
+    #header-search::placeholder {
+        color: var(--input-placeholder) !important;
+    }
+
+    /* TEXTOS */
+    h1, h2, h3, h4, h5, h6 {
+        color: var(--text-primary) !important;
+    }
+
+    p {
+        color: var(--text-secondary) !important;
+    }
+
+    label {
+        color: var(--text-primary) !important;
+        font-weight: 500;
+    }
+
+    /* Clases de Tailwind sobrescritas - MÁS ESPECÍFICAS */
+    .text-gray-900,
+    [class*="text-gray-900"] {
+        color: var(--text-primary) !important;
+    }
+
+    .text-gray-800,
+    [class*="text-gray-800"] {
+        color: var(--text-primary) !important;
+    }
+
+    .text-gray-700,
+    [class*="text-gray-700"] {
+        color: var(--text-secondary) !important;
+    }
+
+    .text-gray-600,
+    [class*="text-gray-600"] {
+        color: var(--text-secondary) !important;
+    }
+
+    .text-gray-500,
+    [class*="text-gray-500"] {
+        color: var(--text-tertiary) !important;
+    }
+
+    .text-gray-400,
+    [class*="text-gray-400"] {
+        color: var(--text-tertiary) !important;
+    }
+
+    .text-gray-300,
+    [class*="text-gray-300"] {
+        color: var(--text-secondary) !important;
+    }
+
+    .bg-gray-50,
+    [class*="bg-gray-50"] {
+        background-color: var(--bg-tertiary) !important;
+    }
+
+    .bg-gray-100,
+    [class*="bg-gray-100"] {
+        background-color: var(--bg-tertiary) !important;
+    }
+
+    .bg-gray-200,
+    [class*="bg-gray-200"] {
+        background-color: var(--bg-hover) !important;
+    }
+
+    .bg-white {
+        background-color: var(--bg-primary) !important;
+    }
+
+    /* ENLACES Y BOTONES */
+    .link {
+        color: var(--link-color) !important;
+        transition: color 0.2s ease;
+    }
+
+    .link:hover {
+        color: var(--link-hover-color) !important;
+    }
+
+    .btn-secondary {
+        background-color: var(--bg-tertiary) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color);
+    }
+
+    .btn-secondary:hover {
+        background-color: var(--bg-hover) !important;
+    }
+
+    /* DROPDOWNS DE USUARIO E IDIOMA - COMPLETAMENTE CORREGIDOS */
+    .user-menu {
+        background-color: var(--bg-primary) !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: var(--shadow-lg);
+    }
+
+    .user-menu-item {
+        color: var(--text-primary) !important;
+    }
+
+    .user-menu-item:hover {
+        background-color: var(--bg-hover) !important;
+    }
+
+    .user-menu-item span,
+    .user-menu-item div {
+        color: var(--text-primary) !important;
+    }
+
+    .user-menu-item .text-xs,
+    .user-menu-item .text-gray-500 {
+        color: var(--text-tertiary) !important;
+    }
+
+    /* Email en dropdown */
+    #user-email-menu {
+        color: var(--text-tertiary) !important;
+    }
+
+    .user-menu-divider {
+        background-color: var(--border-color) !important;
+    }
+
+    /* Fondo del ítem de perfil */
+    .user-menu-item[style*="background"] {
+        background: var(--bg-tertiary) !important;
+    }
+
+    .lang-selector {
+        background: var(--bg-primary) !important;
+        border: 1px solid var(--border-color) !important;
+        color: var(--text-primary) !important;
+    }
+
+    .lang-selector:hover {
+        border-color: var(--link-color) !important;
+        background-color: var(--bg-hover) !important;
+    }
+
+    /* TABLAS COMPLETAMENTE CORREGIDAS */
+    table {
+        border: 1px solid var(--border-color);
+    }
+
+    table thead {
+        background-color: var(--bg-tertiary) !important;
+    }
+
+    table thead th {
+        color: var(--text-primary) !important;
+        font-weight: 600 !important;
+        border-bottom: 2px solid var(--border-color);
+    }
+
+    table tbody {
+        background-color: var(--bg-primary) !important;
+    }
+
+    table tbody tr {
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    table tbody tr:hover {
+        background-color: var(--bg-hover) !important;
+    }
+
+    table tbody td {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Textos específicos dentro de tabla */
+    tbody .text-gray-900 {
+        color: var(--text-primary) !important;
+    }
+
+    tbody .text-gray-600 {
+        color: var(--text-secondary) !important;
+    }
+
+    tbody .text-gray-500 {
+        color: var(--text-tertiary) !important;
+    }
+
+    /* MODALES - COMPLETAMENTE OPTIMIZADOS */
+    .modal {
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    [data-theme="dark"] .modal {
+        background: rgba(0, 0, 0, 0.90);
+    }
+
+    .modal-content {
+        background: var(--bg-primary) !important;
+        color: var(--text-primary) !important;
+        border: 1px solid var(--border-color);
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* Títulos en modales */
+    .modal-content h2,
+    .modal-content h3 {
+        color: var(--text-primary) !important;
+    }
+
+    /* Párrafos y descripciones en modales */
+    .modal-content p {
+        color: var(--text-secondary) !important;
+    }
+
+    /* Contenido de FAQ/Ayuda */
+    .modal-content .border {
+        border-color: var(--border-color) !important;
+    }
+
+    .modal-content .border:hover {
+        background-color: var(--bg-tertiary) !important;
+    }
+
+    /* Sección de contacto en modal de ayuda */
+    .modal-content .bg-green-50 {
+        background-color: rgba(34, 197, 94, 0.1) !important;
+        border-color: var(--link-color) !important;
+    }
+
+    [data-theme="dark"] .modal-content .bg-green-50 p,
+    [data-theme="dark"] .modal-content .bg-green-50 h3 {
+        color: var(--text-primary) !important;
+    }
+
+    [data-theme="dark"] .modal-content .bg-green-50 a {
+        color: var(--link-color) !important;
+    }
+
+    /* Texto verde en dark mode */
+    [data-theme="dark"] .text-green-600,
+    [data-theme="dark"] .text-green-800,
+    [data-theme="dark"] .text-green-900 {
+        color: var(--link-color) !important;
+    }
+
+    /* MENSAJES DE FEEDBACK */
+    .success-message {
+        background-color: var(--success-bg) !important;
+        border: 1px solid var(--success-border) !important;
+        color: var(--success-text) !important;
+    }
+
+    .error-message {
+        background-color: var(--error-bg) !important;
+        border: 1px solid var(--error-border) !important;
+        color: var(--error-text) !important;
+    }
+
+    /* AVATAR */
+    .avatar-upload {
+        background: linear-gradient(135deg, var(--link-color) 0%, var(--link-hover-color) 100%) !important;
+    }
+
+    .user-avatar {
+        background: linear-gradient(135deg, var(--link-color) 0%, var(--link-hover-color) 100%) !important;
+    }
+
+    /* STAT CARDS */
+    .stat-card {
+        box-shadow: var(--shadow-lg);
+    }
+
+    /* FOOTER CORREGIDO */
+    footer {
+        background-color: var(--bg-primary) !important;
+        border-top: 1px solid var(--border-color) !important;
+        color: var(--text-secondary) !important;
+    }
+
+    footer p {
+        color: var(--text-secondary) !important;
+    }
+
+    footer a {
+        color: var(--link-color) !important;
+    }
+
+    footer a:hover {
+        color: var(--link-hover-color) !important;
+    }
+
+    /* ICONOS */
+    ion-icon {
+        color: inherit;
+    }
+
+    .input-icon {
+        color: var(--text-tertiary) !important;
+    }
+
+    .toggle-password {
+        color: var(--text-tertiary) !important;
+    }
+
+    .toggle-password:hover {
+        color: var(--text-secondary) !important;
+    }
+
+    /* BOTÓN DE DARK MODE */
+    #btn-toggle-dark-mode {
+        background-color: var(--bg-tertiary) !important;
+        color: var(--text-primary) !important;
+        border-radius: 8px;
+        padding: 8px;
+        transition: all 0.2s ease;
+    }
+
+    #btn-toggle-dark-mode:hover {
+        background-color: var(--bg-hover) !important;
+        transform: scale(1.05);
+    }
+
+    #btn-toggle-dark-mode ion-icon {
+        color: var(--text-primary) !important;
+    }
+
+    /* FORMULARIO DE AUTH */
+    #auth-container::before {
+        background: rgba(0, 0, 0, 0.75);
+    }
+
+    [data-theme="dark"] #auth-container::before {
+        background: rgba(0, 0, 0, 0.85);
+    }
+
+    #auth-container .bg-white {
+        background-color: var(--bg-primary) !important;
+        border: 1px solid var(--border-color) !important;
+        box-shadow: var(--shadow-lg);
+    }
+
+    #auth-container h1 {
+        color: var(--link-color) !important;
+    }
+
+    #auth-container p {
+        color: var(--text-secondary) !important;
+    }
+
+    #auth-container label {
+        color: var(--text-primary) !important;
+    }
+
+    /* GRÁFICOS */
+    #charts-loading p {
+        color: var(--text-secondary) !important;
+    }
+
+    [data-theme="dark"] canvas {
+        filter: brightness(0.9);
+    }
+
+    /* HELP TEXT */
+    .help-text {
+        color: var(--text-tertiary) !important;
+    }
+
+    .help-text ion-icon {
+        color: var(--link-color) !important;
+    }
+
+    /* BOTONES DE ACCIÓN */
+    .btn-delete {
+        color: #ef4444 !important;
+    }
+
+    .btn-delete:hover {
+        color: #dc2626 !important;
+    }
+
+    .btn-edit {
+        color: var(--link-color) !important;
+    }
+
+    .btn-edit:hover {
+        color: var(--link-hover-color) !important;
+    }
+
+    /* BORDER UTILITIES DE TAILWIND */
+    .border-gray-200,
+    [class*="border-gray-200"] {
+        border-color: var(--border-color) !important;
+    }
+
+    .border-gray-300,
+    [class*="border-gray-300"] {
+        border-color: var(--border-color) !important;
+    }
+
+    .divide-gray-200 > * + * {
+        border-color: var(--border-color) !important;
+    }
+
+    /* ELEMENTOS ESPECÍFICOS ADICIONALES */
+    .sidebar-link span {
+        color: inherit !important;
+    }
+
+    .sidebar-active {
+        background-color: #007a33 !important;
+        color: white !important;
+    }
+
+    [data-theme="dark"] .sidebar-active {
+        background-color: var(--link-color) !important;
+        color: #0f172a !important;
+    }
+
+    /* Hover en búsqueda */
+    .hover\:bg-gray-100:hover {
+        background-color: var(--bg-hover) !important;
+    }
+
+    /* BOTÓN DE CERRAR MODAL */
+    #close-config,
+    #close-help,
+    .modal-content button[id*="close"] {
+        color: var(--text-tertiary) !important;
+    }
+
+    #close-config:hover,
+    #close-help:hover,
+    .modal-content button[id*="close"]:hover {
+        color: var(--text-primary) !important;
+    }
+
+    /* TRANSICIONES */
+    * {
+        transition-property: background-color, color, border-color;
+        transition-duration: 0.3s;
+        transition-timing-function: ease;
+    }
+
+    /* OVERRIDE ESPECÍFICOS PARA DARK MODE */
+    [data-theme="dark"] .bg-gray-900 {
+        background-color: var(--bg-secondary) !important;
+    }
+
+    [data-theme="dark"] .text-white {
+        color: var(--text-primary) !important;
+    }
+
+    /* Elementos con fondo verde que deben verse bien en dark mode */
+    [data-theme="dark"] .bg-green-100 {
+        background-color: rgba(34, 197, 94, 0.1) !important;
+    }
+
+    [data-theme="dark"] .bg-blue-100 {
+        background-color: rgba(59, 130, 246, 0.1) !important;
+    }
+
+    [data-theme="dark"] .bg-purple-100 {
+        background-color: rgba(168, 85, 247, 0.1) !important;
+    }
+
+    /* Iconos de colores en dark mode */
+    [data-theme="dark"] .text-green-600 ion-icon {
+        color: var(--link-color) !important;
+    }
+
+    [data-theme="dark"] .text-blue-600 {
+        color: #60a5fa !important;
+    }
+
+    [data-theme="dark"] .text-purple-600 {
+        color: #c084fc !important;
+    }
         #map { height: 500px; }
         .hidden { display: none; }
         .sidebar-active { background-color: #007a33; color: white; border-left: 4px solid #a4d65e; }
