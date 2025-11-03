@@ -221,6 +221,106 @@
         #btn-refresh-charts:hover ion-icon {
             animation: spin 0.6s ease-in-out;
         }
+
+        /* --- INICIO: NUEVOS ESTILOS PARA MODALES --- */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1020;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .modal.active {
+            display: flex;
+        }
+        .modal-content {
+            background: var(--bg-primary); /* Adaptado para Dark Mode */
+            border-radius: 1rem;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: slideUp 0.3s ease-out;
+            color: var(--text-primary); /* Adaptado para Dark Mode */
+        }
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .avatar-upload {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007a33 0%, #00a043 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 48px;
+            font-weight: 700;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        .avatar-upload:hover {
+            transform: scale(1.05);
+        }
+        .avatar-upload img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .avatar-upload-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .avatar-upload:hover .avatar-upload-overlay {
+            opacity: 1;
+        }
+        
+        .success-message {
+            background-color: #d1fae5;
+            border: 1px solid #10b981;
+            color: #065f46;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .success-message.show {
+            display: block;
+        }
+        .error-message {
+            background-color: #fee2e2;
+            border: 1px solid #ef4444;
+            color: #991b1b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .error-message.show {
+            display: block;
+        }
+         /* --- FIN: NUEVOS ESTILOS PARA MODALES --- */
+
     </style>
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased"> 
@@ -371,353 +471,353 @@
     </div>
 
     <div id="app-container" class="hidden">
-        <header class="bg-white shadow-md p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-10 h-16 border-b border-gray-200">
+        <header class="bg-white shadow-md p-4 flex justify-between items-center fixed top-0 left-0 right-0 z-[1010] h-16 border-b border-gray-200">
              <div class="flex items-center space-x-3">
-                 <div class="w-10 h-10 bg-repsol-green rounded-lg flex items-center justify-center">
-                     <span class="text-2xl">🌳</span>
-                 </div>
-                 <span class="text-xl font-bold text-repsol-green">Reforesta Manabí</span>
+                  <div class="w-10 h-10 bg-repsol-green rounded-lg flex items-center justify-center">
+                       <span class="text-2xl">🌳</span>
+                  </div>
+                  <span class="text-xl font-bold text-repsol-green">Reforesta Manabí</span>
              </div>
              <div class="flex items-center space-x-4">
-                 <div class="relative flex-1 max-w-md mx-4">
-                     <input type="text" id="header-search" placeholder="Buscar..." class="search-input w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none">
-                     <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></ion-icon>
-                 </div>
-                 <button id="btn-toggle-dark-mode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Cambiar tema">
-                    <ion-icon name="moon-outline" id="icon-dark-mode" class="text-2xl text-gray-700 dark:text-gray-300"></ion-icon>
-                 </button>
-                 <div class="user-dropdown">
-                     <div class="lang-selector" id="lang-selector">
-                         <ion-icon name="globe-outline" class="text-lg"></ion-icon>
-                         <span id="current-lang">Español</span>
-                         <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
-                     </div>
-                     <div class="user-menu" id="lang-menu" style="min-width: 180px;">
-                         <div class="user-menu-item" data-lang="es">
-                             <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green" id="check-es"></ion-icon>
-                             <span>Español</span>
-                         </div>
-                         <div class="user-menu-item" data-lang="en">
-                             <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green hidden" id="check-en"></ion-icon>
-                             <span>English</span>
-                         </div>
-                     </div>
-                 </div>
-                 <div class="user-dropdown">
-                     <div class="user-avatar" id="user-avatar">
-                         <span id="user-initials">U</span>
-                     </div>
-                     <div class="user-menu" id="user-menu">
-                         <div class="user-menu-item" style="cursor: default; background: #f9fafb;">
-                             <ion-icon name="person-circle-outline" class="text-xl mr-3 text-repsol-green"></ion-icon>
-                             <div>
-                                 <div class="font-semibold text-gray-900" id="user-name-menu">Usuario</div>
-                                 <div class="text-xs text-gray-500" id="user-email-menu">usuario@ejemplo.com</div>
-                             </div>
-                         </div>
-                         <div class="user-menu-divider"></div>
-                         <div class="user-menu-item" id="btn-config">
-                             <ion-icon name="settings-outline" class="text-lg mr-3"></ion-icon>
-                             <span>Configuración</span>
-                         </div>
-                         <div class="user-menu-item" id="btn-help">
-                             <ion-icon name="help-circle-outline" class="text-lg mr-3"></ion-icon>
-                             <span>Ayuda</span>
-                         </div>
-                         <div class="user-menu-divider"></div>
-                         <div class="user-menu-item danger" id="btn-logout">
-                             <ion-icon name="log-out-outline" class="text-lg mr-3"></ion-icon>
-                             <span>Cerrar Sesión</span>
-                         </div>
-                     </div>
-                 </div>
+                  <div class="relative flex-1 max-w-md mx-4">
+                       <input type="text" id="header-search" placeholder="Buscar..." class="search-input w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none">
+                       <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></ion-icon>
+                  </div>
+                  <button id="btn-toggle-dark-mode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Cambiar tema">
+                     <ion-icon name="moon-outline" id="icon-dark-mode" class="text-2xl text-gray-700 dark:text-gray-300"></ion-icon>
+                  </button>
+                  <div class="user-dropdown">
+                       <div class="lang-selector" id="lang-selector">
+                            <ion-icon name="globe-outline" class="text-lg"></ion-icon>
+                            <span id="current-lang">Español</span>
+                            <ion-icon name="chevron-down-outline" class="text-sm"></ion-icon>
+                       </div>
+                       <div class="user-menu" id="lang-menu" style="min-width: 180px;">
+                            <div class="user-menu-item" data-lang="es">
+                                 <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green" id="check-es"></ion-icon>
+                                 <span>Español</span>
+                            </div>
+                            <div class="user-menu-item" data-lang="en">
+                                 <ion-icon name="checkmark-outline" class="text-lg mr-3 text-repsol-green hidden" id="check-en"></ion-icon>
+                                 <span>English</span>
+                            </div>
+                       </div>
+                  </div>
+                  <div class="user-dropdown">
+                       <div class="user-avatar" id="user-avatar">
+                            <span id="user-initials">U</span>
+                       </div>
+                       <div class="user-menu" id="user-menu">
+                            <div class="user-menu-item" style="cursor: default; background: #f9fafb;">
+                                 <ion-icon name="person-circle-outline" class="text-xl mr-3 text-repsol-green"></ion-icon>
+                                 <div>
+                                      <div class="font-semibold text-gray-900" id="user-name-menu">Usuario</div>
+                                      <div class="text-xs text-gray-500" id="user-email-menu">usuario@ejemplo.com</div>
+                                 </div>
+                            </div>
+                            <div class="user-menu-divider"></div>
+                            <div class="user-menu-item" id="btn-config">
+                                 <ion-icon name="settings-outline" class="text-lg mr-3"></ion-icon>
+                                 <span>Configuración</span>
+                            </div>
+                            <div class="user-menu-item" id="btn-help">
+                                 <ion-icon name="help-circle-outline" class="text-lg mr-3"></ion-icon>
+                                 <span>Ayuda</span>
+                            </div>
+                            <div class="user-menu-divider"></div>
+                            <div class="user-menu-item danger" id="btn-logout">
+                                 <ion-icon name="log-out-outline" class="text-lg mr-3"></ion-icon>
+                                 <span>Cerrar Sesión</span>
+                            </div>
+                       </div>
+                  </div>
              </div>
-          </header>
+           </header>
         
         <div class="flex pt-16">
             <aside class="w-64 bg-gray-900 text-gray-300 min-h-[calc(100vh-64px)] p-4 flex flex-col shadow-xl">
                  <nav class="flex-1 space-y-1">
-                     <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
-                         <ion-icon name="map-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                         <span class="relative z-10 font-medium">Registrar Siembra</span>
-                     </button>
-                     <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
-                         <ion-icon name="list-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                         <span class="relative z-10 font-medium">Ver Registros</span>
-                     </button>
-                     <button data-page="page-charts" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
-                        <ion-icon name="stats-chart-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                        <span class="relative z-10 font-medium">Estadísticas</span>
-                     </button>
+                      <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
+                           <ion-icon name="map-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                           <span class="relative z-10 font-medium">Registrar Siembra</span>
+                      </button>
+                      <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
+                           <ion-icon name="list-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                           <span class="relative z-10 font-medium">Ver Registros</span>
+                      </button>
+                      <button data-page="page-charts" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
+                         <ion-icon name="stats-chart-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                         <span class="relative z-10 font-medium">Estadísticas</span>
+                      </button>
                  </nav>
                  <div class="mt-auto pt-4 border-t border-gray-800">
-                     <p class="text-xs text-gray-500 text-center">Versión 1.2</p>
-                     <p class="text-xs text-gray-600 text-center mt-1">© 2025 Reforesta Manabí</p>
+                      <p class="text-xs text-gray-500 text-center">Versión 1.2</p>
+                      <p class="text-xs text-gray-600 text-center mt-1">© 2025 Reforesta Manabí</p>
                  </div>
               </aside>
 
             <main class="flex-1 p-8 overflow-y-auto bg-gray-50">
                 <div id="page-map" class="page-content">
                     <div class="mb-8">
-                        <h2 class="text-4xl font-bold mb-2 text-gray-900">
-                            ¡Hola, <span id="welcome-user-name" class="text-repsol-green">Usuario</span>! 👋
-                        </h2>
-                        <p class="text-gray-600 text-lg">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
+                         <h2 class="text-4xl font-bold mb-2 text-gray-900">
+                              ¡Hola, <span id="welcome-user-name" class="text-repsol-green">Usuario</span>! 👋
+                         </h2>
+                         <p class="text-gray-600 text-lg">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                        <div class="stat-card">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="stat-number" id="stat-arboles">0</div>
-                                    <div class="stat-label">Árboles Plantados</div>
-                                </div>
-                                <ion-icon name="leaf" class="text-6xl opacity-20"></ion-icon>
-                            </div>
-                        </div>
-                        <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
-                            <div class="flex items-center justify-between">
-                                <div>
-                                    <div class="stat-number" id="stat-horas">0.0</div>
-                                    <div class="stat-label">Horas de Trabajo Estimadas</div>
-                                </div>
-                                <ion-icon name="time" class="text-6xl opacity-20"></ion-icon>
-                                </div>
-                        </div>
+                         <div class="stat-card">
+                              <div class="flex items-center justify-between">
+                                   <div>
+                                        <div class="stat-number" id="stat-arboles">0</div>
+                                        <div class="stat-label">Árboles Plantados</div>
+                                   </div>
+                                   <ion-icon name="leaf" class="text-6xl opacity-20"></ion-icon>
+                              </div>
+                         </div>
+                         <div class="stat-card" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                              <div class="flex items-center justify-between">
+                                   <div>
+                                        <div class="stat-number" id="stat-horas">0.0</div>
+                                        <div class="stat-label">Horas de Trabajo Estimadas</div>
+                                   </div>
+                                   <ion-icon name="time" class="text-6xl opacity-20"></ion-icon>
+                                   </div>
+                         </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div class="lg:col-span-2">
-                            <div class="card p-6">
-                                <h3 class="text-xl font-semibold mb-4 text-gray-900 flex items-center">
-                                    <ion-icon name="location" class="text-repsol-green text-2xl mr-2"></ion-icon>
-                                    Mapa Interactivo de Siembra
-                                </h3>
-                                <div id="map" class="w-full rounded-lg shadow-inner border border-gray-200"></div>
-                            </div>
-                        </div>
-                        
-                        <div class="lg:col-span-1">
-                            <div class="card p-6">
-                                <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
-                                    <ion-icon name="add-circle" class="text-repsol-green text-2xl mr-2"></ion-icon>
-                                    Formulario de Siembra
-                                </h3>
-                                <form id="form-plantar" class="space-y-5">
-                                    <div>
-                                        <label for="especie" class="block text-sm font-semibold text-gray-700 mb-2">Especie del Árbol</label>
-                                        <input type="text" id="especie" name="especie" required class="input-styled" placeholder="Ej: Guayacán, Ceibo">
-                                    </div>
-                                    
-                                    <div>
-                                        <label for="foto" class="block text-sm font-semibold text-gray-700 mb-2">Foto del Árbol (Opcional)</label>
-                                        <p class="help-text mb-3">
-                                            <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
-                                            Formatos: JPG, PNG, WEBP (máx. 5MB)
-                                        </p>
-                                        <div class="relative">
-                                            <input type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
-                                            <button type="button" id="btn-select-foto" class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-colors flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer">
-                                                <ion-icon name="camera-outline" class="text-2xl"></ion-icon>
-                                                <span>Seleccionar Foto</span>
-                                            </button>
+                         <div class="lg:col-span-2">
+                              <div class="card p-6">
+                                   <h3 class="text-xl font-semibold mb-4 text-gray-900 flex items-center">
+                                        <ion-icon name="location" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                        Mapa Interactivo de Siembra
+                                   </h3>
+                                   <div id="map" class="w-full rounded-lg shadow-inner border border-gray-200"></div>
+                              </div>
+                         </div>
+                         
+                         <div class="lg:col-span-1">
+                              <div class="card p-6">
+                                   <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
+                                        <ion-icon name="add-circle" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                        Formulario de Siembra
+                                   </h3>
+                                   <form id="form-plantar" class="space-y-5">
+                                        <div>
+                                             <label for="especie" class="block text-sm font-semibold text-gray-700 mb-2">Especie del Árbol</label>
+                                             <input type="text" id="especie" name="especie" required class="input-styled" placeholder="Ej: Guayacán, Ceibo">
                                         </div>
-                                        <div id="foto-preview-container" class="hidden mt-3">
-                                            <div class="relative rounded-lg overflow-hidden border-2 border-gray-200">
-                                                <img id="foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
-                                                <button type="button" id="btn-remove-foto" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-lg">
-                                                    <ion-icon name="close-outline" class="text-xl"></ion-icon>
-                                                </button>
-                                            </div>
-                                            <p id="foto-info" class="text-xs text-gray-500 mt-2 text-center"></p>
+                                        
+                                        <div>
+                                             <label for="foto" class="block text-sm font-semibold text-gray-700 mb-2">Foto del Árbol (Opcional)</label>
+                                             <p class="help-text mb-3">
+                                                  <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
+                                                  Formatos: JPG, PNG, WEBP (máx. 5MB)
+                                             </p>
+                                             <div class="relative">
+                                                  <input type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
+                                                  <button type="button" id="btn-select-foto" class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-colors flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer">
+                                                       <ion-icon name="camera-outline" class="text-2xl"></ion-icon>
+                                                       <span>Seleccionar Foto</span>
+                                                  </button>
+                                             </div>
+                                             <div id="foto-preview-container" class="hidden mt-3">
+                                                  <div class="relative rounded-lg overflow-hidden border-2 border-gray-200">
+                                                       <img id="foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
+                                                       <button type="button" id="btn-remove-foto" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-lg">
+                                                            <ion-icon name="close-outline" class="text-xl"></ion-icon>
+                                                       </button>
+                                                  </div>
+                                                  <p id="foto-info" class="text-xs text-gray-500 mt-2 text-center"></p>
+                                             </div>
+                                             <div id="upload-progress" class="hidden mt-3">
+                                                  <div class="flex items-center space-x-2 text-sm text-repsol-green">
+                                                       <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
+                                                       <span>Subiendo foto...</span>
+                                                  </div>
+                                             </div>
                                         </div>
-                                        <div id="upload-progress" class="hidden mt-3">
-                                            <div class="flex items-center space-x-2 text-sm text-repsol-green">
-                                                <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
-                                                <span>Subiendo foto...</span>
-                                            </div>
+                                        
+                                        <div>
+                                             <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación GPS</label>
+                                             <p class="help-text mb-3">
+                                                  <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
+                                                  Haz clic en el mapa para seleccionar la ubicación
+                                             </p>
+                                             <div class="space-y-3">
+                                                  <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="input-styled">
+                                                  <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
+                                             </div>
                                         </div>
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación GPS</label>
-                                        <p class="help-text mb-3">
-                                            <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
-                                            Haz clic en el mapa para seleccionar la ubicación
-                                        </p>
-                                        <div class="space-y-3">
-                                            <input type="text" id="latitud" name="latitud" placeholder="Latitud" readonly class="input-styled">
-                                            <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
-                                        </div>
-                                    </div>
-                                    <button type="submit" class="btn btn-primary mt-6">
-                                        <ion-icon name="leaf-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
-                                        Plantar Árbol
-                                    </button>
-                                </form>
-                            </div>
-                        </div>
+                                        <button type="submit" class="btn btn-primary mt-6">
+                                             <ion-icon name="leaf-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
+                                             Plantar Árbol
+                                        </button>
+                                   </form>
+                              </div>
+                         </div>
                     </div>
                 </div>
 
                 <div id="page-table" class="page-content hidden">
                     <div class="mb-6">
-                        <h2 class="text-4xl font-bold mb-2 text-gray-900">Registros de Siembra</h2>
-                        <p class="text-gray-600">Historial completo de todos los árboles plantados</p>
+                         <h2 class="text-4xl font-bold mb-2 text-gray-900">Registros de Siembra</h2>
+                         <p class="text-gray-600">Historial completo de todos los árboles plantados</p>
                     </div>
                     <div class="card overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Especie</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Foto</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Latitud</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Longitud</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fecha Siembra</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Plantado Por</th>
-                                        <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Acciones</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
-                            </table>
-                        </div>
+                         <div class="overflow-x-auto">
+                              <table class="min-w-full divide-y divide-gray-200">
+                                   <thead class="bg-gray-50">
+                                        <tr>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">ID</th>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Especie</th>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Foto</th>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Latitud</th>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Longitud</th>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Fecha Siembra</th>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Plantado Por</th>
+                                             <th class="px-6 py-4 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">Acciones</th>
+                                        </tr>
+                                   </thead>
+                                   <tbody id="table-body" class="bg-white divide-y divide-gray-200"></tbody>
+                              </table>
+                         </div>
                     </div>
                 </div>
 
                 <div id="page-charts" class="page-content hidden">
                     <div class="mb-8">
-                        <h2 class="text-4xl font-bold mb-2 text-gray-900 flex items-center">
-                            <ion-icon name="stats-chart-outline" class="text-repsol-green mr-3"></ion-icon>
-                            Estadísticas y Análisis
-                        </h2>
-                        <p class="text-gray-600 text-lg">Visualiza el progreso de reforestación con gráficos interactivos</p>
+                         <h2 class="text-4xl font-bold mb-2 text-gray-900 flex items-center">
+                              <ion-icon name="stats-chart-outline" class="text-repsol-green mr-3"></ion-icon>
+                              Estadísticas y Análisis
+                         </h2>
+                         <p class="text-gray-600 text-lg">Visualiza el progreso de reforestación con gráficos interactivos</p>
                     </div>
                 
                     <div id="charts-loading" class="flex items-center justify-center py-20">
-                        <div class="text-center">
-                            <div class="animate-spin rounded-full h-16 w-16 border-4 border-repsol-green border-t-transparent mx-auto mb-4"></div>
-                            <p class="text-gray-600 font-medium">Cargando estadísticas...</p>
-                        </div>
+                         <div class="text-center">
+                              <div class="animate-spin rounded-full h-16 w-16 border-4 border-repsol-green border-t-transparent mx-auto mb-4"></div>
+                              <p class="text-gray-600 font-medium">Cargando estadísticas...</p>
+                         </div>
                     </div>
                 
                     <div id="charts-container" class="hidden space-y-8">
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                            <div class="card p-6">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-gray-500 text-sm font-medium mb-1">Total Árboles</p>
-                                        <p class="text-3xl font-bold text-gray-900" id="chart-total-trees">0</p>
-                                    </div>
-                                    <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                                        <ion-icon name="leaf" class="text-2xl text-green-600"></ion-icon>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card p-6">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-gray-500 text-sm font-medium mb-1">Especies Únicas</p>
-                                        <p class="text-3xl font-bold text-gray-900" id="chart-unique-species">0</p>
-                                    </div>
-                                    <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                                        <ion-icon name="color-filter" class="text-2xl text-blue-600"></ion-icon>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card p-6">
-                                <div class="flex items-center justify-between">
-                                    <div>
-                                        <p class="text-gray-500 text-sm font-medium mb-1">Mes Más Activo</p>
-                                        <p class="text-xl font-bold text-gray-900" id="chart-most-active-month">-</p>
-                                    </div>
-                                    <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-                                        <ion-icon name="calendar" class="text-2xl text-purple-600"></ion-icon>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                              <div class="card p-6">
+                                   <div class="flex items-center justify-between">
+                                        <div>
+                                             <p class="text-gray-500 text-sm font-medium mb-1">Total Árboles</p>
+                                             <p class="text-3xl font-bold text-gray-900" id="chart-total-trees">0</p>
+                                        </div>
+                                        <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                                             <ion-icon name="leaf" class="text-2xl text-green-600"></ion-icon>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="card p-6">
+                                   <div class="flex items-center justify-between">
+                                        <div>
+                                             <p class="text-gray-500 text-sm font-medium mb-1">Especies Únicas</p>
+                                             <p class="text-3xl font-bold text-gray-900" id="chart-unique-species">0</p>
+                                        </div>
+                                        <div class="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                                             <ion-icon name="color-filter" class="text-2xl text-blue-600"></ion-icon>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="card p-6">
+                                   <div class="flex items-center justify-between">
+                                        <div>
+                                             <p class="text-gray-500 text-sm font-medium mb-1">Mes Más Activo</p>
+                                             <p class="text-xl font-bold text-gray-900" id="chart-most-active-month">-</p>
+                                        </div>
+                                        <div class="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                                             <ion-icon name="calendar" class="text-2xl text-purple-600"></ion-icon>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
                 
-                        <div class="card p-6">
-                            <div class="mb-6">
-                                <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
-                                    <ion-icon name="trending-up-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
-                                    Evolución de Siembra por Mes
-                                </h3>
-                                <p class="text-sm text-gray-600">Cantidad de árboles plantados cada mes</p>
-                            </div>
-                            <div class="relative" style="height: 350px;">
-                                <canvas id="chart-arboles-mes"></canvas>
-                            </div>
-                        </div>
+                         <div class="card p-6">
+                              <div class="mb-6">
+                                   <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
+                                        <ion-icon name="trending-up-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                        Evolución de Siembra por Mes
+                                   </h3>
+                                   <p class="text-sm text-gray-600">Cantidad de árboles plantados cada mes</p>
+                              </div>
+                              <div class="relative" style="height: 350px;">
+                                   <canvas id="chart-arboles-mes"></canvas>
+                              </div>
+                         </div>
                 
-                        <div class="card p-6">
-                            <div class="mb-6">
-                                <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
-                                    <ion-icon name="bar-chart-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
-                                    Top 10 Especies Más Plantadas
-                                </h3>
-                                <p class="text-sm text-gray-600">Especies con mayor cantidad de árboles registrados</p>
-                            </div>
-                            <div class="relative" style="height: 400px;">
-                                <canvas id="chart-top-especies"></canvas>
-                            </div>
-                        </div>
+                         <div class="card p-6">
+                              <div class="mb-6">
+                                   <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
+                                        <ion-icon name="bar-chart-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                        Top 10 Especies Más Plantadas
+                                   </h3>
+                                   <p class="text-sm text-gray-600">Especies con mayor cantidad de árboles registrados</p>
+                              </div>
+                              <div class="relative" style="height: 400px;">
+                                   <canvas id="chart-top-especies"></canvas>
+                              </div>
+                         </div>
                 
-                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                            <div class="card p-6">
-                                <div class="mb-6">
-                                    <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
-                                        <ion-icon name="pie-chart-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
-                                        Distribución de Especies (Top 5)
-                                    </h3>
-                                    <p class="text-sm text-gray-600">Proporción de las especies más comunes</p>
-                                </div>
-                                <div class="relative" style="height: 300px;">
-                                    <canvas id="chart-especies-dona"></canvas>
-                                </div>
-                            </div>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                              <div class="card p-6">
+                                   <div class="mb-6">
+                                        <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
+                                             <ion-icon name="pie-chart-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                             Distribución de Especies (Top 5)
+                                        </h3>
+                                        <p class="text-sm text-gray-600">Proporción de las especies más comunes</p>
+                                   </div>
+                                   <div class="relative" style="height: 300px;">
+                                        <canvas id="chart-especies-dona"></canvas>
+                                   </div>
+                              </div>
                 
-                            <div class="card p-6">
-                                <div class="mb-6">
-                                    <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
-                                        <ion-icon name="information-circle-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
-                                        Datos Destacados
-                                    </h3>
-                                </div>
-                                <div class="space-y-4">
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                        <span class="text-gray-700 font-medium">Promedio por mes</span>
-                                        <span class="text-2xl font-bold text-repsol-green" id="stat-promedio-mes">0</span>
-                                    </div>
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                        <span class="text-gray-700 font-medium">Especie más popular</span>
-                                        <span class="text-lg font-bold text-blue-600" id="stat-top-especie">-</span>
-                                    </div>
-                                    <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                                        <span class="text-gray-700 font-medium">Último registro</span>
-                                        <span class="text-sm font-medium text-gray-600" id="stat-ultimo-registro">-</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                              <div class="card p-6">
+                                   <div class="mb-6">
+                                        <h3 class="text-xl font-semibold text-gray-900 flex items-center mb-2">
+                                             <ion-icon name="information-circle-outline" class="text-repsol-green text-2xl mr-2"></ion-icon>
+                                             Datos Destacados
+                                        </h3>
+                                   </div>
+                                   <div class="space-y-4">
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                             <span class="text-gray-700 font-medium">Promedio por mes</span>
+                                             <span class="text-2xl font-bold text-repsol-green" id="stat-promedio-mes">0</span>
+                                        </div>
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                             <span class="text-gray-700 font-medium">Especie más popular</span>
+                                             <span class="text-lg font-bold text-blue-600" id="stat-top-especie">-</span>
+                                        </div>
+                                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                             <span class="text-gray-700 font-medium">Último registro</span>
+                                             <span class="text-sm font-medium text-gray-600" id="stat-ultimo-registro">-</span>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
                 
-                        <div class="flex justify-center mt-8">
-                            <button id="btn-refresh-charts" class="px-6 py-3 bg-repsol-green text-white rounded-lg hover:bg-opacity-90 transition-all font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl">
-                                <ion-icon name="refresh-outline" class="text-xl"></ion-icon>
-                                Actualizar Gráficos
-                            </button>
-                        </div>
+                         <div class="flex justify-center mt-8">
+                              <button id="btn-refresh-charts" class="px-6 py-3 bg-repsol-green text-white rounded-lg hover:bg-opacity-90 transition-all font-semibold flex items-center gap-2 shadow-lg hover:shadow-xl">
+                                   <ion-icon name="refresh-outline" class="text-xl"></ion-icon>
+                                   Actualizar Gráficos
+                              </button>
+                         </div>
                     </div>
                 
                     <div id="charts-error" class="hidden">
-                        <div class="card p-8 text-center">
-                            <ion-icon name="alert-circle-outline" class="text-6xl text-red-500 mb-4"></ion-icon>
-                            <h3 class="text-xl font-bold text-gray-900 mb-2">Error al Cargar Estadísticas</h3>
-                            <p class="text-gray-600 mb-6">No se pudieron cargar los datos de los gráficos.</p>
-                            <button id="btn-retry-charts" class="px-6 py-3 bg-repsol-green text-white rounded-lg hover:bg-opacity-90 transition font-semibold">
-                                Intentar Nuevamente
-                            </button>
-                        </div>
+                         <div class="card p-8 text-center">
+                              <ion-icon name="alert-circle-outline" class="text-6xl text-red-500 mb-4"></ion-icon>
+                              <h3 class="text-xl font-bold text-gray-900 mb-2">Error al Cargar Estadísticas</h3>
+                              <p class="text-gray-600 mb-6">No se pudieron cargar los datos de los gráficos.</p>
+                              <button id="btn-retry-charts" class="px-6 py-3 bg-repsol-green text-white rounded-lg hover:bg-opacity-90 transition font-semibold">
+                                   Intentar Nuevamente
+                              </button>
+                         </div>
                     </div>
                 </div>
 
@@ -727,20 +827,23 @@
         <footer class="w-full bg-white text-gray-600 text-center py-6 text-sm border-t border-gray-200 shadow-inner">
              <p class="font-medium">Plataforma Reforesta Manabí © 2025</p>
              <p class="mt-2">
-                 <a href="#" class="hover:text-repsol-green hover:underline">Términos de Servicio</a>
-                 <span class="mx-2">•</span>
-                 <a href="#" class="hover:text-repsol-green hover:underline">Política de Privacidad</a>
-                 <span class="mx-2">•</span>
-                 <a href="#" class="hover:text-repsol-green hover:underline">Contacto</a>
+                  <a href="#" class="hover:text-repsol-green hover:underline">Términos de Servicio</a>
+                  <span class="mx-2">•</span>
+                  <a href="#" class="hover:text-repsol-green hover:underline">Política de Privacidad</a>
+                  <span class="mx-2">•</span>
+                  <a href="#" class="hover:text-repsol-green hover:underline">Contacto</a>
              </p>
-          </footer>
+           </footer>
     </div>
     
     <script>
-        // Toggle password visibility
+        // Toggle password visibility (Este script maneja TODOS los toggles)
         document.querySelectorAll('.toggle-password').forEach(icon => {
             icon.addEventListener('click', function() {
-                const input = this.parentElement.querySelector('input');
+                // Busca el input dentro del .password-wrapper más cercano
+                const input = this.closest('.password-wrapper')?.querySelector('input');
+                if (!input) return;
+
                 const isPassword = input.type === 'password';
                 input.type = isPassword ? 'text' : 'password';
                 this.name = isPassword ? 'eye-off-outline' : 'eye-outline';
@@ -752,87 +855,280 @@
     <div id="modal-edit-tree" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
         <div class="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl animate-fade-in-up max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-6">
-                <h3 class="text-2xl font-bold text-gray-900 flex items-center">
-                    <ion-icon name="create-outline" class="text-repsol-green text-3xl mr-3"></ion-icon>
-                    Editar Árbol
-                </h3>
-                <button id="btn-close-edit-modal" class="text-gray-400 hover:text-gray-600 transition">
+                 <h3 class="text-2xl font-bold text-gray-900 flex items-center">
+                      <ion-icon name="create-outline" class="text-repsol-green text-3xl mr-3"></ion-icon>
+                      Editar Árbol
+                 </h3>
+                 <button id="btn-close-edit-modal" class="text-gray-400 hover:text-gray-600 transition">
+                      <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                 </button>
+            </div>
+            <form id="form-edit-tree" class="space-y-5">
+                 <input type="hidden" id="edit-tree-id">
+                 
+                 <div>
+                      <label for="edit-especie" class="block text-sm font-semibold text-gray-700 mb-2">Especie del Árbol</label>
+                      <input type="text" id="edit-especie" name="especie" required class="input-styled" placeholder="Ej: Guayacán, Ceibo">
+                 </div>
+                 
+                 <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Foto Actual</label>
+                      <div id="edit-current-foto-container" class="mb-3">
+                           <img id="edit-current-foto" src="" alt="Foto actual" class="w-full h-48 object-cover rounded-lg border-2 border-gray-200">
+                           <p class="text-xs text-gray-500 mt-2 text-center">Foto actual del árbol</p>
+                      </div>
+                      <div id="edit-no-foto-container" class="hidden mb-3 p-4 bg-gray-100 rounded-lg text-center">
+                           <ion-icon name="image-outline" class="text-4xl text-gray-400"></ion-icon>
+                           <p class="text-sm text-gray-500 mt-2">Sin foto registrada</p>
+                      </div>
+                 </div>
+
+                 <div>
+                      <label for="edit-foto" class="block text-sm font-semibold text-gray-700 mb-2">Cambiar Foto (Opcional)</label>
+                      <p class="help-text mb-3">
+                           <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
+                           Formatos: JPG, PNG, WEBP (máx. 5MB)
+                      </p>
+                      <div class="relative">
+                           <input type="file" id="edit-foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
+                           <button type="button" id="btn-select-edit-foto" class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-colors flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer">
+                                <ion-icon name="camera-outline" class="text-2xl"></ion-icon>
+                                <span>Seleccionar Nueva Foto</span>
+                           </button>
+                      </div>
+                      <div id="edit-foto-preview-container" class="hidden mt-3">
+                           <div class="relative rounded-lg overflow-hidden border-2 border-repsol-green">
+                                <img id="edit-foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
+                                <button type="button" id="btn-remove-edit-foto" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-lg">
+                                     <ion-icon name="close-outline" class="text-xl"></ion-icon>
+                                </button>
+                           </div>
+                           <p id="edit-foto-info" class="text-xs text-gray-500 mt-2 text-center"></p>
+                      </div>
+                      <div id="edit-upload-progress" class="hidden mt-3">
+                           <div class="flex items-center space-x-2 text-sm text-repsol-green">
+                                <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
+                                <span>Subiendo foto...</span>
+                           </div>
+                      </div>
+                 </div>
+
+                 <div>
+                      <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación GPS</label>
+                      <p class="help-text mb-3">
+                           <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
+                           Coordenadas actuales del árbol
+                      </p>
+                      <div class="space-y-3">
+                           <input type="text" id="edit-latitud" name="latitud" placeholder="Latitud" readonly class="input-styled">
+                           <input type="text" id="edit-longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
+                      </div>
+                 </div>
+
+                 <div class="flex gap-3 pt-4">
+                      <button type="button" id="btn-cancel-edit" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-semibold">
+                           Cancelar
+                      </button>
+                      <button type="submit" class="flex-1 btn btn-primary">
+                           <ion-icon name="checkmark-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
+                           Guardar Cambios
+                      </button>
+                 </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modal-config" class="modal">
+        <div class="modal-content p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <ion-icon name="settings-outline" class="text-repsol-green text-3xl mr-3"></ion-icon>
+                    Configuración de Perfil
+                </h2>
+                <button id="close-config" class="text-gray-400 hover:text-gray-600 transition">
                     <ion-icon name="close-outline" class="text-3xl"></ion-icon>
                 </button>
             </div>
-            <form id="form-edit-tree" class="space-y-5">
-                <input type="hidden" id="edit-tree-id">
-                
+            
+            <div id="success-msg" class="success-message">
+                <div class="flex items-center">
+                    <ion-icon name="checkmark-circle" class="text-xl mr-2"></ion-icon>
+                    <span>Perfil actualizado correctamente</span>
+                </div>
+            </div>
+            
+            <div id="error-msg" class="error-message">
+                <div class="flex items-center">
+                    <ion-icon name="alert-circle" class="text-xl mr-2"></ion-icon>
+                    <span id="error-text">Error al actualizar perfil</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-center mb-8">
+                <div class="avatar-upload" id="avatar-preview">
+                    <span id="avatar-initials">U</span>
+                    <div class="avatar-upload-overlay">
+                        <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
+                    </div>
+                </div>
+                <input type="file" id="avatar-input" accept="image/*" class="hidden">
+                <button id="change-avatar-btn" class="mt-4 text-repsol-green font-medium hover:text-green-700 transition">
+                    <ion-icon name="camera" class="align-middle mr-1"></ion-icon>
+                    Cambiar foto de perfil
+                </button>
+            </div>
+            
+            <form id="profile-form" class="space-y-6">
                 <div>
-                    <label for="edit-especie" class="block text-sm font-semibold text-gray-700 mb-2">Especie del Árbol</label>
-                    <input type="text" id="edit-especie" name="especie" required class="input-styled" placeholder="Ej: Guayacán, Ceibo">
+                    <label for="profile-name" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Nombre Completo
+                    </label>
+                    <input type="text" id="profile-name" class="input-styled" placeholder="Juan Pérez">
                 </div>
                 
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Foto Actual</label>
-                    <div id="edit-current-foto-container" class="mb-3">
-                        <img id="edit-current-foto" src="" alt="Foto actual" class="w-full h-48 object-cover rounded-lg border-2 border-gray-200">
-                        <p class="text-xs text-gray-500 mt-2 text-center">Foto actual del árbol</p>
-                    </div>
-                    <div id="edit-no-foto-container" class="hidden mb-3 p-4 bg-gray-100 rounded-lg text-center">
-                        <ion-icon name="image-outline" class="text-4xl text-gray-400"></ion-icon>
-                        <p class="text-sm text-gray-500 mt-2">Sin foto registrada</p>
-                    </div>
-                </div>
-
-                <div>
-                    <label for="edit-foto" class="block text-sm font-semibold text-gray-700 mb-2">Cambiar Foto (Opcional)</label>
-                    <p class="help-text mb-3">
-                        <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
-                        Formatos: JPG, PNG, WEBP (máx. 5MB)
+                    <label for="profile-email" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Correo Electrónico
+                    </label>
+                    <input type="email" id="profile-email" class="input-styled" disabled>
+                    <p class="help-text">
+                        <ion-icon name="information-circle-outline" class="align-middle"></ion-icon>
+                        El correo no se puede modificar
                     </p>
-                    <div class="relative">
-                        <input type="file" id="edit-foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
-                        <button type="button" id="btn-select-edit-foto" class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-colors flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer">
-                            <ion-icon name="camera-outline" class="text-2xl"></ion-icon>
-                            <span>Seleccionar Nueva Foto</span>
-                        </button>
-                    </div>
-                    <div id="edit-foto-preview-container" class="hidden mt-3">
-                        <div class="relative rounded-lg overflow-hidden border-2 border-repsol-green">
-                            <img id="edit-foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
-                            <button type="button" id="btn-remove-edit-foto" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-lg">
-                                <ion-icon name="close-outline" class="text-xl"></ion-icon>
-                            </button>
-                        </div>
-                        <p id="edit-foto-info" class="text-xs text-gray-500 mt-2 text-center"></p>
-                    </div>
-                    <div id="edit-upload-progress" class="hidden mt-3">
-                        <div class="flex items-center space-x-2 text-sm text-repsol-green">
-                            <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
-                            <span>Subiendo foto...</span>
-                        </div>
-                    </div>
                 </div>
-
+                
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Ubicación GPS</label>
-                    <p class="help-text mb-3">
-                        <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
-                        Coordenadas actuales del árbol
-                    </p>
-                    <div class="space-y-3">
-                        <input type="text" id="edit-latitud" name="latitud" placeholder="Latitud" readonly class="input-styled">
-                        <input type="text" id="edit-longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
+                    <label for="profile-birthdate" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Fecha de Nacimiento
+                    </label>
+                    <input type="date" id="profile-birthdate" class="input-styled">
+                </div>
+                
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                        <ion-icon name="lock-closed-outline" class="text-repsol-green text-xl mr-2"></ion-icon>
+                        Cambiar Contraseña
+                    </h3>
+                    <p class="text-sm text-gray-600 mb-4">Deja en blanco si no deseas cambiar tu contraseña</p>
+                    
+                    <div class="space-y-4">
+                        <div>
+                            <label for="current-password" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Contraseña Actual
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" id="current-password" class="input-styled pr-12" placeholder="••••••••">
+                                <ion-icon name="eye-outline" class="toggle-password" data-target="current-password"></ion-icon>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <label for="new-password" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Nueva Contraseña
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" id="new-password" class="input-styled pr-12" placeholder="••••••••" minlength="8">
+                                <ion-icon name="eye-outline" class="toggle-password" data-target="new-password"></ion-icon>
+                            </div>
+                            <p class="help-text">
+                                <ion-icon name="information-circle-outline" class="align-middle"></ion-icon>
+                                Mínimo 8 caracteres
+                            </p>
+                        </div>
+                        
+                        <div>
+                            <label for="confirm-password" class="block text-sm font-semibold text-gray-700 mb-2">
+                                Confirmar Nueva Contraseña
+                            </label>
+                            <div class="password-wrapper">
+                                <input type="password" id="confirm-password" class="input-styled pr-12" placeholder="••••••••" minlength="8">
+                                <ion-icon name="eye-outline" class="toggle-password" data-target="confirm-password"></ion-icon>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <div class="flex gap-3 pt-4">
-                    <button type="button" id="btn-cancel-edit" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-semibold">
+                
+                <div class="flex gap-4 pt-4">
+                    <button type="button" id="cancel-btn" class="flex-1 btn btn-secondary" style="background-color: #e5e7eb; color: #374151;">
                         Cancelar
                     </button>
                     <button type="submit" class="flex-1 btn btn-primary">
-                        <ion-icon name="checkmark-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
+                        <ion-icon name="checkmark-outline" class="align-middle mr-2 text-xl"></ion-icon>
                         Guardar Cambios
                     </button>
                 </div>
             </form>
         </div>
     </div>
-</body>
+
+    <div id="modal-help" class="modal">
+        <div class="modal-content p-8">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <ion-icon name="help-circle-outline" class="text-repsol-green text-3xl mr-3"></ion-icon>
+                    Centro de Ayuda
+                </h2>
+                <button id="close-help" class="text-gray-400 hover:text-gray-600 transition">
+                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                        <ion-icon name="leaf-outline" class="text-repsol-green mr-2"></ion-icon>
+                        ¿Cómo registro un árbol?
+                    </h3>
+                    <p class="text-gray-600 text-sm">
+                        Ve a "Registrar Siembra", haz clic en el mapa para seleccionar la ubicación, ingresa la especie y opcionalmente añade una foto.
+                    </p>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                        <ion-icon name="camera-outline" class="text-repsol-green mr-2"></ion-icon>
+                        ¿Puedo añadir fotos?
+                    </h3>
+                    <p class="text-gray-600 text-sm">
+                        Sí, puedes subir fotos en formato JPG, PNG o WEBP de hasta 5MB. Las fotos ayudan a documentar el crecimiento de los árboles.
+                    </p>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                        <ion-icon name="stats-chart-outline" class="text-repsol-green mr-2"></ion-icon>
+                        ¿Qué son las estadísticas?
+                    </h3>
+                    <p class="text-gray-600 text-sm">
+                        En la sección "Estadísticas" puedes ver gráficos sobre los árboles plantados por mes, especies más comunes y métricas de impacto.
+                    </p>
+                </div>
+                
+                <div class="border border-gray-200 rounded-lg p-4">
+                    <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                        <ion-icon name="create-outline" class="text-repsol-green mr-2"></ion-icon>
+                        ¿Puedo editar o eliminar registros?
+                    </h3>
+                    <p class="text-gray-600 text-sm">
+                        Sí, en "Ver Registros" encontrarás botones para editar o eliminar cada árbol plantado. La edición permite cambiar la especie y la foto.
+                    </p>
+                </div>
+                
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-6">
+                    <h3 class="font-semibold text-green-900 mb-2 flex items-center">
+                        <ion-icon name="mail-outline" class="text-repsol-green mr-2"></ion-icon>
+                        ¿Necesitas más ayuda?
+                    </h3>
+                    <p class="text-green-800 text-sm mb-3">
+                        Contáctanos para soporte técnico o consultas sobre el proyecto de reforestación.
+                    </p>
+                    <a href="mailto:soporte@reforestamanabi.com" class="text-repsol-green font-medium hover:text-green-700 text-sm">
+                        soporte@reforestamanabi.com
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    </body>
 </html>

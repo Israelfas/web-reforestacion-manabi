@@ -39,10 +39,33 @@ document.addEventListener('DOMContentLoaded', () => {
         currentLangEl: document.getElementById('current-lang'),
         langMenuItems: document.querySelectorAll('#lang-menu .user-menu-item[data-lang]'),
         checkEs: document.getElementById('check-es'),
-        checkEn: document.getElementById('check-en')
+        checkEn: document.getElementById('check-en'),
+
+        // --- NUEVOS Elementos Modales (Config y Ayuda) ---
+        modalConfig: document.getElementById('modal-config'),
+        modalHelp: document.getElementById('modal-help'),
+        closeConfigBtn: document.getElementById('close-config'),
+        closeHelpBtn: document.getElementById('close-help'),
+        cancelBtn: document.getElementById('cancel-btn'),
+        profileForm: document.getElementById('profile-form'),
+        avatarPreview: document.getElementById('avatar-preview'),
+        avatarInitials: document.getElementById('avatar-initials'),
+        avatarInput: document.getElementById('avatar-input'),
+        changeAvatarBtn: document.getElementById('change-avatar-btn'),
+        successMsg: document.getElementById('success-msg'),
+        errorMsg: document.getElementById('error-msg'),
+        errorText: document.getElementById('error-text'),
+        profileName: document.getElementById('profile-name'),
+        profileEmail: document.getElementById('profile-email'),
+        profileBirthdate: document.getElementById('profile-birthdate'),
+        currentPassword: document.getElementById('current-password'),
+        newPassword: document.getElementById('new-password'),
+        confirmPassword: document.getElementById('confirm-password'),
+        togglePasswordIcons: document.querySelectorAll('.toggle-password')
     };
 
-    let map = null, marcadorTemporal = null, currentAccessToken = null;
+    let map = null, marcadorTemporal = null, currentAccessToken = null, currentUser = null;
+    let profileSelectedFile = null; // Para el avatar del perfil
 
     const puntosReforestacion = [
         { nombre: "Parque Forestal", coords: [-0.9575, -80.7100], info: "Zona prioritaria cerca del río." },
@@ -68,11 +91,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateUserInfo = (userName, userEmail) => {
         const nameToDisplay = userName || userEmail?.split('@')[0] || 'Usuario';
         const emailToDisplay = userEmail || 'correo@ejemplo.com';
+        const initials = getInitials(nameToDisplay); // Obtener iniciales
 
         if (els.userNameMenu) els.userNameMenu.textContent = nameToDisplay;
         if (els.userEmailMenu) els.userEmailMenu.textContent = emailToDisplay;
-        if (els.userInitials) els.userInitials.textContent = getInitials(nameToDisplay);
+        if (els.userInitials) els.userInitials.textContent = initials; // Header
         if (els.welcomeUserNameEl) els.welcomeUserNameEl.textContent = nameToDisplay.split(' ')[0];
+        
+        // --- NUEVO: Actualizar modal de config ---
+        if (els.avatarInitials) els.avatarInitials.textContent = initials; 
+        
+        // TODO: Añadir lógica para mostrar imagen de avatar si 'avatarUrl' se pasa
     };
 
     const hideAllAuthForms = () => {
@@ -83,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- 3. LÓGICA DE VISTAS ---
     const showApp = (user) => {
+        currentUser = user; // --- NUEVO: Almacena el usuario globalmente ---
         els.authContainer?.classList.add('hidden');
         els.appContainer?.classList.remove('hidden');
         if (user) {
@@ -94,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const showAuth = () => {
+        currentUser = null; // --- NUEVO: Limpia el usuario global ---
         els.authContainer?.classList.remove('hidden');
         els.appContainer?.classList.add('hidden');
         updateUserInfo('Usuario', 'usuario@ejemplo.com');
@@ -109,22 +140,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
          const formElement = els[formId];
          if (formElement) {
-             formElement.classList.remove('hidden');
+               formElement.classList.remove('hidden');
          } else {
-             console.error(`Auth form with ID "${formId}" not found in els.`);
+               console.error(`Auth form with ID "${formId}" not found in els.`);
           }
 
          if (formId === 'formLogin') {
-             els.registerLink?.classList.remove('hidden');
+               els.registerLink?.classList.remove('hidden');
          } else {
-             els.showLoginDiv?.classList.remove('hidden');
+               els.showLoginDiv?.classList.remove('hidden');
          }
-      };
+     };
 
-      const showLoginForm = () => showAuthForm('formLogin', "Bienvenido. Por favor, inicia sesión.");
-      const showRegisterForm = () => showAuthForm('formRegister', "Crea tu cuenta");
-      const showForgotPasswordForm = () => showAuthForm('formForgotPassword', "Recuperar Contraseña");
-      const showUpdatePasswordForm = () => showAuthForm('formUpdatePassword', "Crea tu nueva contraseña");
+     const showLoginForm = () => showAuthForm('formLogin', "Bienvenido. Por favor, inicia sesión.");
+     const showRegisterForm = () => showAuthForm('formRegister', "Crea tu cuenta");
+     const showForgotPasswordForm = () => showAuthForm('formForgotPassword', "Recuperar Contraseña");
+     const showUpdatePasswordForm = () => showAuthForm('formUpdatePassword', "Crea tu nueva contraseña");
 
     const navigateToPage = (pageId) => {
         els.pageContents?.forEach(page => page.classList.add('hidden'));
@@ -132,20 +163,20 @@ document.addEventListener('DOMContentLoaded', () => {
         if (pageToShow) {
              pageToShow.classList.remove('hidden');
         } else {
-            pageId = 'page-map';
-            document.getElementById(pageId)?.classList.remove('hidden');
+             pageId = 'page-map';
+             document.getElementById(pageId)?.classList.remove('hidden');
         }
 
         if (pageId === 'page-map') {
-            setTimeout(initializeMapIfNeeded, 50);
+             setTimeout(initializeMapIfNeeded, 50);
         }
         if (pageId === 'page-table') {
-            loadTableData();
+             loadTableData();
         }
 
         els.sidebarLinks?.forEach(link => {
-            const isActive = link.dataset.page === pageId;
-            link.classList.toggle('sidebar-active', isActive);
+             const isActive = link.dataset.page === pageId;
+             link.classList.toggle('sidebar-active', isActive);
         });
 
         if (els.headerSearch) els.headerSearch.value = '';
@@ -156,38 +187,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const initializeMapIfNeeded = () => {
         if (map || !document.getElementById('map')) return;
 
-        console.log('Initializing map...');
-        map = L.map('map').setView([-0.958, -80.714], 13);
+console.log('Initializing map...');
+        map = L.map('map', {
+            zoomControl: false // 1. Deshabilitamos el control de zoom por defecto
+        }).setView([-0.958, -80.714], 13);
+        
+        // 2. Añadimos el control de zoom en la nueva posición
+        L.control.zoom({ position: 'topright' }).addTo(map);
+
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap'
+             attribution: '&copy; OpenStreetMap'
         }).addTo(map);
 
         puntosReforestacion.forEach(punto => {
-            L.marker(punto.coords, { icon: greenIcon }).addTo(map)
-                .bindPopup(`<b>${punto.nombre}</b><br>${punto.info}`);
+             L.marker(punto.coords, { icon: greenIcon }).addTo(map)
+                   .bindPopup(`<b>${punto.nombre}</b><br>${punto.info}`);
         });
 
         map.on('click', (e) => {
-            const { lat, lng } = e.latlng;
-            document.getElementById('latitud').value = lat.toFixed(6);
-            document.getElementById('longitud').value = lng.toFixed(6);
+             const { lat, lng } = e.latlng;
+             document.getElementById('latitud').value = lat.toFixed(6);
+             document.getElementById('longitud').value = lng.toFixed(6);
 
-            if (marcadorTemporal) {
-                marcadorTemporal.setLatLng(e.latlng);
-            } else {
-                const redIcon = L.icon({
-                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                 });
-                marcadorTemporal = L.marker(e.latlng, { draggable: true, icon: redIcon }).addTo(map);
-                 marcadorTemporal.on('dragend', (ev) => {
-                     const movedLatLng = ev.target.getLatLng();
-                     document.getElementById('latitud').value = movedLatLng.lat.toFixed(6);
-                     document.getElementById('longitud').value = movedLatLng.lng.toFixed(6);
-                 });
-            }
-             map.panTo(e.latlng);
+             if (marcadorTemporal) {
+                  marcadorTemporal.setLatLng(e.latlng);
+             } else {
+                  const redIcon = L.icon({
+                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                    });
+                  marcadorTemporal = L.marker(e.latlng, { draggable: true, icon: redIcon }).addTo(map);
+                   marcadorTemporal.on('dragend', (ev) => {
+                        const movedLatLng = ev.target.getLatLng();
+                        document.getElementById('latitud').value = movedLatLng.lat.toFixed(6);
+                        document.getElementById('longitud').value = movedLatLng.lng.toFixed(6);
+                   });
+             }
+              map.panTo(e.latlng);
         });
          map.invalidateSize();
         cargarArboles();
@@ -200,17 +237,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const rows = els.tableBody.querySelectorAll('tr');
 
         rows.forEach(row => {
-            if (row.cells.length <= 1) {
-                row.style.display = '';
-                return;
-            }
+             if (row.cells.length <= 1) {
+                   row.style.display = '';
+                   return;
+             }
 
-            const rowText = row.textContent || row.innerText;
-            if (rowText.toLowerCase().includes(term)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
+             const rowText = row.textContent || row.innerText;
+             if (rowText.toLowerCase().includes(term)) {
+                   row.style.display = '';
+             } else {
+                   row.style.display = 'none';
+             }
         });
     };
 
@@ -218,53 +255,53 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!map) return;
         console.log("Cargando árboles plantados...");
         try {
-            const response = await fetch('/api/obtener_arboles');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const arboles = await response.json();
+             const response = await fetch('/api/obtener_arboles');
+             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+             const arboles = await response.json();
 
-            map.eachLayer(layer => {
-                 if (layer instanceof L.Marker && layer !== marcadorTemporal && !layer.options.icon?.options?.iconUrl.includes('green')) {
-                     map.removeLayer(layer);
-                 }
+             map.eachLayer(layer => {
+                  if (layer instanceof L.Marker && layer !== marcadorTemporal && !layer.options.icon?.options?.iconUrl.includes('green')) {
+                       map.removeLayer(layer);
+                  }
              });
 
-            arboles.forEach(arbol => {
-                 const blueIcon = L.icon({
-                     iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                     shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                     iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                 });
+             arboles.forEach(arbol => {
+                  const blueIcon = L.icon({
+                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                  });
 
-                 const popupContent = `
-                   <div class="text-center">
-                       <b>Especie:</b> ${arbol.especie || 'N/A'}<br>
-                       <b>ID:</b> ${arbol.id}
-                       ${arbol.foto_url ? `<br><img src="${arbol.foto_url}" alt="${arbol.especie}" style="width:100%; max-width:200px; margin-top:8px; border-radius:4px;">` : ''}
-                   </div>
-                 `;
+                  const popupContent = `
+                        <div class="text-center">
+                             <b>Especie:</b> ${arbol.especie || 'N/A'}<br>
+                             <b>ID:</b> ${arbol.id}
+                             ${arbol.foto_url ? `<br><img src="${arbol.foto_url}" alt="${arbol.especie}" style="width:100%; max-width:200px; margin-top:8px; border-radius:4px;">` : ''}
+                        </div>
+                  `;
 
-                L.marker([arbol.latitud, arbol.longitud], { icon: blueIcon })
-                     .addTo(map)
-                     .bindPopup(popupContent);
-            });
-             console.log(`${arboles.length} árboles cargados en el mapa.`);
+                 L.marker([arbol.latitud, arbol.longitud], { icon: blueIcon })
+                        .addTo(map)
+                        .bindPopup(popupContent);
+             });
+              console.log(`${arboles.length} árboles cargados en el mapa.`);
         } catch (error) {
-             console.error("Error al cargar árboles:", error);
-             alert("Error al cargar los árboles en el mapa.");
+              console.error("Error al cargar árboles:", error);
+              alert("Error al cargar los árboles en el mapa.");
           }
     };
 
     const cargarStats = async () => {
         try {
-            const response = await fetch('/api/predecir_horas');
-             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const stats = await response.json();
-            if (els.statArboles) els.statArboles.textContent = stats.arboles_totales ?? '0';
-            if (els.statHoras) els.statHoras.textContent = (stats.horas_estimadas ?? 0).toFixed(1);
+             const response = await fetch('/api/predecir_horas');
+              if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+             const stats = await response.json();
+             if (els.statArboles) els.statArboles.textContent = stats.arboles_totales ?? '0';
+             if (els.statHoras) els.statHoras.textContent = (stats.horas_estimadas ?? 0).toFixed(1);
         } catch (error) {
-             console.error("Error al cargar estadísticas:", error);
-             if (els.statArboles) els.statArboles.textContent = '0';
-             if (els.statHoras) els.statHoras.textContent = '0.0';
+              console.error("Error al cargar estadísticas:", error);
+              if (els.statArboles) els.statArboles.textContent = '0';
+              if (els.statHoras) els.statHoras.textContent = '0.0';
           }
     };
 
@@ -274,77 +311,77 @@ document.addEventListener('DOMContentLoaded', () => {
         els.tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">Cargando...</td></tr>';
 
         try {
-            const response = await fetch('/api/obtener_arboles');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const arboles = await response.json();
-            els.tableBody.innerHTML = '';
+             const response = await fetch('/api/obtener_arboles');
+             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+             const arboles = await response.json();
+             els.tableBody.innerHTML = '';
 
-            if (!arboles || arboles.length === 0) {
-                els.tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">No hay árboles registrados.</td></tr>';
-                return;
-            }
+             if (!arboles || arboles.length === 0) {
+                  els.tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-gray-500">No hay árboles registrados.</td></tr>';
+                  return;
+             }
 
-            arboles.sort((a, b) => new Date(b.fecha_siembra) - new Date(a.fecha_siembra));
+             arboles.sort((a, b) => new Date(b.fecha_siembra) - new Date(a.fecha_siembra));
 
-            arboles.forEach(arbol => {
-                let fecha = 'Inválida';
-                try {
-                    fecha = new Date(arbol.fecha_siembra).toLocaleString('es-ES', {
-                        dateStyle: 'short',
-                        timeStyle: 'short',
-                        hour12: true
-                    });
-                } catch (e) {
-                    console.warn(`Fecha inválida: ${arbol.fecha_siembra}`);
-                }
+             arboles.forEach(arbol => {
+                  let fecha = 'Inválida';
+                  try {
+                       fecha = new Date(arbol.fecha_siembra).toLocaleString('es-ES', {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                            hour12: true
+                       });
+                  } catch (e) {
+                       console.warn(`Fecha inválida: ${arbol.fecha_siembra}`);
+                  }
 
-                const usuario = arbol.user_email || 'Desconocido';
+                  const usuario = arbol.user_email || 'Desconocido';
 
-                const fotoHtml = arbol.foto_url
-                    ? `<img src="${arbol.foto_url}" alt="${arbol.especie}" class="w-10 h-10 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform" onclick="window.open('${arbol.foto_url}', '_blank')" title="Click para ver en tamaño completo">`
-                    : `<div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center" title="Sin foto">
-                           <ion-icon name="image-outline" class="text-gray-400 text-xl"></ion-icon>
-                       </div>`;
+                  const fotoHtml = arbol.foto_url
+                       ? `<img src="${arbol.foto_url}" alt="${arbol.especie}" class="w-10 h-10 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform" onclick="window.open('${arbol.foto_url}', '_blank')" title="Click para ver en tamaño completo">`
+                       : `<div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center" title="Sin foto">
+                             <ion-icon name="image-outline" class="text-gray-400 text-xl"></ion-icon>
+                          </div>`;
 
-                els.tableBody.innerHTML += `
-                    <tr class="hover:bg-gray-50 transition-colors" data-id="${arbol.id}">
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${arbol.id}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${arbol.especie || 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap">${fotoHtml}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.latitud?.toFixed(6) || 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.longitud?.toFixed(6) || 'N/A'}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fecha}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate" title="${usuario}">${usuario}</td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <button class="btn-delete text-red-600 hover:text-red-800 transition duration-150" data-id="${arbol.id}" title="Eliminar ${arbol.id}">
-                                <ion-icon name="trash-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
-                            </button>
-                            <button class="btn-edit text-blue-600 hover:text-blue-800 transition duration-150 ml-3" data-id="${arbol.id}" title="Editar ${arbol.id}">
-                                <ion-icon name="create-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
-                            </button>
-                        </td>
-                    </tr>
-                `;
-            });
-            console.log(`${arboles.length} filas añadidas a la tabla.`);
+                  els.tableBody.innerHTML += `
+                       <tr class="hover:bg-gray-50 transition-colors" data-id="${arbol.id}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${arbol.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${arbol.especie || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${fotoHtml}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.latitud?.toFixed(6) || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.longitud?.toFixed(6) || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fecha}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate" title="${usuario}">${usuario}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                 <button class="btn-delete text-red-600 hover:text-red-800 transition duration-150" data-id="${arbol.id}" title="Eliminar ${arbol.id}">
+                                     <ion-icon name="trash-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
+                                 </button>
+                                 <button class="btn-edit text-blue-600 hover:text-blue-800 transition duration-150 ml-3" data-id="${arbol.id}" title="Editar ${arbol.id}">
+                                     <ion-icon name="create-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
+                                 </button>
+                            </td>
+                       </tr>
+                  `;
+             });
+             console.log(`${arboles.length} filas añadidas a la tabla.`);
         } catch (error) {
-            console.error("Error al cargar la tabla:", error);
-            els.tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-red-600">Error al cargar datos.</td></tr>';
-        }
+             console.error("Error al cargar la tabla:", error);
+             els.tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-red-600">Error al cargar datos.</td></tr>';
+         }
     };
 
      const loadAppData = async () => {
-         console.log("Cargando datos iniciales de la aplicación...");
-         try {
-             await Promise.all([
-                 cargarStats(),
-                 loadTableData()
-             ]);
-         } catch(error) {
-             console.error("Error al cargar datos de la app:", error);
-             alert("Error al cargar los datos iniciales de la aplicación.");
-          }
-     };
+           console.log("Cargando datos iniciales de la aplicación...");
+           try {
+                 await Promise.all([
+                      cargarStats(),
+                      loadTableData()
+                 ]);
+           } catch(error) {
+                console.error("Error al cargar datos de la app:", error);
+                alert("Error al cargar los datos iniciales de la aplicación.");
+             }
+      };
 
     // --- 6. DIÁLOGO DE CONFIRMACIÓN ---
     const showConfirmDialog = (message, onConfirm) => {
@@ -355,22 +392,22 @@ document.addEventListener('DOMContentLoaded', () => {
         dialog.id = 'confirm-dialog';
         dialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
         dialog.innerHTML = `
-            <div class="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl animate-fade-in-up">
-                <h3 class="text-xl font-bold mb-4 text-gray-900">Confirmar Acción</h3>
-                <p class="text-gray-600 mb-6">${message}</p>
-                <div class="flex gap-3 justify-end">
-                    <button class="btn-cancel px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-medium">Cancelar</button>
-                    <button class="btn-confirm px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium">Confirmar</button>
-                </div>
-            </div>
-            <style>@keyframes fade-in-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.animate-fade-in-up{animation:fade-in-up .3s ease-out}</style>
+             <div class="bg-white rounded-lg p-6 max-w-md w-full shadow-2xl animate-fade-in-up">
+                 <h3 class="text-xl font-bold mb-4 text-gray-900">Confirmar Acción</h3>
+                 <p class="text-gray-600 mb-6">${message}</p>
+                 <div class="flex gap-3 justify-end">
+                      <button class="btn-cancel px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-medium">Cancelar</button>
+                      <button class="btn-confirm px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition font-medium">Confirmar</button>
+                 </div>
+             </div>
+             <style>@keyframes fade-in-up{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}.animate-fade-in-up{animation:fade-in-up .3s ease-out}</style>
         `;
         document.body.appendChild(dialog);
 
          const closeDialog = (callback) => {
-             dialog.remove();
-             document.removeEventListener('keydown', escKeyHandler);
-             if (callback) callback();
+              dialog.remove();
+              document.removeEventListener('keydown', escKeyHandler);
+              if (callback) callback();
          };
 
         dialog.querySelector('.btn-cancel').onclick = () => closeDialog();
@@ -398,40 +435,42 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.addEventListener('click', (e) => {
         if (!e.target.closest('.user-dropdown')) {
-            els.userMenu?.classList.remove('active');
-            els.langMenu?.classList.remove('active');
+             els.userMenu?.classList.remove('active');
+             els.langMenu?.classList.remove('active');
         }
     });
 
+    // --- REEMPLAZADO: Botones Config y Ayuda ---
     els.btnConfig?.addEventListener('click', () => {
-        alert('Funcionalidad de Configuración - Próximamente...');
+        openConfigModal();
         els.userMenu?.classList.remove('active');
     });
     els.btnHelp?.addEventListener('click', () => {
-        alert('Funcionalidad de Ayuda - Próximamente...');
+        openHelpModal();
         els.userMenu?.classList.remove('active');
     });
+    // --- FIN REEMPLAZO ---
 
     els.langMenuItems?.forEach(item => {
         item.addEventListener('click', () => {
-            const selectedLang = item.dataset.lang;
-            const langText = item.querySelector('span').textContent;
+             const selectedLang = item.dataset.lang;
+             const langText = item.querySelector('span').textContent;
 
-            if (els.currentLangEl) els.currentLangEl.textContent = langText;
-            if (els.checkEs) els.checkEs.classList.toggle('hidden', selectedLang !== 'es');
-            if (els.checkEn) els.checkEn.classList.toggle('hidden', selectedLang !== 'en');
+             if (els.currentLangEl) els.currentLangEl.textContent = langText;
+             if (els.checkEs) els.checkEs.classList.toggle('hidden', selectedLang !== 'es');
+             if (els.checkEn) els.checkEn.classList.toggle('hidden', selectedLang !== 'en');
 
-            console.log(`Idioma seleccionado: ${selectedLang}`);
-            alert(`Idioma cambiado a ${langText} (funcionalidad de traducción pendiente)`);
+             console.log(`Idioma seleccionado: ${selectedLang}`);
+             alert(`Idioma cambiado a ${langText} (funcionalidad de traducción pendiente)`);
 
-            els.langMenu?.classList.remove('active');
+             els.langMenu?.classList.remove('active');
         });
     });
 
     els.headerSearch?.addEventListener('keyup', () => {
         const tablePage = document.getElementById('page-table');
         if (tablePage && !tablePage.classList.contains('hidden')) {
-            filterTable(els.headerSearch.value);
+             filterTable(els.headerSearch.value);
         }
     });
 
@@ -440,53 +479,53 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         if (els.registerErrorEl) els.registerErrorEl.classList.add('hidden');
         const [email, password, passwordConfirm, name, birthdate] = [
-            'register-email', 'register-password', 'register-password-confirm', 
-            'register-name', 'register-birth-date'
+             'register-email', 'register-password', 'register-password-confirm', 
+             'register-name', 'register-birth-date'
         ].map(id => document.getElementById(id)?.value);
 
         if (!birthdate) {
-            if (els.registerErrorEl) {
-                 els.registerErrorEl.textContent = "Fecha de nacimiento requerida.";
-                 els.registerErrorEl.classList.remove('hidden');
-            }
-            return;
+             if (els.registerErrorEl) {
+                  els.registerErrorEl.textContent = "Fecha de nacimiento requerida.";
+                  els.registerErrorEl.classList.remove('hidden');
+             }
+             return;
         }
         
         if (password !== passwordConfirm) {
-            if (els.registerErrorEl) {
-                els.registerErrorEl.textContent = "Las contraseñas no coinciden.";
-                els.registerErrorEl.classList.remove('hidden');
-            }
-            return;
+             if (els.registerErrorEl) {
+                  els.registerErrorEl.textContent = "Las contraseñas no coinciden.";
+                  els.registerErrorEl.classList.remove('hidden');
+             }
+             return;
         }
         
         if (password.length < 8) {
-            if (els.registerErrorEl) {
-                els.registerErrorEl.textContent = "La contraseña debe tener al menos 8 caracteres.";
-                els.registerErrorEl.classList.remove('hidden');
-            }
-            return;
+             if (els.registerErrorEl) {
+                  els.registerErrorEl.textContent = "La contraseña debe tener al menos 8 caracteres.";
+                  els.registerErrorEl.classList.remove('hidden');
+             }
+             return;
         }
         
         try {
-            const response = await fetch('/api/register', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, name, birthdate })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error desconocido');
+             const response = await fetch('/api/register', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, password, name, birthdate })
+             });
+             const data = await response.json();
+             if (!response.ok) throw new Error(data.error || 'Error desconocido');
 
-            alert('¡Registro exitoso! Revisa tu email para confirmar y luego inicia sesión.');
-            els.formRegister?.reset();
-            showLoginForm();
+             alert('¡Registro exitoso! Revisa tu email para confirmar y luego inicia sesión.');
+             els.formRegister?.reset();
+             showLoginForm();
         } catch (error) {
-            console.error("Error registro:", error);
-            if (els.registerErrorEl) {
-                els.registerErrorEl.textContent = error.message.includes("already registered") ? "Email ya registrado." : `Error: ${error.message}`;
-                els.registerErrorEl.classList.remove('hidden');
-            } else {
-                 alert(`Error al registrar: ${error.message}`);
-             }
+             console.error("Error registro:", error);
+             if (els.registerErrorEl) {
+                  els.registerErrorEl.textContent = error.message.includes("already registered") ? "Email ya registrado." : `Error: ${error.message}`;
+                  els.registerErrorEl.classList.remove('hidden');
+             } else {
+                  alert(`Error al registrar: ${error.message}`);
+              }
         } 
     });
 
@@ -497,22 +536,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const [email, password] = ['login-email', 'login-password'].map(id => document.getElementById(id)?.value);
         
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Credenciales inválidas');
-            
-            showApp(data.user); 
+             const response = await fetch('/api/login', {
+                  method: 'POST', headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email, password })
+             });
+             const data = await response.json();
+             if (!response.ok) throw new Error(data.error || 'Credenciales inválidas');
+             
+             // Aquí se llama a showApp con los datos del usuario
+             showApp(data.user); 
         } catch (error) {
-             console.error("Error login:", error);
-             if (els.loginErrorEl) {
-                 els.loginErrorEl.textContent = error.message;
-                 els.loginErrorEl.classList.remove('hidden');
-             } else {
-                 alert(`Error al iniciar sesión: ${error.message}`);
-             }
+              console.error("Error login:", error);
+              if (els.loginErrorEl) {
+                   els.loginErrorEl.textContent = error.message;
+                   els.loginErrorEl.classList.remove('hidden');
+              } else {
+                   alert(`Error al iniciar sesión: ${error.message}`);
+              }
         } 
     });
 
@@ -524,34 +564,34 @@ document.addEventListener('DOMContentLoaded', () => {
          const email = document.getElementById('forgot-email')?.value;
          
          if (!email || !email.includes('@')) {
-              if(els.forgotErrorEl) {
-                   els.forgotErrorEl.textContent = 'Email inválido.';
-                   els.forgotErrorEl.classList.remove('hidden');
-                 }
-             return;
+                if(els.forgotErrorEl) {
+                       els.forgotErrorEl.textContent = 'Email inválido.';
+                       els.forgotErrorEl.classList.remove('hidden');
+                     }
+               return;
           }
 
          try {
-             const response = await fetch('/api/forgot_password', {
-                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ email })
-             });
-             const data = await response.json();
-             if (!response.ok) throw new Error(data.error || 'Error del servidor');
+               const response = await fetch('/api/forgot_password', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+               });
+               const data = await response.json();
+               if (!response.ok) throw new Error(data.error || 'Error del servidor');
 
-             if (els.forgotSuccessEl) {
-                  els.forgotSuccessEl.textContent = data.message || "Correo enviado.";
-                  els.forgotSuccessEl.classList.remove('hidden');
-              }
-             els.formForgotPassword?.reset();
-         } catch (error) {
-              console.error("Error forgot password:", error);
-              if (els.forgotErrorEl) {
-                  els.forgotErrorEl.textContent = `Error: ${error.message}`;
-                  els.forgotErrorEl.classList.remove('hidden');
-              } else {
-                   alert(`Error al solicitar recuperación: ${error.message}`);
+               if (els.forgotSuccessEl) {
+                     els.forgotSuccessEl.textContent = data.message || "Correo enviado.";
+                     els.forgotSuccessEl.classList.remove('hidden');
                 }
+               els.formForgotPassword?.reset();
+         } catch (error) {
+               console.error("Error forgot password:", error);
+               if (els.forgotErrorEl) {
+                     els.forgotErrorEl.textContent = `Error: ${error.message}`;
+                     els.forgotErrorEl.classList.remove('hidden');
+               } else {
+                     alert(`Error al solicitar recuperación: ${error.message}`);
+                  }
          } 
      });
 
@@ -563,48 +603,48 @@ document.addEventListener('DOMContentLoaded', () => {
          const new_password_confirm = document.getElementById('update-password-confirm')?.value;
 
          if (!currentAccessToken) {
-              if (els.updateErrorEl) {
-                  els.updateErrorEl.textContent = 'Token inválido o expirado.';
-                  els.updateErrorEl.classList.remove('hidden');
-              }
-             return;
+                if (els.updateErrorEl) {
+                     els.updateErrorEl.textContent = 'Token inválido o expirado.';
+                     els.updateErrorEl.classList.remove('hidden');
+                }
+               return;
          }
          
          if (new_password !== new_password_confirm) {
-             if (els.updateErrorEl) {
-                 els.updateErrorEl.textContent = 'Las contraseñas no coinciden.';
-                 els.updateErrorEl.classList.remove('hidden');
-             }
-             return;
+                if (els.updateErrorEl) {
+                     els.updateErrorEl.textContent = 'Las contraseñas no coinciden.';
+                     els.updateErrorEl.classList.remove('hidden');
+                }
+               return;
          }
          
          if (!new_password || new_password.length < 8) {
-              if (els.updateErrorEl) {
-                  els.updateErrorEl.textContent = 'Contraseña debe tener al menos 8 caracteres.';
-                  els.updateErrorEl.classList.remove('hidden');
-              }
-              return;
+                if (els.updateErrorEl) {
+                     els.updateErrorEl.textContent = 'Contraseña debe tener al menos 8 caracteres.';
+                     els.updateErrorEl.classList.remove('hidden');
+                }
+                return;
           }
 
          try {
-             const response = await fetch('/api/update_password', {
-                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                 body: JSON.stringify({ access_token: currentAccessToken, new_password })
-             });
-             const data = await response.json();
-             if (!response.ok) throw new Error(data.error || 'Error del servidor');
+               const response = await fetch('/api/update_password', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ access_token: currentAccessToken, new_password })
+               });
+               const data = await response.json();
+               if (!response.ok) throw new Error(data.error || 'Error del servidor');
 
-             alert(data.message || "Contraseña actualizada. Inicia sesión.");
-             currentAccessToken = null;
-             showLoginForm();
+               alert(data.message || "Contraseña actualizada. Inicia sesión.");
+               currentAccessToken = null;
+               showLoginForm();
          } catch (error) {
-              console.error("Error update password:", error);
-              if (els.updateErrorEl) {
-                  els.updateErrorEl.textContent = `Error: ${error.message}`;
-                  els.updateErrorEl.classList.remove('hidden');
-              } else {
-                  alert(`Error al actualizar contraseña: ${error.message}`);
-              }
+               console.error("Error update password:", error);
+               if (els.updateErrorEl) {
+                     els.updateErrorEl.textContent = `Error: ${error.message}`;
+                     els.updateErrorEl.classList.remove('hidden');
+               } else {
+                     alert(`Error al actualizar contraseña: ${error.message}`);
+                }
          } 
      });
 
@@ -616,33 +656,33 @@ document.addEventListener('DOMContentLoaded', () => {
     // Logout Button
     els.btnLogout?.addEventListener('click', () => {
          showConfirmDialog(
-             '¿Estás seguro de que deseas cerrar sesión?',
-             () => {
-                 currentAccessToken = null;
-                 showAuth();
-                 alert('Has cerrado sesión.');
-             }
+              '¿Estás seguro de que deseas cerrar sesión?',
+              () => {
+                   currentAccessToken = null;
+                   showAuth();
+                   alert('Has cerrado sesión.');
+              }
          );
      });
 
     // Sidebar Page Navigation
     els.sidebarLinks?.forEach(link => {
         link.addEventListener('click', () => {
-            const pageId = link.dataset.page;
-            navigateToPage(pageId);
+             const pageId = link.dataset.page;
+             navigateToPage(pageId);
 
-            if (pageId === 'page-charts') {
-                setTimeout(() => {
-                    
-                    if (typeof Chart !== 'undefined') {
-                        loadCharts();
-                    } else {
-                        console.error('Chart.js no está cargado');
-                        document.getElementById('charts-error')?.classList.remove('hidden');
-                        document.getElementById('charts-loading')?.classList.add('hidden');
-                    }
-                }, 100);
-            }
+             if (pageId === 'page-charts') {
+                  setTimeout(() => {
+                      
+                       if (typeof Chart !== 'undefined') {
+                            loadCharts();
+                       } else {
+                            console.error('Chart.js no está cargado');
+                            document.getElementById('charts-error')?.classList.remove('hidden');
+                            document.getElementById('charts-loading')?.classList.add('hidden');
+                       }
+                  }, 100);
+             }
         });
     });
 
@@ -665,26 +705,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) {
-            alert('La foto no debe superar 5MB');
-            fotoInput.value = '';
-            return;
+             alert('La foto no debe superar 5MB');
+             fotoInput.value = '';
+             return;
         }
 
         const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            alert('Formato no permitido. Use PNG, JPG o WEBP');
-            fotoInput.value = '';
-            return;
+             alert('Formato no permitido. Use PNG, JPG o WEBP');
+             fotoInput.value = '';
+             return;
         }
 
         selectedFile = file;
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            fotoPreview.src = event.target.result;
-            fotoPreviewContainer?.classList.remove('hidden');
-            const sizeInKB = (file.size / 1024).toFixed(1);
-            fotoInfo.textContent = `${file.name} (${sizeInKB} KB)`;
+             fotoPreview.src = event.target.result;
+             fotoPreviewContainer?.classList.remove('hidden');
+             const sizeInKB = (file.size / 1024).toFixed(1);
+             fotoInfo.textContent = `${file.name} (${sizeInKB} KB)`;
         };
         reader.readAsDataURL(file);
     });
@@ -705,23 +745,23 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadProgress?.classList.remove('hidden');
 
         try {
-            const response = await fetch('/api/upload_foto', {
-                method: 'POST',
-                body: formData
-            });
+             const response = await fetch('/api/upload_foto', {
+                  method: 'POST',
+                  body: formData
+             });
 
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.error || 'Error al subir la foto');
-            }
+             const data = await response.json();
+             
+             if (!response.ok) {
+                  throw new Error(data.error || 'Error al subir la foto');
+             }
 
-            return data.foto_url;
+             return data.foto_url;
         } catch (error) {
-            console.error('Error uploading foto:', error);
-            throw error;
+             console.error('Error uploading foto:', error);
+             throw error;
         } finally {
-            uploadProgress?.classList.add('hidden');
+             uploadProgress?.classList.add('hidden');
         }
     };
 
@@ -747,52 +787,52 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const openEditModal = async (arbolId) => {
         try {
-            const response = await fetch(`/api/obtener_arboles`);
-            if (!response.ok) throw new Error('Error al cargar datos');
-            
-            const arboles = await response.json();
-            const arbol = arboles.find(a => a.id === parseInt(arbolId));
-            
-            if (!arbol) {
-                alert('Árbol no encontrado');
-                return;
-            }
-            currentTreeData = arbol;
-            
-            document.getElementById('edit-tree-id').value = arbol.id;
-            document.getElementById('edit-especie').value = arbol.especie || '';
-            document.getElementById('edit-latitud').value = arbol.latitud?.toFixed(6) || '';
-            document.getElementById('edit-longitud').value = arbol.longitud?.toFixed(6) || '';
-            
-            if (arbol.foto_url) {
-                editCurrentFoto.src = arbol.foto_url;
-                editCurrentFotoContainer.classList.remove('hidden');
-                editNoFotoContainer.classList.add('hidden');
-            } else {
-                editCurrentFotoContainer.classList.add('hidden');
-                editNoFotoContainer.classList.remove('hidden');
-            }
-            
-            editSelectedFile = null;
-            editUploadedFotoUrl = null;
-            editFotoInput.value = '';
-            editFotoPreviewContainer.classList.add('hidden');
-            
-            modalEditTree.classList.remove('hidden');
-                
+             const response = await fetch(`/api/obtener_arboles`);
+             if (!response.ok) throw new Error('Error al cargar datos');
+             
+             const arboles = await response.json();
+             const arbol = arboles.find(a => a.id === parseInt(arbolId));
+             
+             if (!arbol) {
+                  alert('Árbol no encontrado');
+                  return;
+             }
+             currentTreeData = arbol;
+             
+             document.getElementById('edit-tree-id').value = arbol.id;
+             document.getElementById('edit-especie').value = arbol.especie || '';
+             document.getElementById('edit-latitud').value = arbol.latitud?.toFixed(6) || '';
+             document.getElementById('edit-longitud').value = arbol.longitud?.toFixed(6) || '';
+             
+             if (arbol.foto_url) {
+                  editCurrentFoto.src = arbol.foto_url;
+                  editCurrentFotoContainer.classList.remove('hidden');
+                  editNoFotoContainer.classList.add('hidden');
+             } else {
+                  editCurrentFotoContainer.classList.add('hidden');
+                  editNoFotoContainer.classList.remove('hidden');
+             }
+             
+             editSelectedFile = null;
+             editUploadedFotoUrl = null;
+             editFotoInput.value = '';
+             editFotoPreviewContainer.classList.add('hidden');
+             
+             modalEditTree.classList.remove('hidden');
+                  
         } catch (error) {
-            console.error('Error al abrir modal de edición:', error);
-            alert(`Error: ${error.message}`);
+             console.error('Error al abrir modal de edición:', error);
+             alert(`Error: ${error.message}`);
         }
     };
 
     const closeEditModal = () => {
-        modalEditTree.classList.add('hidden');
-        formEditTree.reset();
+        if(modalEditTree) modalEditTree.classList.add('hidden');
+        if(formEditTree) formEditTree.reset();
         editSelectedFile = null;
         editUploadedFotoUrl = null;
         currentTreeData = null;
-        editFotoPreviewContainer.classList.add('hidden');
+        if(editFotoPreviewContainer) editFotoPreviewContainer.classList.add('hidden');
     };
 
     btnCloseEditModal?.addEventListener('click', closeEditModal);
@@ -802,9 +842,22 @@ document.addEventListener('DOMContentLoaded', () => {
         if (e.target === modalEditTree) closeEditModal();
     });
 
+    // --- NUEVO: Listener de ESC combinado ---
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && !modalEditTree.classList.contains('hidden')) {
-            closeEditModal();
+        if (e.key === 'Escape') {
+            // Cerrar modal de edición de árbol
+            if (modalEditTree && !modalEditTree.classList.contains('hidden')) {
+                 closeEditModal();
+            }
+            // Cerrar modal de configuración
+            if (els.modalConfig && els.modalConfig.classList.contains('active')) {
+                els.modalConfig.classList.remove('active');
+                resetProfileForm();
+            }
+            // Cerrar modal de ayuda
+            if (els.modalHelp && els.modalHelp.classList.contains('active')) {
+                els.modalHelp.classList.remove('active');
+            }
         }
     });
 
@@ -816,26 +869,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) {
-            alert('La foto no debe superar 5MB');
-            editFotoInput.value = '';
-            return;
+             alert('La foto no debe superar 5MB');
+             editFotoInput.value = '';
+             return;
         }
         const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
         if (!allowedTypes.includes(file.type)) {
-            alert('Formato no permitido. Use PNG, JPG o WEBP');
-            editFotoInput.value = '';
-            return;
+             alert('Formato no permitido. Use PNG, JPG o WEBP');
+             editFotoInput.value = '';
+             return;
         }
         
         editSelectedFile = file;
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            editFotoPreview.src = event.target.result;
-            editFotoPreviewContainer.classList.remove('hidden');
-            
-            const sizeInKB = (file.size / 1024).toFixed(1);
-            editFotoInfo.textContent = `${file.name} (${sizeInKB} KB) - Esta foto reemplazará la actual`;
+             editFotoPreview.src = event.target.result;
+             editFotoPreviewContainer.classList.remove('hidden');
+             
+             const sizeInKB = (file.size / 1024).toFixed(1);
+             editFotoInfo.textContent = `${file.name} (${sizeInKB} KB) - Esta foto reemplazará la actual`;
         };
         reader.readAsDataURL(file);
     });
@@ -856,8 +909,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const especie = document.getElementById('edit-especie').value.trim();
         
         if (!especie || especie.length < 2) {
-            alert('La especie debe tener al menos 2 caracteres.');
-            return;
+             alert('La especie debe tener al menos 2 caracteres.');
+             return;
         }
         
         const submitBtn = formEditTree.querySelector('button[type="submit"]');
@@ -866,62 +919,62 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.innerHTML = '<ion-icon name="hourglass-outline" class="inline align-middle mr-2 text-xl animate-spin"></ion-icon>Guardando...';
         
         try {
-            let fotoUrlToSend = currentTreeData.foto_url; 
-            
-            if (editSelectedFile) {
-                try {
-                    editUploadProgress.classList.remove('hidden');
-                    const formData = new FormData();
-                    formData.append('foto', editSelectedFile);
-                    
-                    const uploadResponse = await fetch('/api/upload_foto', {
-                        method: 'POST',
-                        body: formData
-                    });
-                    
-                    const uploadData = await uploadResponse.json();
-                    
-                    if (!uploadResponse.ok) {
-                        throw new Error(uploadData.error || 'Error al subir la foto');
-                    }
-                    
-                    fotoUrlToSend = uploadData.foto_url;
-                    console.log('Nueva foto subida:', fotoUrlToSend);
-                        
-                } catch (error) {
-                    throw new Error(`Error al subir la foto: ${error.message}`);
-                } finally {
-                    editUploadProgress.classList.add('hidden');
-                }
-            }
-            
-            const updateData = {
-                especie: especie,
-                foto_url: fotoUrlToSend
-            };
-            
-            const response = await fetch(`/api/editar_arbol/${arbolId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(updateData)
-            });
-            
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error del servidor');
-            
-            alert(`¡Árbol "${especie}" actualizado exitosamente!${editSelectedFile ? ' (foto actualizada)' : ''}`);
-            
-            closeEditModal();
-            
-            await loadTableData();
-            await cargarArboles(); 
-                
+             let fotoUrlToSend = currentTreeData.foto_url; 
+             
+             if (editSelectedFile) {
+                  try {
+                       editUploadProgress.classList.remove('hidden');
+                       const formData = new FormData();
+                       formData.append('foto', editSelectedFile);
+                       
+                       const uploadResponse = await fetch('/api/upload_foto', {
+                            method: 'POST',
+                            body: formData
+                       });
+                       
+                       const uploadData = await uploadResponse.json();
+                       
+                       if (!uploadResponse.ok) {
+                            throw new Error(uploadData.error || 'Error al subir la foto');
+                       }
+                       
+                       fotoUrlToSend = uploadData.foto_url;
+                       console.log('Nueva foto subida:', fotoUrlToSend);
+                           
+                  } catch (error) {
+                       throw new Error(`Error al subir la foto: ${error.message}`);
+                  } finally {
+                       editUploadProgress.classList.add('hidden');
+                  }
+             }
+             
+             const updateData = {
+                  especie: especie,
+                  foto_url: fotoUrlToSend
+             };
+             
+             const response = await fetch(`/api/editar_arbol/${arbolId}`, {
+                  method: 'PUT',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(updateData)
+             });
+             
+             const data = await response.json();
+             if (!response.ok) throw new Error(data.error || 'Error del servidor');
+             
+             alert(`¡Árbol "${especie}" actualizado exitosamente!${editSelectedFile ? ' (foto actualizada)' : ''}`);
+             
+             closeEditModal();
+             
+             await loadTableData();
+             await cargarArboles(); 
+                 
         } catch (error) {
-            console.error("Error al editar árbol:", error);
-            alert(`Error: ${error.message}`);
+             console.error("Error al editar árbol:", error);
+             alert(`Error: ${error.message}`);
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
+             submitBtn.disabled = false;
+             submitBtn.innerHTML = originalBtnText;
         }
     });
 
@@ -932,12 +985,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const [especie, latitud, longitud] = ['especie', 'latitud', 'longitud'].map(id => document.getElementById(id)?.value);
 
         if (!especie || !latitud || !longitud) {
-            alert('Completa la especie y selecciona un punto en el mapa.');
-            return;
+             alert('Completa la especie y selecciona un punto en el mapa.');
+             return;
         }
         if (especie.trim().length < 2) {
-            alert('La especie debe tener al menos 2 caracteres.');
-            return;
+             alert('La especie debe tener al menos 2 caracteres.');
+             return;
         }
 
         const submitBtn = form.querySelector('button[type="submit"]');
@@ -946,71 +999,71 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.innerHTML = '<ion-icon name="hourglass-outline" class="inline align-middle mr-2 text-xl animate-spin"></ion-icon>Procesando...';
 
         try {
-            if (selectedFile) {
-                try {
-                    uploadedFotoUrl = await uploadFoto(selectedFile);
-                    console.log('Foto subida:', uploadedFotoUrl);
-                } catch (error) {
-                    throw new Error(`Error al subir la foto: ${error.message}`);
-                }
-            }
+             if (selectedFile) {
+                  try {
+                       uploadedFotoUrl = await uploadFoto(selectedFile);
+                       console.log('Foto subida:', uploadedFotoUrl);
+                  } catch (error) {
+                       throw new Error(`Error al subir la foto: ${error.message}`);
+                  }
+             }
 
-            const response = await fetch('/api/plantar_arbol', {
-                method: 'POST', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    especie: especie.trim(),
-                    latitud: parseFloat(latitud),
-                    longitud: parseFloat(longitud),
-                    foto_url: uploadedFotoUrl || null
-                })
-            });
-            
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error del servidor');
-            
-            alert(`¡Árbol "${especie}" plantado exitosamente!${selectedFile ? ' (con foto)' : ''}`);
-            form.reset();
-            
-            if (btnRemoveFoto) btnRemoveFoto.click();
-            
-            if (map) {
-                const blueIcon = L.icon({
-                    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                    iconSize: [25, 41], 
-                    iconAnchor: [12, 41], 
-                    popupAnchor: [1, -34], 
-                    shadowSize: [41, 41]
-                });
-                
-                const popupContent = `
-                    <div class="text-center">
-                        <b>Especie:</b> ${data.especie}<br>
-                        <b>ID:</b> ${data.id}
-                        ${data.foto_url ? `<br><img src="${data.foto_url}" alt="${data.especie}" style="width:100%; max-width:200px; margin-top:8px; border-radius:4px;">` : ''}
-                    </div>
-                `;
-                
-                L.marker([data.latitud, data.longitud], { icon: blueIcon })
-                    .addTo(map)
-                    .bindPopup(popupContent);
-            }
-            
-            if (marcadorTemporal) { 
-                marcadorTemporal.remove(); 
-                marcadorTemporal = null; 
-            }
-            
-            await cargarStats();
-            await loadTableData();
-            
+             const response = await fetch('/api/plantar_arbol', {
+                  method: 'POST', 
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                       especie: especie.trim(),
+                       latitud: parseFloat(latitud),
+                       longitud: parseFloat(longitud),
+                       foto_url: uploadedFotoUrl || null
+                  })
+             });
+             
+             const data = await response.json();
+             if (!response.ok) throw new Error(data.error || 'Error del servidor');
+             
+             alert(`¡Árbol "${especie}" plantado exitosamente!${selectedFile ? ' (con foto)' : ''}`);
+             form.reset();
+             
+             if (btnRemoveFoto) btnRemoveFoto.click();
+             
+             if (map) {
+                  const blueIcon = L.icon({
+                         iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                         iconSize: [25, 41], 
+                         iconAnchor: [12, 41], 
+                         popupAnchor: [1, -34], 
+                         shadowSize: [41, 41]
+                  });
+                 
+                  const popupContent = `
+                        <div class="text-center">
+                             <b>Especie:</b> ${data.especie}<br>
+                             <b>ID:</b> ${data.id}
+                             ${data.foto_url ? `<br><img src="${data.foto_url}" alt="${data.especie}" style="width:100%; max-width:200px; margin-top:8px; border-radius:4px;">` : ''}
+                        </div>
+                  `;
+                 
+                  L.marker([data.latitud, data.longitud], { icon: blueIcon })
+                        .addTo(map)
+                        .bindPopup(popupContent);
+             }
+             
+             if (marcadorTemporal) { 
+                  marcadorTemporal.remove(); 
+                  marcadorTemporal = null; 
+             }
+             
+             await cargarStats();
+             await loadTableData();
+             
         } catch (error) {
-            console.error("Error al plantar:", error);
-            alert(`Error: ${error.message}`);
+             console.error("Error al plantar:", error);
+             alert(`Error: ${error.message}`);
         } finally {
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = originalBtnText;
+             submitBtn.disabled = false;
+             submitBtn.innerHTML = originalBtnText;
         }
     });
 
@@ -1020,31 +1073,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const editButton = e.target.closest('.btn-edit');
     
         if (deleteButton) {
-            const arbolId = deleteButton.dataset.id;
-            const filaArbol = deleteButton.closest('tr');
-            const especie = filaArbol?.cells[1]?.textContent || `ID ${arbolId}`;
+             const arbolId = deleteButton.dataset.id;
+             const filaArbol = deleteButton.closest('tr');
+             const especie = filaArbol?.cells[1]?.textContent || `ID ${arbolId}`;
     
-            showConfirmDialog(
-                `¿Seguro que quieres eliminar "${especie}" (ID: ${arbolId})?`,
-                async () => { 
-                    try {
-                        const response = await fetch(`/api/eliminar_arbol/${arbolId}`, { method: 'DELETE' });
-                        const result = await response.json();
-                        if (!response.ok) throw new Error(result.error || 'Error del servidor');
-                        
-                        alert(result.message || 'Árbol eliminado.');
-                        await loadTableData(); 
-                        await cargarStats(); 
-                        await cargarArboles(); 
-                    } catch (error) {
-                        console.error("Error al eliminar:", error);
-                        alert(`Error al eliminar: ${error.message}`);
-                    }
-                }
-            );
+             showConfirmDialog(
+                  `¿Seguro que quieres eliminar "${especie}" (ID: ${arbolId})?`,
+                  async () => { 
+                       try {
+                            const response = await fetch(`/api/eliminar_arbol/${arbolId}`, { method: 'DELETE' });
+                            const result = await response.json();
+                            if (!response.ok) throw new Error(result.error || 'Error del servidor');
+                            
+                            alert(result.message || 'Árbol eliminado.');
+                            await loadTableData(); 
+                            await cargarStats(); 
+                            await cargarArboles(); 
+                       } catch (error) {
+                            console.error("Error al eliminar:", error);
+                            alert(`Error al eliminar: ${error.message}`);
+                       }
+                  }
+             );
         } else if (editButton) {
-            const arbolId = editButton.dataset.id;
-            openEditModal(arbolId); 
+             const arbolId = editButton.dataset.id;
+             openEditModal(arbolId); 
         }
     });
 
@@ -1052,21 +1105,21 @@ document.addEventListener('DOMContentLoaded', () => {
     const checkUrlForToken = () => {
         const hash = window.location.hash.substring(1);
         if (hash) {
-            const params = new URLSearchParams(hash);
-            const accessToken = params.get('access_token');
-            const type = params.get('type');
+             const params = new URLSearchParams(hash);
+             const accessToken = params.get('access_token');
+             const type = params.get('type');
 
-             window.history.replaceState(null, '', window.location.pathname + window.location.search);
+              window.history.replaceState(null, '', window.location.pathname + window.location.search);
 
-            if (type === 'recovery' && accessToken) {
-                 currentAccessToken = accessToken;
-                 showAuth();
-                 showUpdatePasswordForm();
-            } else {
-                 showAuth();
-             }
+             if (type === 'recovery' && accessToken) {
+                  currentAccessToken = accessToken;
+                  showAuth();
+                  showUpdatePasswordForm();
+             } else {
+                  showAuth();
+              }
         } else {
-            showAuth();
+             showAuth();
         }
     };
 
@@ -1092,32 +1145,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chartsError) chartsError.classList.add('hidden');
 
         try {
-            console.log('Cargando datos para gráficos...');
-            
-            const response = await fetch('/api/estadisticas_graficos');
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            
-            const data = await response.json();
-            console.log('Datos de gráficos recibidos:', data);
+             console.log('Cargando datos para gráficos...');
+             
+             const response = await fetch('/api/estadisticas_graficos');
+             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+             
+             const data = await response.json();
+             console.log('Datos de gráficos recibidos:', data);
 
-            if (chartArbolesMes) chartArbolesMes.destroy();
-            if (chartTopEspecies) chartTopEspecies.destroy();
-            if (chartEspeciesDona) chartEspeciesDona.destroy();
+             if (chartArbolesMes) chartArbolesMes.destroy();
+             if (chartTopEspecies) chartTopEspecies.destroy();
+             if (chartEspeciesDona) chartEspeciesDona.destroy();
 
-            renderChartArbolesMes(data.arboles_por_mes || {});
-            renderChartTopEspecies(data.top_especies || {});
-            renderChartEspeciesDona(data.top_especies || {});
-            
-            updateAdditionalStats(data);
+             renderChartArbolesMes(data.arboles_por_mes || {});
+             renderChartTopEspecies(data.top_especies || {});
+             renderChartEspeciesDona(data.top_especies || {});
+             
+             updateAdditionalStats(data);
 
-            if (chartsLoading) chartsLoading.classList.add('hidden');
-            if (chartsContainer) chartsContainer.classList.remove('hidden');
+             if (chartsLoading) chartsLoading.classList.add('hidden');
+             if (chartsContainer) chartsContainer.classList.remove('hidden');
 
         } catch (error) {
-            console.error('Error al cargar gráficos:', error);
-            
-            if (chartsLoading) chartsLoading.classList.add('hidden');
-            if (chartsError) chartsError.classList.remove('hidden');
+             console.error('Error al cargar gráficos:', error);
+             
+             if (chartsLoading) chartsLoading.classList.add('hidden');
+             if (chartsError) chartsError.classList.remove('hidden');
         }
     };
 
@@ -1126,75 +1179,75 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!ctx) return;
 
         const labels = Object.keys(arbolesPorMes).map(mesAno => {
-            const [year, month] = mesAno.split('-');
-            const fecha = new Date(year, month - 1);
-            return fecha.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
+             const [year, month] = mesAno.split('-');
+             const fecha = new Date(year, month - 1);
+             return fecha.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' });
         });
         
         const values = Object.values(arbolesPorMes);
 
         chartArbolesMes = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Árboles Plantados',
-                    data: values,
-                    borderColor: '#007a33',
-                    backgroundColor: 'rgba(0, 122, 51, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: '#007a33',
-                    pointBorderColor: '#fff',
-                    pointBorderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top',
-                        labels: {
-                            font: { size: 14, weight: '600' },
-                            padding: 15
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        titleFont: { size: 14, weight: 'bold' },
-                        bodyFont: { size: 13 },
-                        callbacks: {
-                            label: (context) => `${context.parsed.y} árboles plantados`
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            font: { size: 12 }
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: { size: 12 }
-                        },
-                        grid: {
-                            display: false
-                        }
-                    }
-                }
-            }
+             type: 'line',
+             data: {
+                  labels: labels,
+                  datasets: [{
+                       label: 'Árboles Plantados',
+                       data: values,
+                       borderColor: '#007a33',
+                       backgroundColor: 'rgba(0, 122, 51, 0.1)',
+                       fill: true,
+                       tension: 0.4,
+                       borderWidth: 3,
+                       pointRadius: 5,
+                       pointHoverRadius: 7,
+                       pointBackgroundColor: '#007a33',
+                       pointBorderColor: '#fff',
+                       pointBorderWidth: 2
+                  }]
+             },
+             options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                       legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                 font: { size: 14, weight: '600' },
+                                 padding: 15
+                            }
+                       },
+                       tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                 label: (context) => `${context.parsed.y} árboles plantados`
+                            }
+                       }
+                  },
+                  scales: {
+                       y: {
+                            beginAtZero: true,
+                            ticks: {
+                                 stepSize: 1,
+                                 font: { size: 12 }
+                            },
+                            grid: {
+                                 color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                       },
+                       x: {
+                            ticks: {
+                                 font: { size: 12 }
+                            },
+                            grid: {
+                                 display: false
+                            }
+                       }
+                  }
+             }
         });
     };
 
@@ -1206,64 +1259,64 @@ document.addEventListener('DOMContentLoaded', () => {
         const cantidades = Object.values(topEspecies);
 
         const backgroundColors = especies.map((_, index) => {
-            const hue = (index * 137.5) % 360; 
-            return `hsla(${hue}, 65%, 55%, 0.8)`;
+             const hue = (index * 137.5) % 360; 
+             return `hsla(${hue}, 65%, 55%, 0.8)`;
         });
         const borderColors = backgroundColors.map(color => color.replace('0.8', '1'));
 
         chartTopEspecies = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: especies,
-                datasets: [{
-                    label: 'Cantidad de Árboles',
-                    data: cantidades,
-                    backgroundColor: backgroundColors,
-                    borderColor: borderColors,
-                    borderWidth: 2,
-                    borderRadius: 8,
-                    borderSkipped: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                indexAxis: 'y', 
-                plugins: {
-                    legend: {
-                        display: false
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        titleFont: { size: 14, weight: 'bold' },
-                        bodyFont: { size: 13 },
-                        callbacks: {
-                            label: (context) => `${context.parsed.x} árboles`
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            font: { size: 12 }
-                        },
-                        grid: {
-                            color: 'rgba(0, 0, 0, 0.05)'
-                        }
-                    },
-                    y: {
-                        ticks: {
-                            font: { size: 12, weight: '500' }
-                        },
-                        grid: {
+             type: 'bar',
+             data: {
+                  labels: especies,
+                  datasets: [{
+                       label: 'Cantidad de Árboles',
+                       data: cantidades,
+                       backgroundColor: backgroundColors,
+                       borderColor: borderColors,
+                       borderWidth: 2,
+                       borderRadius: 8,
+                       borderSkipped: false
+                  }]
+             },
+             options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  indexAxis: 'y', 
+                  plugins: {
+                       legend: {
                             display: false
-                        }
-                    }
-                }
-            }
+                       },
+                       tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                 label: (context) => `${context.parsed.x} árboles`
+                            }
+                       }
+                  },
+                  scales: {
+                       x: {
+                            beginAtZero: true,
+                            ticks: {
+                                 stepSize: 1,
+                                 font: { size: 12 }
+                            },
+                            grid: {
+                                 color: 'rgba(0, 0, 0, 0.05)'
+                            }
+                       },
+                       y: {
+                            ticks: {
+                                 font: { size: 12, weight: '500' }
+                            },
+                            grid: {
+                                 display: false
+                            }
+                       }
+                  }
+             }
         });
     };
 
@@ -1275,60 +1328,60 @@ document.addEventListener('DOMContentLoaded', () => {
         const cantidades = Object.values(topEspecies).slice(0, 5);
 
         const colors = [
-            'rgba(0, 122, 51, 0.8)',   
-            'rgba(16, 185, 129, 0.8)',  
-            'rgba(59, 130, 246, 0.8)',  
-            'rgba(139, 92, 246, 0.8)',  
-            'rgba(249, 115, 22, 0.8)'   
+             'rgba(0, 122, 51, 0.8)',   
+             'rgba(16, 185, 129, 0.8)',  
+             'rgba(59, 130, 246, 0.8)',  
+             'rgba(139, 92, 246, 0.8)',  
+             'rgba(249, 115, 22, 0.8)'   
         ];
 
         chartEspeciesDona = new Chart(ctx, {
-            type: 'doughnut',
-            data: {
-                labels: especies,
-                datasets: [{
-                    data: cantidades,
-                    backgroundColor: colors,
-                    borderColor: '#fff',
-                    borderWidth: 3,
-                    hoverOffset: 15
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'right',
-                        labels: {
-                            font: { size: 13, weight: '500' },
-                            padding: 15,
-                            generateLabels: (chart) => {
-                                const data = chart.data;
-                                return data.labels.map((label, i) => ({
-                                    text: `${label} (${data.datasets[0].data[i]})`,
-                                    fillStyle: data.datasets[0].backgroundColor[i],
-                                    hidden: false,
-                                    index: i
-                                }));
+             type: 'doughnut',
+             data: {
+                  labels: especies,
+                  datasets: [{
+                       data: cantidades,
+                       backgroundColor: colors,
+                       borderColor: '#fff',
+                       borderWidth: 3,
+                       hoverOffset: 15
+                  }]
+             },
+             options: {
+                  responsive: true,
+                  maintainAspectRatio: false,
+                  plugins: {
+                       legend: {
+                            position: 'right',
+                            labels: {
+                                 font: { size: 13, weight: '500' },
+                                 padding: 15,
+                                 generateLabels: (chart) => {
+                                      const data = chart.data;
+                                      return data.labels.map((label, i) => ({
+                                           text: `${label} (${data.datasets[0].data[i]})`,
+                                           fillStyle: data.datasets[0].backgroundColor[i],
+                                           hidden: false,
+                                           index: i
+                                      }));
+                                 }
                             }
-                        }
-                    },
-                    tooltip: {
-                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-                        padding: 12,
-                        titleFont: { size: 14, weight: 'bold' },
-                        bodyFont: { size: 13 },
-                        callbacks: {
-                            label: (context) => {
-                                const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                return `${context.parsed} árboles (${percentage}%)`;
+                       },
+                       tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            padding: 12,
+                            titleFont: { size: 14, weight: 'bold' },
+                            bodyFont: { size: 13 },
+                            callbacks: {
+                                 label: (context) => {
+                                      const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                      const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                      return `${context.parsed} árboles (${percentage}%)`;
+                                 }
                             }
-                        }
-                    }
-                }
-            }
+                       }
+                  }
+             }
         });
     };
 
@@ -1345,13 +1398,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (especiesUnicasEl) especiesUnicasEl.textContent = especiesUnicas;
 
         if (Object.keys(arbolesPorMes).length > 0) {
-            const mesActivo = Object.entries(arbolesPorMes).reduce((a, b) => a[1] > b[1] ? a : b);
-            const [year, month] = mesActivo[0].split('-');
-            const fecha = new Date(year, month - 1);
-            const mesNombre = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-            
-            const mesActivoEl = document.getElementById('chart-most-active-month');
-            if (mesActivoEl) mesActivoEl.textContent = mesNombre;
+             const mesActivo = Object.entries(arbolesPorMes).reduce((a, b) => a[1] > b[1] ? a : b);
+             const [year, month] = mesActivo[0].split('-');
+             const fecha = new Date(year, month - 1);
+             const mesNombre = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+             
+             const mesActivoEl = document.getElementById('chart-most-active-month');
+             if (mesActivoEl) mesActivoEl.textContent = mesNombre;
         }
 
         const mesesConDatos = Object.keys(arbolesPorMes).length;
@@ -1360,17 +1413,17 @@ document.addEventListener('DOMContentLoaded', () => {
         if (promedioEl) promedioEl.textContent = promedio;
 
         if (Object.keys(topEspecies).length > 0) {
-            const especieTop = Object.entries(topEspecies)[0];
-            const especieTopEl = document.getElementById('stat-top-especie');
-            if (especieTopEl) especieTopEl.textContent = `${especieTop[0]} (${especieTop[1]})`;
+             const especieTop = Object.entries(topEspecies)[0];
+             const especieTopEl = document.getElementById('stat-top-especie');
+             if (especieTopEl) especieTopEl.textContent = `${especieTop[0]} (${especieTop[1]})`;
         }
 
         const ultimoRegistroEl = document.getElementById('stat-ultimo-registro');
         if (ultimoRegistroEl && Object.keys(arbolesPorMes).length > 0) {
-            const ultimoMes = Object.keys(arbolesPorMes).pop();
-            const [year, month] = ultimoMes.split('-');
-            const fecha = new Date(year, month - 1);
-            ultimoRegistroEl.textContent = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+             const ultimoMes = Object.keys(arbolesPorMes).pop();
+             const [year, month] = ultimoMes.split('-');
+             const fecha = new Date(year, month - 1);
+             ultimoRegistroEl.textContent = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
         }
     };
 
@@ -1386,9 +1439,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         
         if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            enableDarkMode();
+             enableDarkMode();
         } else {
-            disableDarkMode();
+             disableDarkMode();
         }
     };
 
@@ -1408,22 +1461,235 @@ document.addEventListener('DOMContentLoaded', () => {
         const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
         
         if (isDark) {
-            disableDarkMode();
+             disableDarkMode();
         } else {
-            enableDarkMode();
+             enableDarkMode();
         }
         
         const chartsPage = document.getElementById('page-charts');
         if (chartsPage && !chartsPage.classList.contains('hidden')) {
-            setTimeout(() => {
-                if (chartArbolesMes) chartArbolesMes.destroy();
-                if (chartTopEspecies) chartTopEspecies.destroy();
-                if (chartEspeciesDona) chartEspeciesDona.destroy();
-                loadCharts();
-            }, 100);
+             setTimeout(() => {
+                  if (chartArbolesMes) chartArbolesMes.destroy();
+                  if (chartTopEspecies) chartTopEspecies.destroy();
+                  if (chartEspeciesDona) chartEspeciesDona.destroy();
+                  loadCharts();
+             }, 100);
         }
     });
 
     initDarkMode();
+
+    // --- 11. NUEVA FUNCIONALIDAD DE CONFIGURACIÓN DE PERFIL ---
+    
+    const openConfigModal = () => {
+        if (!els.modalConfig) return;
+        
+        if (!currentUser) {
+            console.error("No hay usuario logueado para cargar el perfil.");
+            // Cargar datos genéricos si no hay usuario (aunque no debería pasar si está en la app)
+            els.profileName.value = "Usuario";
+            els.profileEmail.value = "correo@ejemplo.com";
+            els.avatarInitials.textContent = "U";
+            return;
+        }
+    
+        els.modalConfig.classList.add('active');
+        
+        // Cargar datos actuales del usuario desde el objeto global
+        const userName = currentUser.name || currentUser.email?.split('@')[0] || 'Usuario';
+        const userEmail = currentUser.email || '';
+        // Asumiendo que 'birthdate' viene del objeto user. Si no, será string vacío.
+        const userBirthdate = currentUser.birthdate || ''; 
+    
+        if(els.profileName) els.profileName.value = userName;
+        if(els.profileEmail) els.profileEmail.value = userEmail;
+        if(els.profileBirthdate) els.profileBirthdate.value = userBirthdate;
+        
+        // Limpiar vista previa de avatar y mostrar iniciales
+        profileSelectedFile = null;
+        if (els.avatarInput) els.avatarInput.value = '';
+        if (els.avatarPreview) {
+            // TODO: Aquí se debería cargar la 'currentUser.avatar_url' si existe
+            // Por ahora, solo muestra iniciales
+            els.avatarPreview.innerHTML = `<span id="avatar-initials">${getInitials(userName)}</span>
+                <div class="avatar-upload-overlay">
+                    <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
+                </div>`;
+        }
+        // Actualizar las iniciales por si acaso
+        if(els.avatarInitials) els.avatarInitials.textContent = getInitials(userName);
+    };
+
+    const openHelpModal = () => {
+        if (!els.modalHelp) return;
+        els.modalHelp.classList.add('active');
+    };
+
+    // Cerrar modales
+    els.closeConfigBtn?.addEventListener('click', () => {
+        els.modalConfig?.classList.remove('active');
+        resetProfileForm();
+    });
+
+    els.closeHelpBtn?.addEventListener('click', () => {
+        els.modalHelp?.classList.remove('active');
+    });
+
+    els.cancelBtn?.addEventListener('click', () => {
+        els.modalConfig?.classList.remove('active');
+        resetProfileForm();
+    });
+
+    // Cerrar al hacer clic fuera
+    [els.modalConfig, els.modalHelp].forEach(modal => {
+        modal?.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+                if(modal === els.modalConfig) {
+                    resetProfileForm();
+                }
+            }
+        });
+    });
+
+    // Cambiar avatar
+    els.changeAvatarBtn?.addEventListener('click', () => {
+        els.avatarInput?.click();
+    });
+
+    els.avatarInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 5 * 1024 * 1024) { // 5MB
+            showProfileError('La imagen no debe superar 5MB');
+            return;
+        }
+        
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+        if (!allowedTypes.includes(file.type)) {
+             showProfileError('Formato no permitido. Use PNG, JPG o WEBP');
+             return;
+        }
+
+        profileSelectedFile = file; // Almacenar el archivo seleccionado
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            if (!els.avatarPreview) return;
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            els.avatarPreview.innerHTML = '';
+            els.avatarPreview.appendChild(img);
+
+            const overlay = document.createElement('div');
+            overlay.className = 'avatar-upload-overlay';
+            overlay.innerHTML = '<ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>';
+            els.avatarPreview.appendChild(overlay);
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // Enviar formulario de perfil
+    els.profileForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = els.profileName.value.trim();
+        const birthdate = els.profileBirthdate.value;
+        const currentPassword = els.currentPassword.value;
+        const newPassword = els.newPassword.value;
+        const confirmPassword = els.confirmPassword.value;
+
+        // Validaciones
+        if (!name || name.length < 2) {
+            showProfileError('El nombre debe tener al menos 2 caracteres');
+            return;
+        }
+
+        // Si intenta cambiar contraseña
+        if (currentPassword || newPassword || confirmPassword) {
+            if (!currentPassword) {
+                showProfileError('Debes ingresar tu contraseña actual');
+                return;
+            }
+            if (newPassword.length < 8) {
+                showProfileError('La nueva contraseña debe tener al menos 8 caracteres');
+                return;
+            }
+            if (newPassword !== confirmPassword) {
+                showProfileError('Las contraseñas nuevas no coinciden');
+                return;
+            }
+        }
+
+        try {
+            // Aquí puedes agregar la llamada a tu API para actualizar el perfil
+            // 1. Si 'profileSelectedFile' existe, subirlo primero a '/api/upload_foto' (o similar)
+            // 2. Luego, llamar a '/api/update_profile' con { name, birthdate, newPassword, currentPassword, avatar_url }
+
+            console.log("Simulando guardado de perfil...");
+            console.log("Nombre:", name);
+            console.log("Fecha Nac:", birthdate);
+            console.log("Avatar seleccionado:", profileSelectedFile ? profileSelectedFile.name : "Ninguno");
+            console.log("Cambio de Pass:", newPassword ? "Sí" : "No");
+            
+            showProfileSuccess();
+
+            // --- MEJORADO: Actualizar UI globalmente ---
+            if (currentUser) {
+                // Actualizar el objeto de usuario local
+                currentUser.name = name;
+                currentUser.birthdate = birthdate;
+                // Llamar a la función centralizada
+                updateUserInfo(name, currentUser.email);
+            }
+            
+            // TODO: Si se subió un avatar, actualizar 'currentUser.avatar_url'
+            // y modificar 'updateUserInfo' para que muestre la imagen.
+            profileSelectedFile = null;
+
+            setTimeout(() => {
+                els.modalConfig?.classList.remove('active');
+                resetProfileForm();
+            }, 2000);
+
+        } catch (error) {
+            console.error("Error al actualizar perfil:", error);
+            showProfileError('Error al actualizar el perfil: ' + error.message);
+        }
+    });
+
+    function showProfileSuccess() {
+        els.successMsg?.classList.add('show');
+        els.errorMsg?.classList.remove('show');
+        setTimeout(() => {
+            els.successMsg?.classList.remove('show');
+        }, 3000);
+    }
+
+    function showProfileError(message) {
+        if (els.errorText) els.errorText.textContent = message;
+        els.errorMsg?.classList.add('show');
+        els.successMsg?.classList.remove('show');
+        setTimeout(() => {
+            els.errorMsg?.classList.remove('show');
+        }, 5000);
+    }
+
+    function resetProfileForm() {
+        els.successMsg?.classList.remove('show');
+        els.errorMsg?.classList.remove('show');
+        if(els.currentPassword) els.currentPassword.value = '';
+        if(els.newPassword) els.newPassword.value = '';
+        if(els.confirmPassword) els.confirmPassword.value = '';
+        
+        // Restablecer visibilidad de contraseñas
+        els.togglePasswordIcons?.forEach(icon => {
+            const targetId = icon.dataset.target;
+            const input = document.getElementById(targetId);
+            if (input) input.type = 'password';
+            icon.name = 'eye-outline';
+        });
+    }
 
 }); // Fin DOMContentLoaded
