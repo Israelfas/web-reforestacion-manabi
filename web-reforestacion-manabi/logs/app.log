@@ -3620,3 +3620,134 @@ Exception: Error de autenticación: [Errno 11001] getaddrinfo failed
 2025-12-08 03:23:03,415 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:23:03] "GET /api/obtener_arboles HTTP/1.1" 200 -
 2025-12-08 03:38:04,347 - werkzeug - INFO -  * Detected change in 'C:\\Users\\Asus\\Desktop\\reforestacion-manabi\\web-reforestacion-manabi\\app.py', reloading
 2025-12-08 03:38:04,516 - werkzeug - INFO -  * Restarting with stat
+2025-12-08 03:38:05,709 - __main__ - INFO - Conexión con Supabase establecida.
+2025-12-08 03:38:05,715 - __main__ - INFO - Iniciando Reforesta Manabí en 0.0.0.0:5000 (Debug: True)...
+2025-12-08 03:38:05,735 - werkzeug - WARNING -  * Debugger is active!
+2025-12-08 03:38:05,739 - werkzeug - INFO -  * Debugger PIN: 239-645-024
+2025-12-08 03:38:17,644 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:17] "GET / HTTP/1.1" 200 -
+2025-12-08 03:38:17,854 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:17] "GET /static/main.js HTTP/1.1" 200 -
+2025-12-08 03:38:18,025 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:19,342 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:19,345 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:19,346 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:19] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:19,350 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:19,358 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id "HTTP/2 200 OK"
+2025-12-08 03:38:19,360 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:19] "GET /api/predecir_horas HTTP/1.1" 200 -
+2025-12-08 03:38:19,491 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:19,494 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:19,494 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:19] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:26,148 - __main__ - INFO - Intento de login para: marcelomejiauep@gmail.com
+2025-12-08 03:38:26,440 - httpx - INFO - HTTP Request: POST https://ukjrvbwnahfzscsazyhv.supabase.co/auth/v1/token?grant_type=password "HTTP/2 200 OK"
+2025-12-08 03:38:26,442 - __main__ - INFO - Login exitoso para marcelomejiauep@gmail.com. User ID: 6cf8052a-5fd7-413d-beba-1b35343b8f04
+2025-12-08 03:38:26,446 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:26] "POST /api/login HTTP/1.1" 200 -
+2025-12-08 03:38:26,473 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:27,459 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:27,461 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:27,463 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:27] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:27,467 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:27,480 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id "HTTP/2 200 OK"
+2025-12-08 03:38:27,482 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:27] "GET /api/predecir_horas HTTP/1.1" 200 -
+2025-12-08 03:38:27,599 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:27,601 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:27,602 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:27] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:43,474 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:43,671 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:43,672 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:43,673 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:43] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:44,528 - __main__ - INFO - Generando datos para gráficos...
+2025-12-08 03:38:44,658 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=especie%2Cfecha_siembra "HTTP/2 200 OK"
+2025-12-08 03:38:44,660 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:44] "GET /api/estadisticas_graficos HTTP/1.1" 200 -
+2025-12-08 03:38:48,625 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:48,763 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:48,765 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:48,766 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:48] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:50,400 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:50,587 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:50,589 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:50,590 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:50] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:52,903 - __main__ - INFO - Editando árbol ID 9: {'especie': 'Ciruelo', 'foto_url': None}
+2025-12-08 03:38:53,032 - httpx - INFO - HTTP Request: PATCH https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?id=eq.9 "HTTP/2 200 OK"
+2025-12-08 03:38:53,033 - __main__ - INFO - Árbol 9 actualizado
+2025-12-08 03:38:53,033 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:53] "PUT /api/editar_arbol/9 HTTP/1.1" 200 -
+2025-12-08 03:38:54,319 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:54,448 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:54,450 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:54,451 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:54] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:38:54,469 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:38:54,597 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:38:54,599 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:38:54,600 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:38:54] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:06,592 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:07,150 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:07,151 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:07,153 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:07] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:07,388 - __main__ - INFO - Generando datos para gráficos...
+2025-12-08 03:40:07,534 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=especie%2Cfecha_siembra "HTTP/2 200 OK"
+2025-12-08 03:40:07,536 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:07] "GET /api/estadisticas_graficos HTTP/1.1" 200 -
+2025-12-08 03:40:08,572 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:08,700 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:08,702 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:08,703 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:08] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:09,703 - __main__ - INFO - Generando datos para gráficos...
+2025-12-08 03:40:09,833 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=especie%2Cfecha_siembra "HTTP/2 200 OK"
+2025-12-08 03:40:09,836 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:09] "GET /api/estadisticas_graficos HTTP/1.1" 200 -
+2025-12-08 03:40:11,435 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:11,563 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:11,565 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:11,566 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:11] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:26,059 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:26] "GET / HTTP/1.1" 200 -
+2025-12-08 03:40:26,102 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:26] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2025-12-08 03:40:26,418 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:26,617 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id "HTTP/2 200 OK"
+2025-12-08 03:40:26,617 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:26,619 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:26] "GET /api/predecir_horas HTTP/1.1" 200 -
+2025-12-08 03:40:26,619 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:26,620 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:26] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:26,625 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:26,754 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:26,755 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:26,756 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:26] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:45,625 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:45,805 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:45,807 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:45,809 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:45] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:52,723 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:52,912 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:52,914 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:52,915 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:52] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:54,589 - __main__ - INFO - Editando árbol ID 6: {'especie': 'Pino', 'foto_url': None}
+2025-12-08 03:40:54,720 - httpx - INFO - HTTP Request: PATCH https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?id=eq.6 "HTTP/2 200 OK"
+2025-12-08 03:40:54,721 - __main__ - INFO - Árbol 6 actualizado
+2025-12-08 03:40:54,722 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:54] "PUT /api/editar_arbol/6 HTTP/1.1" 200 -
+2025-12-08 03:40:56,037 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:56,176 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:56,178 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:56,179 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:56] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:40:56,196 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:40:56,333 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:40:56,335 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:40:56,336 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:40:56] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:42:52,445 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:42:52] "GET / HTTP/1.1" 200 -
+2025-12-08 03:42:52,493 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:42:52] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2025-12-08 03:42:52,816 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:42:53,150 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:42:53,151 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:42:53,152 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id "HTTP/2 200 OK"
+2025-12-08 03:42:53,153 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:42:53] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:42:53,155 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:42:53] "GET /api/predecir_horas HTTP/1.1" 200 -
+2025-12-08 03:42:53,159 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:42:53,302 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:42:53,304 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:42:53,305 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:42:53] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:47:07,023 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:47:07] "GET / HTTP/1.1" 200 -
+2025-12-08 03:47:07,147 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:47:07] "[36mGET /static/main.js HTTP/1.1[0m" 304 -
+2025-12-08 03:47:07,427 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:47:08,089 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:47:08,089 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id "HTTP/2 200 OK"
+2025-12-08 03:47:08,090 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:47:08,092 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:47:08] "GET /api/predecir_horas HTTP/1.1" 200 -
+2025-12-08 03:47:08,092 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:47:08] "GET /api/obtener_arboles HTTP/1.1" 200 -
+2025-12-08 03:47:08,097 - __main__ - INFO - Obteniendo árboles...
+2025-12-08 03:47:08,240 - httpx - INFO - HTTP Request: GET https://ukjrvbwnahfzscsazyhv.supabase.co/rest/v1/arboles_sembrados?select=id%2Cespecie%2Clatitud%2Clongitud%2Cfecha_siembra%2Cfoto_url%2Cuser_email&limit=1000&offset=0&order=fecha_siembra.desc "HTTP/2 200 OK"
+2025-12-08 03:47:08,241 - __main__ - INFO - Obtenidos 7 árboles
+2025-12-08 03:47:08,242 - werkzeug - INFO - 127.0.0.1 - - [08/Dec/2025 03:47:08] "GET /api/obtener_arboles HTTP/1.1" 200 -
