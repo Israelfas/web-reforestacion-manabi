@@ -133,6 +133,131 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ========================================
+    // SISTEMA DE BLOQUEO TEMPORAL (RATE LIMITING)
+    // ========================================
+    const LOCKOUT_KEY = 'login_lockout';
+
+    const saveLockout = (blockedUntil, attemptsLeft = 0) => {
+        try {
+            localStorage.setItem(LOCKOUT_KEY, JSON.stringify({
+                blocked_until: blockedUntil,
+                attempts_left: attemptsLeft
+            }));
+            console.log('🔒 Bloqueo guardado hasta:', blockedUntil);
+        } catch (error) {
+            console.error('Error al guardar bloqueo:', error);
+        }
+    };
+
+    const getLockout = () => {
+        try {
+            const lockoutStr = localStorage.getItem(LOCKOUT_KEY);
+            if (!lockoutStr) return null;
+            
+            const lockout = JSON.parse(lockoutStr);
+            const blockedUntil = new Date(lockout.blocked_until);
+            
+            // Si ya expiró, limpiar
+            if (blockedUntil < new Date()) {
+                clearLockout();
+                return null;
+            }
+            
+            return {
+                blocked_until: blockedUntil,
+                attempts_left: lockout.attempts_left || 0
+            };
+        } catch (error) {
+            console.error('Error al recuperar bloqueo:', error);
+            return null;
+        }
+    };
+
+    const clearLockout = () => {
+        try {
+            localStorage.removeItem(LOCKOUT_KEY);
+            console.log('🔓 Bloqueo limpiado');
+        } catch (error) {
+            console.error('Error al limpiar bloqueo:', error);
+        }
+    };
+
+    const updateLockoutUI = (timeLeftSeconds, attemptsLeft) => {
+        const loginError = els.loginErrorEl;
+        if (!loginError) return;
+        
+        if (timeLeftSeconds > 0) {
+            const minutes = Math.floor(timeLeftSeconds / 60);
+            const seconds = timeLeftSeconds % 60;
+            
+            loginError.innerHTML = `
+                <div class="flex items-center justify-center space-x-2">
+                    <ion-icon name="lock-closed" class="text-xl"></ion-icon>
+                    <span>Bloqueado. Tiempo restante: <strong>${minutes}m ${seconds}s</strong></span>
+                </div>
+            `;
+            loginError.classList.remove('hidden');
+            
+            // Deshabilitar botón de login
+            const submitBtn = els.formLogin?.querySelector('button[type="submit"]');
+            if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.style.opacity = '0.5';
+                submitBtn.style.cursor = 'not-allowed';
+            }
+        } else if (attemptsLeft < 3) {
+            loginError.innerHTML = `
+                <div class="flex items-center justify-center space-x-2">
+                    <ion-icon name="warning" class="text-xl text-yellow-600"></ion-icon>
+                    <span>Te quedan <strong>${attemptsLeft}</strong> intentos antes del bloqueo</span>
+                </div>
+            `;
+            loginError.classList.remove('hidden');
+        } else {
+            loginError.classList.add('hidden');
+        }
+    };
+
+    let lockoutTimer = null;
+
+    const startLockoutTimer = (blockedUntil) => {
+        if (lockoutTimer) clearInterval(lockoutTimer);
+        
+        lockoutTimer = setInterval(() => {
+            const now = new Date();
+            const timeLeft = Math.max(0, Math.floor((blockedUntil - now) / 1000));
+            
+            if (timeLeft <= 0) {
+                clearInterval(lockoutTimer);
+                clearLockout();
+                
+                // Rehabilitar botón
+                const submitBtn = els.formLogin?.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+                
+                if (els.loginErrorEl) {
+                    els.loginErrorEl.innerHTML = `
+                        <div class="flex items-center justify-center space-x-2 text-green-600">
+                            <ion-icon name="checkmark-circle" class="text-xl"></ion-icon>
+                            <span>Bloqueo terminado. Puedes intentar de nuevo.</span>
+                        </div>
+                    `;
+                    
+                    setTimeout(() => {
+                        els.loginErrorEl?.classList.add('hidden');
+                    }, 5000);
+                }
+            } else {
+                updateLockoutUI(timeLeft, 0);
+            }
+        }, 1000);
+    };
+
+    // ========================================
     // DATOS E ICONOS GLOBALES
     // ========================================
 
@@ -238,7 +363,21 @@ document.addEventListener('DOMContentLoaded', () => {
          }
       };
 
-      const showLoginForm = () => showAuthForm('formLogin', "Bienvenido. Por favor, inicia sesión.");
+      const showLoginForm = () => {
+        showAuthForm('formLogin', "Bienvenido. Por favor, inicia sesión.");
+        
+        // Verificar si hay bloqueo activo al mostrar el formulario
+        const lockout = getLockout();
+        if (lockout) {
+            const timeLeft = Math.floor((lockout.blocked_until - new Date()) / 1000);
+            if (timeLeft > 0) {
+                startLockoutTimer(lockout.blocked_until);
+            } else {
+                clearLockout();
+            }
+        }
+      };
+      
       const showRegisterForm = () => showAuthForm('formRegister', "Crea tu cuenta");
       const showForgotPasswordForm = () => showAuthForm('formForgotPassword', "Recuperar Contraseña");
       const showUpdatePasswordForm = () => showAuthForm('formUpdatePassword', "Crea tu nueva contraseña");
@@ -275,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log('Initializing map...');
         
-        // ✅ NUEVO: Asegurar que el contenedor tenga tamaño correcto
+        // ✅ NUEVO: Asegurar que el contenedor tenga tamaño correcto y z-index
         const mapContainer = document.getElementById('map');
         mapContainer.style.height = '500px';
         mapContainer.style.width = '100%';
@@ -621,12 +760,29 @@ document.addEventListener('DOMContentLoaded', () => {
         } 
     });
 
-    // LOGIN CON PERSISTENCIA DE SESIÓN Y ONBOARDING
+    // LOGIN CON BLOQUEO TEMPORAL Y PERSISTENCIA DE SESIÓN
     els.formLogin?.addEventListener('submit', async (e) => {
         e.preventDefault();
         if (els.loginErrorEl) els.loginErrorEl.classList.add('hidden');
         
+        // Verificar si hay bloqueo activo
+        const lockout = getLockout();
+        if (lockout) {
+            const timeLeft = Math.floor((lockout.blocked_until - new Date()) / 1000);
+            if (timeLeft > 0) {
+                startLockoutTimer(lockout.blocked_until);
+                return;
+            } else {
+                clearLockout();
+            }
+        }
+        
         const [email, password] = ['login-email', 'login-password'].map(id => document.getElementById(id)?.value);
+        
+        const submitBtn = els.formLogin.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<ion-icon name="hourglass-outline" class="inline align-middle mr-2 animate-spin"></ion-icon>Verificando...';
         
         try {
             const response = await fetch('/api/login', {
@@ -636,15 +792,50 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Credenciales inválidas');
             
-            // Guardar sesión
+            // Si está bloqueado
+            if (response.status === 429 || data.blocked) {
+                const blockedUntil = new Date(data.blocked_until);
+                saveLockout(data.blocked_until, 0);
+                startLockoutTimer(blockedUntil);
+                
+                if (els.loginErrorEl) {
+                    els.loginErrorEl.innerHTML = `
+                        <div class="flex items-center justify-center space-x-2">
+                            <ion-icon name="lock-closed" class="text-xl"></ion-icon>
+                            <span>${data.message || 'Demasiados intentos fallidos'}</span>
+                        </div>
+                    `;
+                    els.loginErrorEl.classList.remove('hidden');
+                }
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                return;
+            }
+            
+            // Si login falló pero no bloqueado
+            if (!response.ok) {
+                // Guardar intentos restantes
+                if (data.attempts_left !== undefined) {
+                    updateLockoutUI(0, data.attempts_left);
+                }
+                
+                if (els.loginErrorEl) {
+                    els.loginErrorEl.textContent = data.error || 'Error al iniciar sesión';
+                    els.loginErrorEl.classList.remove('hidden');
+                }
+                
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+                return;
+            }
+            
+            // ✅ LOGIN EXITOSO
+            clearLockout();
             saveSession(data.user, data.session);
-            
-            // Mostrar app
             showApp(data.user);
             
-            // Verificar onboarding
             if (!hasCompletedOnboarding()) {
                 setTimeout(() => startOnboarding(), 1000);
             }
@@ -652,12 +843,13 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch (error) {
             console.error("Error login:", error);
             if (els.loginErrorEl) {
-                els.loginErrorEl.textContent = error.message;
+                els.loginErrorEl.textContent = 'Error de conexión. Intenta nuevamente.';
                 els.loginErrorEl.classList.remove('hidden');
-            } else {
-                alert(`Error al iniciar sesión: ${error.message}`);
             }
-        } 
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }
     });
 
     // FORGOT PASSWORD

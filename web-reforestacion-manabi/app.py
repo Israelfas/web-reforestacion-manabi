@@ -1,6 +1,7 @@
 import os
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
+from collections import defaultdict
 from flask import Flask, render_template, request, jsonify
 from supabase import create_client, Client
 from dotenv import load_dotenv
@@ -44,6 +45,81 @@ app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
 app.config['MAX_CONTENT_LENGTH'] = 5 * 1024 * 1024  # 5MB límite de subida
 
+# --- SISTEMA DE RATE LIMITING (SEGURIDAD) - SOLO EMAIL ---
+# Almacenamiento en memoria para intentos fallidos
+LOGIN_ATTEMPTS = defaultdict(lambda: {'count': 0, 'blocked_until': None, 'first_attempt': None})
+
+# Configuración de seguridad
+MAX_LOGIN_ATTEMPTS = 3
+LOCKOUT_DURATION = timedelta(minutes=5)  # 5 minutos de bloqueo
+ATTEMPT_WINDOW = timedelta(minutes=5)    # Ventana de 5 minutos para contar intentos
+
+def get_client_ip():
+    """Obtiene la IP real del cliente considerando proxies (solo para logs)"""
+    if request.headers.get('X-Forwarded-For'):
+        return request.headers.get('X-Forwarded-For').split(',')[0].strip()
+    elif request.headers.get('X-Real-IP'):
+        return request.headers.get('X-Real-IP')
+    return request.remote_addr
+
+def check_rate_limit(identifier):
+    """
+    Verifica si un identificador (email) está bloqueado
+    Retorna (is_blocked, attempts_left, blocked_until)
+    """
+    now = datetime.utcnow()
+    attempts_data = LOGIN_ATTEMPTS[identifier]
+    
+    # Si está bloqueado, verificar si ya expiró el bloqueo
+    if attempts_data['blocked_until']:
+        if now < attempts_data['blocked_until']:
+            # Aún bloqueado
+            return True, 0, attempts_data['blocked_until']
+        else:
+            # Expiró el bloqueo, resetear TODO
+            logger.info(f"🔓 Bloqueo expirado para {identifier}, reseteando contador")
+            attempts_data['count'] = 0
+            attempts_data['blocked_until'] = None
+            attempts_data['first_attempt'] = None
+            return False, MAX_LOGIN_ATTEMPTS, None
+    
+    # Si la ventana de tiempo expiró, resetear contador
+    if attempts_data['first_attempt'] and (now - attempts_data['first_attempt']) > ATTEMPT_WINDOW:
+        logger.info(f"⏰ Ventana de tiempo expirada para {identifier}, reseteando intentos")
+        attempts_data['count'] = 0
+        attempts_data['first_attempt'] = None
+    
+    # Calcular intentos restantes
+    attempts_left = MAX_LOGIN_ATTEMPTS - attempts_data['count']
+    return False, attempts_left, None
+
+def record_failed_attempt(identifier):
+    """Registra un intento fallido y bloquea si es necesario"""
+    now = datetime.utcnow()
+    attempts_data = LOGIN_ATTEMPTS[identifier]
+    
+    # Si es el primer intento reciente, registrar tiempo
+    if attempts_data['count'] == 0:
+        attempts_data['first_attempt'] = now
+        logger.info(f"🕐 Primer intento fallido para {identifier}")
+    
+    attempts_data['count'] += 1
+    logger.info(f"📊 Intentos fallidos para {identifier}: {attempts_data['count']}/{MAX_LOGIN_ATTEMPTS}")
+    
+    # Si alcanzó el máximo, bloquear
+    if attempts_data['count'] >= MAX_LOGIN_ATTEMPTS:
+        attempts_data['blocked_until'] = now + LOCKOUT_DURATION
+        logger.warning(f"🔒 Email {identifier} bloqueado hasta {attempts_data['blocked_until']} UTC")
+        return True  # Indica que se acaba de bloquear
+    
+    return False
+
+def reset_attempts(identifier):
+    """Resetea los intentos después de un login exitoso"""
+    if identifier in LOGIN_ATTEMPTS:
+        LOGIN_ATTEMPTS[identifier] = {'count': 0, 'blocked_until': None, 'first_attempt': None}
+        logger.info(f"✅ Intentos reseteados para {identifier}")
+
 # --- DECORADORES Y VALIDACIONES ---
 def handle_errors(f):
     @wraps(f)
@@ -76,7 +152,6 @@ def sanitize_string(text, min_length=2, max_length=100, field_name="texto"):
     return cleaned
 
 def validate_password(password):
-    """Valida que la contraseña cumpla con los requisitos mínimos"""
     if not password or not isinstance(password, str):
         raise ValueError("Contraseña inválida")
     if len(password) < 8:
@@ -84,7 +159,6 @@ def validate_password(password):
     return password.strip()
 
 def validate_email(email):
-    """Valida formato básico de email"""
     if not email or not isinstance(email, str):
         raise ValueError("Email inválido")
     email = email.strip().lower()
@@ -240,7 +314,7 @@ def eliminar_arbol(arbol_id):
 
     return jsonify({"message": f"Árbol {arbol_id} eliminado exitosamente", "id": arbol_id}), 200
 
-# --- SUBIDA DE FOTOS DE ÁRBOLES ---
+# --- SUBIDA DE FOTOS Y AVATARES ---
 @app.route("/api/upload_foto", methods=['POST'])
 @handle_errors
 def upload_foto():
@@ -291,18 +365,15 @@ def upload_foto():
 
         raise Exception(error_message)
 
-# --- SUBIDA DE AVATARES DE USUARIO ---
 @app.route("/api/upload_avatar", methods=['POST'])
 @handle_errors
 def upload_avatar():
-    """Sube el avatar del usuario al storage"""
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         raise ValueError("Token de autorización requerido")
     
     jwt_token = auth_header.split(' ')[1]
     
-    # Verificar usuario
     try:
         user_response = supabase.auth.get_user(jwt_token)
         if not user_response or not user_response.user:
@@ -323,7 +394,6 @@ def upload_avatar():
     if file_ext not in allowed_extensions:
         raise ValueError(f"Formato no permitido. Use: {', '.join(allowed_extensions)}")
     
-    # Usar el user_id en el nombre para identificar avatares por usuario
     unique_filename = f"avatar_{user_id}.{file_ext}"
     logger.info(f"Subiendo avatar para usuario {user_id}: {unique_filename}")
     
@@ -331,14 +401,13 @@ def upload_avatar():
         file_content = file.read()
         content_type = f"image/{file_ext}" if file_ext != 'jpg' else 'image/jpeg'
         
-        # Guardar en carpeta 'avatars/' dentro del bucket 'arboles-fotos'
         response = supabase.storage.from_("arboles-fotos").upload(
             path=f"avatars/{unique_filename}",
             file=file_content,
             file_options={
                 "content-type": content_type,
                 "cache-control": "3600",
-                "upsert": "true"  # Sobrescribir si existe
+                "upsert": "true"
             }
         )
         
@@ -369,8 +438,7 @@ def predecir_horas():
 @handle_errors
 def estadisticas_graficos():
     logger.info("Generando datos para gráficos...")
-    response = supabase.table("arboles_sembrados") \
-        .select("especie, fecha_siembra").execute()
+    response = supabase.table("arboles_sembrados").select("especie, fecha_siembra").execute()
 
     if not response.data:
         return jsonify({"arboles_por_mes": {}, "top_especies": {}}), 200
@@ -400,7 +468,6 @@ def estadisticas_graficos():
 
     top_especies_sorted = sorted(especies_count.items(), key=lambda item: item[1], reverse=True)
     top_especies = dict(top_especies_sorted[:10])
-
     arboles_por_mes_sorted = dict(sorted(arboles_por_mes.items()))
 
     return jsonify({
@@ -408,7 +475,146 @@ def estadisticas_graficos():
         "top_especies": top_especies
     }), 200
 
-# --- AUTENTICACIÓN ---
+# --- LOGIN Y SEGURIDAD (RATE LIMITING) ---
+@app.route("/api/login", methods=['POST'])
+@handle_errors
+def login_user():
+    datos = request.json
+    if not datos:
+        raise ValueError("Sin datos")
+    
+    email = validate_email(datos.get("email", ""))
+    password = datos.get("password", "")
+    
+    if not password:
+        raise ValueError("Contraseña requerida")
+    
+    # RATE LIMITING: Solo verificar bloqueo por email
+    email_lower = email.lower()
+    
+    # Verificar estado de bloqueo
+    is_blocked, attempts_left, blocked_until = check_rate_limit(email_lower)
+    
+    if is_blocked:
+        now = datetime.utcnow()
+        time_left_seconds = max(0, int((blocked_until - now).total_seconds()))
+        minutes_left = time_left_seconds // 60
+        seconds_left = time_left_seconds % 60
+        
+        logger.warning(f"🚫 Intento de login bloqueado para email: {email} (IP: {get_client_ip()} - solo para logs)")
+        
+        return jsonify({
+            "error": "Demasiados intentos fallidos",
+            "blocked": True,
+            "blocked_until": blocked_until.isoformat() + 'Z',
+            "time_left_seconds": time_left_seconds,
+            "message": f"Tu correo ha sido bloqueado temporalmente. Intenta nuevamente en {minutes_left}m {seconds_left}s"
+        }), 429
+    
+    # Solo para logs (no afecta el bloqueo)
+    client_ip = get_client_ip()
+    logger.info(f"🔑 Intento de login para: {email} desde IP: {client_ip} (intentos restantes: {attempts_left})")
+    
+    try:
+        # Intentar autenticación con Supabase
+        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+
+        if response.user and response.session:
+            # LOGIN EXITOSO: Resetear contador de intentos
+            reset_attempts(email_lower)
+            
+            logger.info(f"✅ Login exitoso para {email}. User ID: {response.user.id}")
+            user_data = response.user.dict()
+            session_data = response.session.dict()
+
+            # Obtener nombre del usuario
+            user_name = user_data.get("user_metadata", {}).get("name")
+            if not user_name:
+                user_name = email.split('@')[0]
+            user_data['name'] = user_name
+
+            return jsonify({
+                "user": user_data,
+                "session": session_data,
+                "attempts_left": MAX_LOGIN_ATTEMPTS
+            }), 200
+        else:
+            raise ValueError("Credenciales inválidas o error inesperado.")
+
+    except Exception as e:
+        error_msg = str(e)
+        logger.warning(f"❌ Fallo de login para {email}: {error_msg}")
+        
+        # Registrar intento fallido
+        just_blocked = record_failed_attempt(email_lower)
+        
+        # Obtener nuevo estado después de registrar el fallo
+        _, attempts_left, blocked_until_new = check_rate_limit(email_lower)
+        
+        # Si acabamos de bloquear
+        if just_blocked:
+            lockout_minutes = int(LOCKOUT_DURATION.total_seconds() / 60)
+            time_left_seconds = int(LOCKOUT_DURATION.total_seconds())
+            minutes_left = time_left_seconds // 60
+            seconds_left = time_left_seconds % 60
+            
+            return jsonify({
+                "error": "Demasiados intentos fallidos",
+                "blocked": True,
+                "blocked_until": blocked_until_new.isoformat() + 'Z' if blocked_until_new else None,
+                "time_left_seconds": time_left_seconds,
+                "message": f"Tu correo ha sido bloqueado por {minutes_left}m {seconds_left}s debido a múltiples intentos fallidos"
+            }), 429
+        
+        # Preparar mensaje de error
+        if "invalid login credentials" in error_msg.lower() or "invalid" in error_msg.lower():
+            error_message = f"Credenciales inválidas. Te quedan {attempts_left} intentos antes del bloqueo."
+        elif "email not confirmed" in error_msg.lower():
+            error_message = "Email no confirmado. Revisa tu bandeja de entrada."
+        else:
+            error_message = f"Error de autenticación. Intentos restantes: {attempts_left}"
+        
+        return jsonify({
+            "error": error_message,
+            "blocked": False,
+            "attempts_left": attempts_left
+        }), 401
+
+@app.route("/api/check_lockout", methods=['POST'])
+@handle_errors
+def check_lockout_status():
+    datos = request.json
+    email = datos.get("email", "").strip().lower()
+    
+    if not email:
+        return jsonify({
+            "blocked": False,
+            "attempts_left": MAX_LOGIN_ATTEMPTS
+        }), 200
+    
+    # Verificar estado actual
+    is_blocked, attempts_left, blocked_until = check_rate_limit(email)
+    
+    if is_blocked and blocked_until:
+        now = datetime.utcnow()
+        time_left_seconds = max(0, int((blocked_until - now).total_seconds()))
+        minutes_left = time_left_seconds // 60
+        seconds_left = time_left_seconds % 60
+        
+        return jsonify({
+            "blocked": True,
+            "blocked_until": blocked_until.isoformat() + 'Z',
+            "time_left_seconds": time_left_seconds,
+            "attempts_left": 0,
+            "message": f"Tu correo está bloqueado. Tiempo restante: {minutes_left}m {seconds_left}s"
+        }), 200
+    
+    return jsonify({
+        "blocked": False,
+        "attempts_left": attempts_left
+    }), 200
+
+# --- GESTIÓN DE USUARIOS (REGISTER, PROFILE, ETC) ---
 @app.route("/api/register", methods=['POST'])
 @handle_errors
 def register_user():
@@ -442,86 +648,34 @@ def register_user():
         })
         
         if user_response and user_response.user:
-             logger.info(f"Usuario {email} registrado pendiente de confirmación. ID: {user_response.user.id}")
              return jsonify({
                  "message": "Registro exitoso. Revisa tu email para confirmar la cuenta.",
                  "user_id": user_response.user.id
                  }), 201
         elif hasattr(user_response, 'error') and user_response.error:
              msg = user_response.error.message
-             logger.warning(f"Error de Supabase al registrar {email}: {msg}")
              if "already registered" in msg.lower():
                   raise ValueError("Este email ya está registrado.")
              else:
                   raise Exception(f"Error del servicio de autenticación: {msg}")
         else:
-             logger.error(f"Respuesta inesperada de Supabase Auth al registrar {email}: {user_response}")
              raise Exception("Respuesta inesperada del servicio de autenticación.")
 
     except Exception as e:
-         logger.error(f"Excepción durante el registro de {email}: {e}", exc_info=True)
          if isinstance(e, ValueError):
               raise e
          else:
               raise Exception(f"No se pudo completar el registro: {e}")
 
-@app.route("/api/login", methods=['POST'])
-@handle_errors
-def login_user():
-    datos = request.json
-    if not datos:
-        raise ValueError("Sin datos")
-    
-    email = validate_email(datos.get("email", ""))
-    password = datos.get("password", "")
-    
-    if not password:
-        raise ValueError("Contraseña requerida")
-
-    logger.info(f"Intento de login para: {email}")
-    try:
-        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
-
-        if response.user and response.session:
-            logger.info(f"Login exitoso para {email}. User ID: {response.user.id}")
-            user_data = response.user.dict()
-            session_data = response.session.dict()
-
-            user_name = user_data.get("user_metadata", {}).get("name")
-            if not user_name:
-                 user_name = email.split('@')[0]
-            user_data['name'] = user_name
-
-            return jsonify({
-                 "user": user_data,
-                 "session": session_data
-            }), 200
-        else:
-             logger.warning(f"Respuesta inesperada de sign_in_with_password para {email}")
-             raise ValueError("Credenciales inválidas o error inesperado.")
-
-    except Exception as e:
-        error_msg = str(e)
-        logger.warning(f"Fallo de login para {email}: {error_msg}")
-        if "invalid login credentials" in error_msg.lower():
-            raise ValueError("Credenciales inválidas.")
-        elif "email not confirmed" in error_msg.lower():
-            raise ValueError("Email no confirmado. Revisa tu bandeja de entrada.")
-        else:
-            raise Exception(f"Error de autenticación: {error_msg}")
-
 @app.route("/api/forgot_password", methods=['POST'])
 @handle_errors
 def send_recovery_email():
     email = validate_email(request.json.get("email", ""))
-
     logger.info(f"Solicitud de recuperación de contraseña para: {email}")
     try:
         supabase.auth.reset_password_for_email(email)
-        logger.info(f"Correo de recuperación enviado (o simulado) a {email}.")
         return jsonify({"message": "Si el email está registrado, recibirás un correo para restablecer tu contraseña."}), 200
     except Exception as e:
-         logger.error(f"Error al enviar correo de recuperación para {email}: {e}", exc_info=True)
          raise Exception("No se pudo procesar la solicitud de recuperación.")
 
 @app.route("/api/update_password", methods=['POST'])
@@ -531,28 +685,19 @@ def update_password():
     if not auth_header or not auth_header.startswith('Bearer '):
          raise ValueError("Token de autorización faltante o inválido.")
     jwt_token = auth_header.split(' ')[1]
-
     new_password = validate_password(request.json.get("new_password", ""))
 
     try:
         user_response = supabase.auth.get_user(jwt_token)
         if not user_response or not user_response.user:
              raise ValueError("Token inválido o expirado.")
-
-        user_id = user_response.user.id
-        logger.info(f"Usuario {user_id} intentando actualizar contraseña.")
-
+        
         update_response = supabase.auth.update_user(attributes={'password': new_password})
-
         if update_response and update_response.user:
-             logger.info(f"Contraseña actualizada exitosamente para usuario {user_id}.")
              return jsonify({"message": "Contraseña actualizada correctamente."}), 200
         else:
-             logger.error(f"Respuesta inesperada al actualizar contraseña para {user_id}: {update_response}")
              raise Exception("No se pudo actualizar la contraseña debido a un error inesperado.")
-
     except Exception as e:
-        logger.error(f"Error al actualizar contraseña: {e}", exc_info=True)
         error_msg = str(e)
         if "invalid token" in error_msg.lower():
              raise ValueError("Token inválido o expirado.")
@@ -561,14 +706,9 @@ def update_password():
 @app.route("/api/update_profile", methods=['PUT'])
 @handle_errors
 def update_profile():
-    """
-    Actualiza el perfil del usuario (nombre, fecha nacimiento, avatar)
-    También permite cambiar la contraseña si se proporcionan todos los campos necesarios
-    """
     auth_header = request.headers.get('Authorization')
     if not auth_header or not auth_header.startswith('Bearer '):
         raise ValueError("Token de autorización faltante o inválido.")
-    
     jwt_token = auth_header.split(' ')[1]
     datos = request.json
     
@@ -576,22 +716,14 @@ def update_profile():
         raise ValueError("Sin datos para actualizar")
     
     try:
-        # Verificar que el token sea válido
         user_response = supabase.auth.get_user(jwt_token)
         if not user_response or not user_response.user:
             raise ValueError("Token inválido o expirado.")
         
         user_id = user_response.user.id
-        logger.info(f"Usuario {user_id} actualizando perfil...")
-        
         updates = {}
-        
-        # Actualizar nombre
         if "name" in datos:
-            name = sanitize_string(datos["name"], min_length=2, max_length=50, field_name="nombre")
-            updates["name"] = name
-        
-        # Actualizar fecha de nacimiento
+            updates["name"] = sanitize_string(datos["name"], min_length=2, max_length=50, field_name="nombre")
         if "birthdate" in datos:
             birthdate = datos["birthdate"].strip()
             if birthdate:
@@ -599,56 +731,34 @@ def update_profile():
                     datetime.strptime(birthdate, '%Y-%m-%d')
                     updates["birthdate"] = birthdate
                 except ValueError:
-                    raise ValueError("Formato de fecha inválido (use AAAA-MM-DD)")
-        
-        # Actualizar avatar_url
+                    raise ValueError("Formato de fecha inválido")
         if "avatar_url" in datos:
             updates["avatar_url"] = datos["avatar_url"]
         
-        # Si hay updates de metadata, aplicarlos
         if updates:
-            logger.info(f"Actualizando metadata: {updates}")
-            update_response = supabase.auth.update_user(
-                attributes={'data': updates}
-            )
-            
-            if not update_response or not update_response.user:
-                raise Exception("No se pudo actualizar el perfil")
+            supabase.auth.update_user(attributes={'data': updates})
         
-        # Cambio de contraseña (opcional)
         password_changed = False
         if "current_password" in datos and "new_password" in datos:
             current_password = datos["current_password"]
             new_password = validate_password(datos["new_password"])
-            
-            # Verificar contraseña actual intentando loguearse
             try:
                 email = user_response.user.email
-                verify_response = supabase.auth.sign_in_with_password({
-                    "email": email,
-                    "password": current_password
-                })
+                verify_response = supabase.auth.sign_in_with_password({"email": email, "password": current_password})
                 if not verify_response.user:
                     raise ValueError("Contraseña actual incorrecta")
             except Exception:
                 raise ValueError("Contraseña actual incorrecta")
             
-            # Actualizar contraseña
-            pwd_response = supabase.auth.update_user(
-                attributes={'password': new_password}
-            )
+            pwd_response = supabase.auth.update_user(attributes={'password': new_password})
             if pwd_response and pwd_response.user:
                 password_changed = True
-                logger.info(f"Contraseña actualizada para usuario {user_id}")
         
-        # Obtener datos actualizados
         final_user = supabase.auth.get_user(jwt_token)
-        
         response_message = "Perfil actualizado correctamente"
         if password_changed:
             response_message += " (contraseña cambiada)"
         
-        logger.info(f"Perfil de usuario {user_id} actualizado exitosamente")
         return jsonify({
             "message": response_message,
             "user": final_user.user.dict()
@@ -657,31 +767,27 @@ def update_profile():
     except ValueError as e:
         raise e
     except Exception as e:
-        logger.error(f"Error al actualizar perfil: {e}", exc_info=True)
         raise Exception(f"Error al actualizar el perfil: {str(e)}")
 
-# --- MANEJO DE ERRORES GENÉRICOS ---
+# --- MANEJO DE ERRORES ---
 @app.errorhandler(404)
 def not_found(error):
-    logger.warning(f"Ruta no encontrada: {request.url}")
     return jsonify({"error": "Recurso no encontrado"}), 404
 
 @app.errorhandler(405)
 def method_not_allowed(error):
-    logger.warning(f"Método {request.method} no permitido para la ruta: {request.url}")
     return jsonify({"error": "Método no permitido"}), 405
 
 @app.errorhandler(413)
 def payload_too_large(error):
-    logger.warning(f"Payload demasiado grande recibido en {request.url}. Límite: {app.config['MAX_CONTENT_LENGTH']} bytes.")
-    return jsonify({"error": f"El archivo o la solicitud es demasiado grande (límite: {app.config['MAX_CONTENT_LENGTH'] // 1024 // 1024}MB)."}), 413
+    return jsonify({"error": f"El archivo es demasiado grande (límite: 5MB)."}), 413
 
 @app.errorhandler(Exception)
 def internal_error(error):
     logger.critical(f"Error interno no capturado: {error}", exc_info=True)
     return jsonify({"error": "Ocurrió un error interno inesperado en el servidor."}), 500
 
-# --- INICIO DE LA APP ---
+# --- INICIO ---
 if __name__ == "__main__":
     host = os.environ.get('FLASK_RUN_HOST', '0.0.0.0')
     port = int(os.environ.get('FLASK_RUN_PORT', 5000))

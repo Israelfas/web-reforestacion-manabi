@@ -227,7 +227,7 @@
     .bg-gray-200, [class*="bg-gray-200"] { background-color: var(--bg-hover) !important; }
     .bg-white { background-color: var(--bg-primary) !important; }
 
-    /* ENLACES Y BOTONES */
+    /* ENLACES */
     .link {
         color: var(--link-color) !important;
         transition: color 0.2s ease;
@@ -235,16 +235,6 @@
 
     .link:hover {
         color: var(--link-hover-color) !important;
-    }
-
-    .btn-secondary {
-        background-color: var(--bg-tertiary) !important;
-        color: var(--text-primary) !important;
-        border: 1px solid var(--border-color);
-    }
-
-    .btn-secondary:hover {
-        background-color: var(--bg-hover) !important;
     }
 
     /* DROPDOWNS DE USUARIO E IDIOMA */
@@ -490,23 +480,6 @@
         filter: brightness(0.9);
     }
 
-    /* BOTONES DE ACCIÓN */
-    .btn-delete {
-        color: #ef4444 !important;
-    }
-
-    .btn-delete:hover {
-        color: #dc2626 !important;
-    }
-
-    .btn-edit {
-        color: var(--link-color) !important;
-    }
-
-    .btn-edit:hover {
-        color: var(--link-hover-color) !important;
-    }
-
     /* BORDER UTILITIES DE TAILWIND */
     .border-gray-200, [class*="border-gray-200"] { border-color: var(--border-color) !important; }
     .border-gray-300, [class*="border-gray-300"] { border-color: var(--border-color) !important; }
@@ -582,12 +555,6 @@
             cursor: pointer; color: #9ca3af; font-size: 18px;
         }
         .toggle-password:hover { color: #6b7280; }
-        
-        .btn-primary { background-color: #007a33; color: white; }
-        .btn-primary:hover { background-color: #005a24; box-shadow: 0 4px 8px rgba(0, 122, 51, 0.3); transform: translateY(-2px); }
-        .btn-primary:active { transform: translateY(0); box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); }
-        .btn-secondary { background-color: #4b5563; color: white; }
-        .btn-secondary:hover { background-color: #374151; box-shadow: 0 4px 8px rgba(75, 85, 99, 0.3); transform: translateY(-2px); }
         
         .link { 
             color: #007a33; font-weight: 500; cursor: pointer; transition: color 0.2s ease;
@@ -784,10 +751,10 @@
         }
 
         /* ============================================
-           CORRECCIÓN: MAPA QUE SE DESBORDA
+           CORRECCIÓN: MAPA QUE SE DESBORDA (CORREGIDO)
            ============================================ */
         #map { 
-            height: 500px; /* Altura fija necesaria */
+            height: 500px; 
             width: 100% !important;
             max-width: 100% !important;
             border-radius: 8px;
@@ -796,7 +763,6 @@
             z-index: 1; /* Asegura que esté por debajo del menú */
         }
 
-        /* ELIMINAMOS height: 100% !important de aquí para evitar el colapso */
         .leaflet-container {
             width: 100% !important;
             max-width: 100% !important;
@@ -806,34 +772,6 @@
         /* Asegurar que el contenedor del mapa no se desborde */
         .lg\:col-span-2 {
             overflow: hidden;
-        }
-
-        /* ============================================
-           CORRECCIÓN: BOTONES MODAL DE EDICIÓN
-           ============================================ */
-        #modal-edit-tree .btn,
-        #modal-edit-tree button[type="submit"],
-        #modal-edit-tree #btn-cancel-edit {
-            padding: 10px 16px !important;
-            font-size: 14px !important;
-            height: auto !important;
-            min-height: 42px !important;
-        }
-
-        #modal-edit-tree .btn ion-icon {
-            font-size: 18px !important;
-        }
-
-        /* Botones de seleccionar foto en modales */
-        #btn-select-foto,
-        #btn-select-edit-foto {
-            padding: 12px 16px !important;
-            font-size: 14px !important;
-        }
-
-        #btn-select-foto ion-icon,
-        #btn-select-edit-foto ion-icon {
-            font-size: 20px !important;
         }
 
         /* ============================================
@@ -873,27 +811,6 @@
         #onboarding-overlay:not(.hidden) ~ * .leaflet-control-container,
         body:has(#onboarding-overlay:not(.hidden)) .leaflet-control-container {
             z-index: 1 !important;
-        }
-
-        /* ============================================
-           CORRECCIÓN: TAMAÑO DE BOTONES GENERALES
-           ============================================ */
-        .btn {
-            width: 100%; font-weight: 700; border-radius: 8px; 
-            cursor: pointer; border: none; transition: all 0.3s ease; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            font-size: 14px !important;
-            padding: 12px 20px !important;
-            font-weight: 600 !important;
-        }
-
-        .btn ion-icon {
-            font-size: 18px !important;
-        }
-
-        /* Botón de plantar en el formulario principal */
-        #form-plantar button[type="submit"] {
-            padding: 14px 24px !important;
-            font-size: 15px !important;
         }
 
         /* ============================================
@@ -980,6 +897,542 @@
         
         #floating-help-btn:active {
             transform: scale(0.95);
+        }
+
+        /* ============================================
+           SISTEMA DE BLOQUEO TEMPORAL (RATE LIMITING)
+           ============================================ */
+        /* Estilos para mensajes de bloqueo */
+        #login-error {
+            border-radius: 8px;
+            padding: 12px;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        #login-error ion-icon {
+            animation: pulse-error 2s infinite;
+        }
+
+        @keyframes pulse-error {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+
+        /* ============================================
+           SISTEMA DE BOTONES COMPACTOS Y ESTÉTICOS
+           ============================================ */
+
+        /* Override de clases .btn para hacerlas más compactas */
+        .btn {
+            padding: 0.625rem 1rem !important; /* py-2.5 px-4 */
+            font-size: 0.875rem !important; /* text-sm */
+            font-weight: 600 !important;
+            height: auto !important;
+            min-height: 42px !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.2s ease;
+        }
+
+        .btn ion-icon {
+            font-size: 1.25rem !important; /* text-xl */
+        }
+
+        /* Botón primario mejorado */
+        .btn-primary {
+            background: linear-gradient(135deg, #007a33 0%, #00a043 100%);
+            box-shadow: 0 2px 8px rgba(0, 122, 51, 0.2);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 122, 51, 0.3);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        /* Botón secundario mejorado */
+        .btn-secondary {
+            background-color: #e5e7eb !important;
+            color: #374151 !important;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-secondary:hover {
+            background-color: #d1d5db !important;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Botones de archivo (seleccionar foto) */
+        button[id*="select-foto"],
+        button[id*="select-edit-foto"] {
+            padding: 0.625rem 1rem !important;
+            min-height: 42px !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* Botones de remover (X) */
+        button[id*="remove-foto"],
+        button[id*="remove-edit-foto"] {
+            padding: 0.375rem !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 50%;
+        }
+
+        button[id*="remove-foto"] ion-icon {
+            font-size: 1.125rem !important;
+        }
+
+        /* Botones de acción en tablas (editar/eliminar) */
+        .btn-delete,
+        .btn-edit {
+            padding: 0.375rem !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-delete:hover,
+        .btn-edit:hover {
+            transform: scale(1.1);
+        }
+
+        /* Botones en diálogos de confirmación */
+        #confirm-dialog .btn-confirm,
+        #confirm-dialog .btn-cancel {
+            padding: 0.625rem 1rem !important;
+            min-height: 42px !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* Loading state para botones */
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* ============================================
+           MEJORAS ESPECÍFICAS PARA MODALES
+           ============================================ */
+
+        /* Botones en modal de configuración */
+        #modal-config button[type="submit"],
+        #modal-config #cancel-btn,
+        #modal-config #change-avatar-btn {
+            padding: 0.625rem 1rem !important;
+            min-height: 42px !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* Botones en modal de onboarding */
+        #onboarding-next,
+        #onboarding-prev,
+        #onboarding-skip {
+            padding: 0.5rem 1rem !important;
+            font-size: 0.875rem !important;
+            height: auto !important;
+        }
+
+        /* ============================================
+           ANIMACIONES SUTILES
+           ============================================ */
+
+        @keyframes button-press {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(0.98); }
+        }
+
+        .btn:active {
+            animation: button-press 0.15s ease;
+        }
+
+        /* ============================================
+           RESPONSIVE - Mantener compactos en móvil
+           ============================================ */
+
+        @media (max-width: 640px) {
+            .btn {
+                padding: 0.625rem 0.875rem !important;
+                font-size: 0.8125rem !important;
+                min-height: 40px !important;
+            }
+            
+            .btn ion-icon {
+                font-size: 1.125rem !important;
+            }
+            
+            /* Botones de seleccionar foto en móvil */
+            button[id*="select-foto"] {
+                padding: 0.5rem 0.75rem !important;
+                min-height: 40px !important;
+            }
+            
+            /* Ajustar espaciado en formularios móviles */
+            #form-plantar,
+            #form-edit-tree {
+                gap: 1rem;
+            }
+        }
+
+        /* ============================================
+           ESTADO HOVER MEJORADO
+           ============================================ */
+
+        .btn:not(:disabled):hover {
+            filter: brightness(1.05);
+        }
+
+        .btn-primary:not(:disabled):hover {
+            filter: brightness(1.1);
+        }
+
+        /* ============================================
+           ICONOS DENTRO DE BOTONES
+           ============================================ */
+
+        .btn ion-icon {
+            pointer-events: none; /* Evitar que el icono capture clics */
+        }
+
+        /* Alinear iconos correctamente */
+        .btn {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* ============================================
+           FIX PARA BOTONES EN AUTH FORMS
+           ============================================ */
+
+        #form-login button[type="submit"],
+        #form-register button[type="submit"],
+        #form-forgot-password button[type="submit"],
+        #form-update-password button[type="submit"] {
+            padding: 0.75rem 1rem !important;
+            min-height: 48px !important;
+            font-size: 0.875rem !important;
+        }
+
+        /* ============================================
+           MEJORAS VISUALES ADICIONALES
+           ============================================ */
+
+        /* Sombra sutil en hover */
+        .btn:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Feedback visual al hacer clic */
+        .btn:active {
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) inset;
+        }
+
+        /* Transición suave de colores */
+        .btn {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Cursor pointer consistente */
+        .btn,
+        button[type="button"],
+        button[type="submit"] {
+            cursor: pointer;
+        }
+
+        /* ============================================
+           PREVENIR OVERFLOW EN BOTONES
+           ============================================ */
+
+        .btn {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* ============================================
+           ACCESIBILIDAD
+           ============================================ */
+
+        .btn:focus-visible {
+            outline: 2px solid #007a33;
+            outline-offset: 2px;
+        }
+
+        /* ============================================
+           DARK MODE COMPATIBILITY
+           ============================================ */
+
+        [data-theme="dark"] .btn-secondary {
+            background-color: var(--bg-tertiary) !important;
+            color: var(--text-primary) !important;
+        }
+
+        [data-theme="dark"] .btn-secondary:hover {
+            background-color: var(--bg-hover) !important;
+        }
+
+        [data-theme="dark"] .btn-primary {
+            box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+        }
+
+        [data-theme="dark"] .btn-primary:hover {
+            box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+        }
+        
+        /* ============================================
+           ESTILOS PARA FORMULARIO DE PLANTAR
+           ============================================ */
+
+        /* Botón principal de plantar */
+        #form-plantar button[type="submit"] {
+            height: auto !important;
+            min-height: 48px !important;
+            padding: 0.75rem 1rem !important;
+            font-size: 0.875rem !important;
+            font-weight: 600 !important;
+        }
+
+        #form-plantar button[type="submit"] ion-icon {
+            font-size: 1.25rem !important;
+        }
+
+        /* Botón de seleccionar foto */
+        #btn-select-foto {
+            min-height: 42px !important;
+            padding: 0.625rem 1rem !important;
+        }
+
+        #btn-select-foto ion-icon {
+            font-size: 1.25rem !important;
+        }
+
+        /* Botón de remover foto */
+        #btn-remove-foto {
+            padding: 0.375rem !important;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #btn-remove-foto ion-icon {
+            font-size: 1.125rem !important;
+        }
+
+        /* Transiciones suaves */
+        #form-plantar button {
+            transition: all 0.2s ease;
+        }
+
+        /* Preview de imagen más compacto */
+        #foto-preview-container img {
+            max-height: 160px;
+        }
+
+        /* ===== CORRECCIÓN DEL TUTORIAL/TOUR ===== */
+
+        /* Ajustar el contenedor del tour para que no tape el contenido */
+        .tour-overlay,
+        .tutorial-step,
+        .profile-tour-step {
+            z-index: 9999 !important;
+        }
+
+        /* Ajustar el modal/panel del tutorial */
+        .tour-content,
+        .tutorial-content {
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 12px;
+        }
+
+        /* Botones del tour - tamaño normal */
+        .tour-buttons,
+        .tutorial-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        /* Botón "Omitir tour" */
+        .tour-skip-btn,
+        .tutorial-skip-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #6b7280;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tour-skip-btn:hover,
+        .tutorial-skip-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        /* Botón "Anterior" */
+        .tour-prev-btn,
+        .tutorial-prev-btn {
+            padding: 8px 16px;
+            font-size: 14px;
+            background: transparent;
+            border: 1px solid #d1d5db;
+            color: #6b7280;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tour-prev-btn:hover,
+        .tutorial-prev-btn:hover {
+            background: #f3f4f6;
+            border-color: #9ca3af;
+        }
+
+        /* Botón principal (verde con checkmark) */
+        .tour-next-btn,
+        .tutorial-next-btn,
+        .tour-complete-btn {
+            padding: 10px 24px;
+            font-size: 14px;
+            background: #16a34a; /* Verde */
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            /* ELIMINAR TAMAÑOS EXAGERADOS */
+            width: auto !important;
+            height: auto !important;
+            max-width: 150px;
+            max-height: 42px;
+        }
+
+        .tour-next-btn:hover,
+        .tutorial-next-btn:hover,
+        .tour-complete-btn:hover {
+            background: #15803d;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Icono del checkmark dentro del botón */
+        .tour-next-btn svg,
+        .tutorial-next-btn svg,
+        .tour-complete-btn svg,
+        .checkmark-icon {
+            width: 18px !important;
+            height: 18px !important;
+            /* NO debe ser enorme */
+        }
+
+        /* Si el checkmark está como elemento separado */
+        .tour-checkmark-overlay,
+        .tutorial-checkmark {
+            display: none !important; /* Ocultar si está como overlay separado */
+        }
+
+        /* Contenedor del perfil - asegurar que sea visible */
+        .profile-section,
+        .user-profile-section {
+            position: relative;
+            z-index: 1;
+            pointer-events: auto;
+        }
+
+        /* Indicadores de paso (puntitos) */
+        .tour-indicators,
+        .tutorial-pagination {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 16px;
+        }
+
+        .tour-indicator,
+        .tutorial-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #d1d5db;
+            transition: all 0.2s;
+        }
+
+        .tour-indicator.active,
+        .tutorial-dot.active {
+            background: #16a34a;
+            width: 24px;
+            border-radius: 4px;
+        }
+
+        /* Posicionamiento del modal del tutorial */
+        .tutorial-modal {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            max-width: 400px;
+            z-index: 9999;
+        }
+
+        /* Avatar del perfil debe ser clickeable */
+        .profile-avatar,
+        .user-avatar {
+            cursor: pointer;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .tutorial-modal {
+                position: fixed;
+                bottom: 20px;
+                top: auto;
+                right: 20px;
+                left: 20px;
+                transform: none;
+                max-width: none;
+            }
+            
+            .tour-buttons,
+            .tutorial-buttons {
+                flex-direction: column;
+            }
+            
+            .tour-next-btn,
+            .tutorial-next-btn,
+            .tour-complete-btn {
+                max-width: 100%;
+            }
         }
     </style>
 </head>
@@ -1206,8 +1659,8 @@
                            <span class="relative z-10 font-medium">Ver Registros</span>
                       </button>
                       <button data-page="page-charts" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
-                         <ion-icon name="stats-chart-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                         <span class="relative z-10 font-medium">Estadísticas</span>
+                          <ion-icon name="stats-chart-outline" class="mr-3 text-xl relative z-10"></ion-icon>
+                          <span class="relative z-10 font-medium">Estadísticas</span>
                       </button>
                  </nav>
                  <div class="mt-auto pt-4 border-t border-gray-800">
@@ -1241,7 +1694,7 @@
                                      <div class="stat-label">Horas de Trabajo Estimadas</div>
                                  </div>
                                  <ion-icon name="time" class="text-6xl opacity-20"></ion-icon>
-                                 </div>
+                             </div>
                          </div>
                     </div>
                     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1261,6 +1714,7 @@
                                        <ion-icon name="add-circle" class="text-repsol-green text-2xl mr-2"></ion-icon>
                                        Formulario de Siembra
                                   </h3>
+                                  
                                   <form id="form-plantar" class="space-y-5">
                                        <div>
                                             <label for="especie" class="block text-sm font-semibold text-gray-700 mb-2">Especie del Árbol</label>
@@ -1275,20 +1729,25 @@
                                             </p>
                                             <div class="relative">
                                                  <input type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
-                                                 <button type="button" id="btn-select-foto" class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-colors flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer">
-                                                       <ion-icon name="camera-outline" class="text-2xl"></ion-icon>
-                                                       <span>Seleccionar Foto</span>
+                                                 
+                                                 <button type="button" id="btn-select-foto" 
+                                                         class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-all flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer text-sm font-medium hover:bg-green-50">
+                                                      <ion-icon name="camera-outline" class="text-xl"></ion-icon>
+                                                      <span>Seleccionar Foto</span>
                                                  </button>
                                             </div>
+                                            
                                             <div id="foto-preview-container" class="hidden mt-3">
                                                  <div class="relative rounded-lg overflow-hidden border-2 border-gray-200">
                                                       <img id="foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
-                                                      <button type="button" id="btn-remove-foto" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-lg">
-                                                           <ion-icon name="close-outline" class="text-xl"></ion-icon>
+                                                      <button type="button" id="btn-remove-foto" 
+                                                              class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition-colors shadow-lg">
+                                                           <ion-icon name="close-outline" class="text-lg"></ion-icon>
                                                       </button>
                                                  </div>
                                                  <p id="foto-info" class="text-xs text-gray-500 mt-2 text-center"></p>
                                             </div>
+                                            
                                             <div id="upload-progress" class="hidden mt-3">
                                                  <div class="flex items-center space-x-2 text-sm text-repsol-green">
                                                       <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
@@ -1308,8 +1767,10 @@
                                                  <input type="text" id="longitud" name="longitud" placeholder="Longitud" readonly class="input-styled">
                                             </div>
                                        </div>
-                                       <button type="submit" class="btn btn-primary mt-6">
-                                            <ion-icon name="leaf-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
+                                       
+                                       <button type="submit" 
+                                               class="w-full px-4 py-3 bg-repsol-green hover:bg-opacity-90 text-white rounded-lg transition font-semibold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-100">
+                                            <ion-icon name="leaf-outline" class="text-xl"></ion-icon>
                                             Plantar Árbol
                                        </button>
                                   </form>
@@ -1560,20 +2021,24 @@
                       </p>
                       <div class="relative">
                            <input type="file" id="edit-foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
-                           <button type="button" id="btn-select-edit-foto" class="w-full px-4 py-3 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-colors flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer">
-                                <ion-icon name="camera-outline" class="text-2xl"></ion-icon>
+                           
+                           <button type="button" id="btn-select-edit-foto" 
+                                   class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-all flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer text-sm font-medium hover:bg-green-50">
+                                <ion-icon name="camera-outline" class="text-xl"></ion-icon>
                                 <span>Seleccionar Nueva Foto</span>
                            </button>
                       </div>
+                      
                       <div id="edit-foto-preview-container" class="hidden mt-3">
                            <div class="relative rounded-lg overflow-hidden border-2 border-repsol-green">
                                 <img id="edit-foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
-                                <button type="button" id="btn-remove-edit-foto" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-2 hover:bg-red-700 transition-colors shadow-lg">
-                                     <ion-icon name="close-outline" class="text-xl"></ion-icon>
+                                <button type="button" id="btn-remove-edit-foto" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition-colors shadow-lg">
+                                     <ion-icon name="close-outline" class="text-lg"></ion-icon>
                                 </button>
                            </div>
                            <p id="edit-foto-info" class="text-xs text-gray-500 mt-2 text-center"></p>
                       </div>
+                      
                       <div id="edit-upload-progress" class="hidden mt-3">
                            <div class="flex items-center space-x-2 text-sm text-repsol-green">
                                 <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
@@ -1595,11 +2060,14 @@
                  </div>
 
                  <div class="flex gap-3 pt-4">
-                      <button type="button" id="btn-cancel-edit" class="flex-1 px-4 py-3 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-semibold">
+                      <button type="button" id="btn-cancel-edit" 
+                              class="flex-1 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-semibold text-sm flex items-center justify-center gap-2">
+                           <ion-icon name="close-outline" class="text-lg"></ion-icon>
                            Cancelar
                       </button>
-                      <button type="submit" class="flex-1 btn btn-primary">
-                           <ion-icon name="checkmark-outline" class="inline align-middle mr-2 text-xl"></ion-icon>
+                      <button type="submit" 
+                              class="flex-1 px-4 py-2.5 bg-repsol-green hover:bg-opacity-90 text-white rounded-lg transition font-semibold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                           <ion-icon name="checkmark-outline" class="text-lg"></ion-icon>
                            Guardar Cambios
                       </button>
                  </div>
@@ -1799,10 +2267,10 @@
         </div>
     </div>
     
-    <div id="onboarding-overlay" class="hidden fixed inset-0 bg-black bg-opacity-75 z-[2000]">
+    <div id="onboarding-overlay" class="tour-overlay hidden fixed inset-0 bg-black bg-opacity-75 z-[2000]">
         <div id="onboarding-spotlight" class="absolute rounded-lg pointer-events-none transition-all duration-500 hidden" style="box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.75);"></div>
         
-        <div id="onboarding-tooltip" class="fixed bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 z-[2001]" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+        <div id="onboarding-tooltip" class="tour-content fixed bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 sm:p-8 z-[2001]" style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
             <div class="absolute top-3 right-3 sm:top-4 sm:right-4">
                 <span id="onboarding-step-counter" class="text-xs sm:text-sm font-semibold text-gray-500 bg-gray-100 px-2 py-1 rounded-full">1/5</span>
             </div>
@@ -1819,26 +2287,26 @@
                 </p>
             </div>
             
-            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
-                <button id="onboarding-skip" class="text-gray-500 hover:text-gray-700 font-medium transition text-sm order-2 sm:order-1">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3 tour-buttons">
+                <button id="onboarding-skip" class="tour-skip-btn text-gray-500 hover:text-gray-700 font-medium transition text-sm order-2 sm:order-1">
                     Omitir tour
                 </button>
                 <div class="flex gap-2 sm:gap-3 w-full sm:w-auto order-1 sm:order-2">
-                    <button id="onboarding-prev" class="hidden flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 text-sm">
+                    <button id="onboarding-prev" class="tour-prev-btn hidden flex-1 sm:flex-none px-3 sm:px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium text-gray-700 text-sm">
                         ← Anterior
                     </button>
-                    <button id="onboarding-next" class="flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-repsol-green text-white rounded-lg hover:bg-opacity-90 transition font-semibold text-sm shadow-md hover:shadow-lg">
+                    <button id="onboarding-next" class="tour-next-btn flex-1 sm:flex-none px-4 sm:px-6 py-2 bg-repsol-green text-white rounded-lg hover:bg-opacity-90 transition font-semibold text-sm shadow-md hover:shadow-lg">
                         Siguiente →
                     </button>
                 </div>
             </div>
             
-            <div class="mt-6 flex justify-center gap-2">
-                <div class="onboarding-dot w-2 h-2 rounded-full bg-repsol-green transition-all duration-300"></div>
-                <div class="onboarding-dot w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
-                <div class="onboarding-dot w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
-                <div class="onboarding-dot w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
-                <div class="onboarding-dot w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
+            <div class="mt-6 flex justify-center gap-2 tour-indicators">
+                <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-repsol-green transition-all duration-300"></div>
+                <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
+                <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
+                <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
+                <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
             </div>
         </div>
     </div>
