@@ -67,6 +67,100 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let map = null, marcadorTemporal = null, currentAccessToken = null, currentUser = null;
     let profileSelectedFile = null; // Para el avatar del perfil
+    let especieSeleccionadaActual = null; // Para el buscador de especies
+
+    // ========================================
+    // SISTEMA DE NOTIFICACIONES TOAST
+    // Reemplaza los alert() por notificaciones modernas
+    // ========================================
+
+    /**
+     * Muestra una notificación toast
+     * @param {string} message - Mensaje a mostrar
+     * @param {string} type - Tipo: 'success', 'error', 'warning', 'info'
+     * @param {number} duration - Duración en ms (default: 3000)
+     */
+    const showToast = (message, type = 'info', duration = 3000) => {
+        // Crear contenedor si no existe
+        let toastContainer = document.getElementById('toast-container');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.id = 'toast-container';
+            toastContainer.className = 'fixed top-20 right-4 z-[9999] flex flex-col gap-2 pointer-events-none';
+            document.body.appendChild(toastContainer);
+        }
+
+        // Configuración por tipo
+        const config = {
+            success: {
+                icon: 'checkmark-circle',
+                bgColor: 'bg-green-600',
+                borderColor: 'border-green-700'
+            },
+            error: {
+                icon: 'close-circle',
+                bgColor: 'bg-red-600',
+                borderColor: 'border-red-700'
+            },
+            warning: {
+                icon: 'warning',
+                bgColor: 'bg-yellow-600',
+                borderColor: 'border-yellow-700'
+            },
+            info: {
+                icon: 'information-circle',
+                bgColor: 'bg-blue-600',
+                borderColor: 'border-blue-700'
+            }
+        };
+
+        const { icon, bgColor, borderColor } = config[type] || config.info;
+
+        // Crear toast
+        const toast = document.createElement('div');
+        toast.className = `toast-notification ${bgColor} ${borderColor} text-white px-4 py-3 rounded-lg shadow-2xl border-l-4 flex items-center gap-3 min-w-[300px] max-w-md pointer-events-auto transform translate-x-[400px] transition-transform duration-300`;
+        toast.innerHTML = `
+            <ion-icon name="${icon}" class="text-2xl flex-shrink-0"></ion-icon>
+            <p class="flex-1 text-sm font-medium">${message}</p>
+            <button class="toast-close hover:bg-white hover:bg-opacity-20 rounded p-1 transition">
+                <ion-icon name="close" class="text-lg"></ion-icon>
+            </button>
+        `;
+
+        toastContainer.appendChild(toast);
+
+        // Animación de entrada
+        setTimeout(() => {
+            toast.style.transform = 'translateX(0)';
+        }, 10);
+
+        // Función de cierre
+        const closeToast = () => {
+            toast.style.transform = 'translateX(400px)';
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                toast.remove();
+                // Eliminar contenedor si está vacío
+                if (toastContainer.children.length === 0) {
+                    toastContainer.remove();
+                }
+            }, 300);
+        };
+
+        // Cerrar al hacer clic en X
+        const closeBtn = toast.querySelector('.toast-close');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeToast);
+        }
+
+        // Auto-cerrar después de la duración
+        if (duration > 0) {
+            setTimeout(closeToast, duration);
+        }
+
+        return toast;
+    };
+
 
     // ========================================
     // FUNCIONES DE GESTIÓN DE SESIÓN
@@ -240,16 +334,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 
                 if (els.loginErrorEl) {
-                    els.loginErrorEl.innerHTML = `
-                        <div class="flex items-center justify-center space-x-2 text-green-600">
-                            <ion-icon name="checkmark-circle" class="text-xl"></ion-icon>
-                            <span>Bloqueo terminado. Puedes intentar de nuevo.</span>
-                        </div>
-                    `;
-                    
-                    setTimeout(() => {
-                        els.loginErrorEl?.classList.add('hidden');
-                    }, 5000);
+                    showToast('🔓 Bloqueo terminado. Puedes intentar iniciar sesión.', 'success');
+                    els.loginErrorEl.classList.add('hidden');
                 }
             } else {
                 updateLockoutUI(timeLeft, 0);
@@ -272,6 +358,415 @@ document.addEventListener('DOMContentLoaded', () => {
         shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
         iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
     });
+    
+    // ========================================
+    // SISTEMA DE GEOLOCALIZACIÓN AUTOMÁTICA
+    // ========================================
+
+    /**
+     * Obtiene la ubicación actual del usuario usando GPS del dispositivo
+     */
+    const obtenerUbicacionActual = () => {
+        if (!navigator.geolocation) {
+            showToast('Tu navegador no soporta geolocalización', 'error');
+            return;
+        }
+
+        const btnGeolocate = document.getElementById('btn-geolocate');
+        const latitudInput = document.getElementById('latitud');
+        const longitudInput = document.getElementById('longitud');
+
+        if (btnGeolocate) {
+            btnGeolocate.innerHTML = '<ion-icon name="hourglass-outline" class="animate-spin"></ion-icon> Obteniendo...';
+            btnGeolocate.disabled = true;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                const accuracy = position.coords.accuracy;
+
+                // Actualizar inputs
+                if (latitudInput) latitudInput.value = lat.toFixed(6);
+                if (longitudInput) longitudInput.value = lng.toFixed(6);
+
+                // Mover mapa a la ubicación
+                if (map) {
+                    map.setView([lat, lng], 15);
+
+                    // Crear o mover marcador
+                    if (marcadorTemporal) {
+                        marcadorTemporal.setLatLng([lat, lng]);
+                    } else {
+                        const redIcon = L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41],
+                            iconAnchor: [12, 41],
+                            popupAnchor: [1, -34],
+                            shadowSize: [41, 41]
+                        });
+                        marcadorTemporal = L.marker([lat, lng], { draggable: true, icon: redIcon }).addTo(map);
+
+                        marcadorTemporal.on('dragend', (ev) => {
+                            const movedLatLng = ev.target.getLatLng();
+                            if (latitudInput) latitudInput.value = movedLatLng.lat.toFixed(6);
+                            if (longitudInput) longitudInput.value = movedLatLng.lng.toFixed(6);
+                        });
+                    }
+                }
+
+                // Feedback exitoso
+                const accuracyMsg = accuracy < 10 ? 'Excelente' : accuracy < 50 ? 'Buena' : 'Aceptable';
+                showToast(`📍 Ubicación obtenida (precisión: ${accuracyMsg} - ${Math.round(accuracy)}m)`, 'success');
+
+                if (btnGeolocate) {
+                    btnGeolocate.innerHTML = '<ion-icon name="checkmark-circle"></ion-icon> Ubicado';
+                    setTimeout(() => {
+                        btnGeolocate.innerHTML = '<ion-icon name="locate"></ion-icon> Usar mi ubicación';
+                        btnGeolocate.disabled = false;
+                    }, 2000);
+                }
+            },
+            (error) => {
+                console.error('Error de geolocalización:', error);
+                let errorMsg = 'No se pudo obtener tu ubicación';
+
+                switch (error.code) {
+                    case error.PERMISSION_DENIED:
+                        errorMsg = 'Permiso de ubicación denegado. Actívalo en tu navegador.';
+                        break;
+                    case error.POSITION_UNAVAILABLE:
+                        errorMsg = 'Información de ubicación no disponible.';
+                        break;
+                    case error.TIMEOUT:
+                        errorMsg = 'Tiempo de espera agotado para obtener ubicación.';
+                        break;
+                }
+
+                showToast(errorMsg, 'error');
+
+                if (btnGeolocate) {
+                    btnGeolocate.innerHTML = '<ion-icon name="locate"></ion-icon> Usar mi ubicación';
+                    btnGeolocate.disabled = false;
+                }
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            }
+        );
+    };
+
+    // ========================================
+    // BUSCADOR PREDICTIVO DE ESPECIES CON IMÁGENES
+    // ========================================
+
+    // Base de datos de especies nativas de Ecuador
+    const ESPECIES_ECUADOR = [
+        {
+            nombre: 'Guayacán',
+            cientifico: 'Handroanthus chrysanthus',
+            imagen: 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=100&h=100&fit=crop',
+            descripcion: 'Árbol ornamental de flores amarillas'
+        },
+        {
+            nombre: 'Ceibo',
+            cientifico: 'Ceiba pentandra',
+            imagen: 'https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?w=100&h=100&fit=crop',
+            descripcion: 'Árbol gigante, símbolo de Ecuador'
+        },
+        {
+            nombre: 'Algarrobo',
+            cientifico: 'Prosopis juliflora',
+            imagen: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=100&h=100&fit=crop',
+            descripcion: 'Resistente a sequía, madera dura'
+        },
+        {
+            nombre: 'Laurel',
+            cientifico: 'Cordia alliodora',
+            imagen: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=100&h=100&fit=crop',
+            descripcion: 'Madera fina para construcción'
+        },
+        {
+            nombre: 'Pechiche',
+            cientifico: 'Vitex gigantea',
+            imagen: 'https://images.unsplash.com/photo-1511497584788-876760111969?w=100&h=100&fit=crop',
+            descripcion: 'Flores moradas, madera resistente'
+        },
+        {
+            nombre: 'Amarillo',
+            cientifico: 'Centrolobium ochroxylum',
+            imagen: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=100&h=100&fit=crop',
+            descripcion: 'Madera amarilla muy valiosa'
+        },
+        {
+            nombre: 'Caoba',
+            cientifico: 'Swietenia macrophylla',
+            imagen: 'https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=100&h=100&fit=crop',
+            descripcion: 'Madera noble de alto valor'
+        },
+        {
+            nombre: 'Fernán Sánchez',
+            cientifico: 'Triplaris cumingiana',
+            imagen: 'https://images.unsplash.com/photo-1542273917363-3b1817f69a2d?w=100&h=100&fit=crop',
+            descripcion: 'Resistente, ideal para riberas'
+        },
+        {
+            nombre: 'Balsa',
+            cientifico: 'Ochroma pyramidale',
+            imagen: 'https://images.unsplash.com/photo-1511497584788-876760111969?w=100&h=100&fit=crop',
+            descripcion: 'Madera más liviana del mundo'
+        },
+        {
+            nombre: 'Moral Bobo',
+            cientifico: 'Clarisia racemosa',
+            imagen: 'https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=100&h=100&fit=crop',
+            descripcion: 'Frutos comestibles para fauna'
+        }
+    ];
+
+    /**
+     * Inicializa el buscador predictivo de especies
+     */
+    const initEspecieSearch = () => {
+        const especieInput = document.getElementById('especie');
+        const especieResults = document.getElementById('especie-results');
+
+        if (!especieInput || !especieResults) return;
+
+        // Evento de escritura
+        especieInput.addEventListener('input', (e) => {
+            const query = e.target.value.trim().toLowerCase();
+            especieSeleccionadaActual = null;
+
+            if (query.length < 2) {
+                especieResults.classList.add('hidden');
+                especieResults.innerHTML = '';
+                return;
+            }
+
+            // Filtrar especies
+            const matches = ESPECIES_ECUADOR.filter(especie =>
+                especie.nombre.toLowerCase().includes(query) ||
+                especie.cientifico.toLowerCase().includes(query) ||
+                especie.descripcion.toLowerCase().includes(query)
+            ).slice(0, 5); // Mostrar máximo 5 resultados
+
+            if (matches.length === 0) {
+                especieResults.innerHTML = `
+                    <div class="p-3 text-sm text-gray-500 text-center">
+                        <ion-icon name="search-outline" class="text-lg mb-1"></ion-icon>
+                        <p>No se encontraron especies. Escribe el nombre manualmente.</p>
+                    </div>
+                `;
+                especieResults.classList.remove('hidden');
+                return;
+            }
+
+            // Renderizar resultados
+            especieResults.innerHTML = matches.map(especie => `
+                <div class="especie-result-item flex items-center p-3 hover:bg-gray-50 cursor-pointer transition border-b border-gray-100 last:border-0"
+                    data-nombre="${especie.nombre}"
+                    data-cientifico="${especie.cientifico}">
+                    <img src="${especie.imagen}" 
+                        alt="${especie.nombre}" 
+                        class="w-12 h-12 rounded-lg object-cover mr-3 border border-gray-200"
+                        onerror="this.src='https://via.placeholder.com/100?text=🌳'">
+                    <div class="flex-1">
+                        <p class="font-semibold text-sm text-gray-900">${especie.nombre}</p>
+                        <p class="text-xs text-gray-500 italic">${especie.cientifico}</p>
+                        <p class="text-xs text-gray-400 mt-0.5">${especie.descripcion}</p>
+                    </div>
+                    <ion-icon name="chevron-forward-outline" class="text-gray-400 text-lg"></ion-icon>
+                </div>
+            `).join('');
+
+            especieResults.classList.remove('hidden');
+
+            // Event listeners para selección
+            especieResults.querySelectorAll('.especie-result-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const nombre = item.dataset.nombre;
+                    const cientifico = item.dataset.cientifico;
+                    especieInput.value = nombre;
+                    especieSeleccionadaActual = { nombre, cientifico };
+                    especieResults.classList.add('hidden');
+                    showToast(`Especie seleccionada: ${nombre}`, 'success');
+                    // Asegurar que la validación se actualice
+                    especieInput.dispatchEvent(new Event('input'));
+                });
+            });
+        });
+
+        // Cerrar resultados al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!especieInput.contains(e.target) && !especieResults.contains(e.target)) {
+                especieResults.classList.add('hidden');
+            }
+        });
+
+        // Abrir resultados al hacer focus si hay texto
+        especieInput.addEventListener('focus', () => {
+            if (especieInput.value.trim().length >= 2) {
+                especieInput.dispatchEvent(new Event('input'));
+            }
+        });
+    };
+
+    // ========================================
+    // VALIDACIÓN Y COMPRESIÓN DE IMÁGENES
+    // ========================================
+
+    /**
+     * Valida y comprime una imagen antes de subirla
+     * @param {File} file - Archivo de imagen
+     * @param {number} maxSizeMB - Tamaño máximo en MB
+     * @param {number} maxWidthOrHeight - Dimensión máxima
+     * @returns {Promise<Blob>} - Imagen comprimida
+     */
+    const compressImage = async (file, maxSizeMB = 1, maxWidthOrHeight = 1920) => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Redimensionar si es muy grande
+                    if (width > height) {
+                        if (width > maxWidthOrHeight) {
+                            height *= maxWidthOrHeight / width;
+                            width = maxWidthOrHeight;
+                        }
+                    } else {
+                        if (height > maxWidthOrHeight) {
+                            width *= maxWidthOrHeight / height;
+                            height = maxWidthOrHeight;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Convertir a blob con compresión
+                    canvas.toBlob(
+                        (blob) => {
+                            const compressedSizeMB = blob.size / 1024 / 1024;
+                            console.log(`📸 Imagen comprimida: ${compressedSizeMB.toFixed(2)}MB (Original: ${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+                            resolve(blob);
+                        },
+                        'image/jpeg',
+                        0.85 // Calidad 85%
+                    );
+                };
+                img.onerror = () => reject(new Error('Error al cargar la imagen'));
+            };
+            reader.onerror = () => reject(new Error('Error al leer el archivo'));
+        });
+    };
+
+    /**
+     * Valida formato y tamaño de imagen con feedback instantáneo
+     */
+    const validateImageFile = async (file) => {
+        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+        const maxSize = 5 * 1024 * 1024; // 5MB
+
+        // Validar tipo
+        if (!allowedTypes.includes(file.type)) {
+            showToast('❌ Formato no permitido. Use PNG, JPG o WEBP', 'error');
+            return null;
+        }
+
+        // Validar tamaño original
+        if (file.size > maxSize) {
+            showToast('⚠️ Imagen muy grande, comprimiendo automáticamente...', 'warning', 2000);
+            try {
+                const compressed = await compressImage(file, 1, 1920);
+                showToast('✅ Imagen comprimida exitosamente', 'success');
+                return new File([compressed], file.name, { type: 'image/jpeg' });
+            } catch (error) {
+                showToast('❌ Error al comprimir la imagen', 'error');
+                return null;
+            }
+        }
+
+        // Comprimir si es más de 1MB
+        if (file.size > 1024 * 1024) {
+            try {
+                const compressed = await compressImage(file, 1, 1920);
+                showToast('🎯 Imagen optimizada para carga rápida', 'info', 2000);
+                return new File([compressed], file.name, { type: 'image/jpeg' });
+            } catch (error) {
+                console.error('Error al optimizar:', error);
+                return file; // Retornar original si falla
+            }
+        }
+
+        return file;
+    };
+    
+    // ========================================
+    // VALIDACIÓN EN TIEMPO REAL DE FORMULARIOS
+    // ========================================
+
+    /**
+     * Agrega validación visual en tiempo real a un input
+     */
+    const addRealtimeValidation = (inputId, validationFn, errorMsg) => {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        let feedbackEl = input.parentElement.querySelector('.validation-feedback');
+        if (!feedbackEl) {
+            feedbackEl = document.createElement('div');
+            feedbackEl.className = 'validation-feedback text-xs mt-1 flex items-center gap-1 transition-all duration-200';
+            // Insertar después del input, dentro del wrapper
+            input.parentElement.appendChild(feedbackEl);
+        }
+
+        const validate = () => {
+            const value = input.value.trim();
+            const isValid = validationFn(value);
+
+            if (!value) {
+                // Sin contenido, ocultar feedback
+                feedbackEl.classList.add('hidden');
+                input.classList.remove('border-green-500', 'border-red-500');
+                return true; // Considerar vacío como válido para no obligar a rellenar inmediatamente
+            }
+
+            if (isValid) {
+                feedbackEl.innerHTML = '<ion-icon name="checkmark-circle" class="text-green-600"></ion-icon><span class="text-green-600">Válido</span>';
+                feedbackEl.classList.remove('hidden');
+                input.classList.remove('border-red-500');
+                input.classList.add('border-green-500');
+            } else {
+                feedbackEl.innerHTML = `<ion-icon name="alert-circle" class="text-red-600"></ion-icon><span class="text-red-600">${errorMsg}</span>`;
+                feedbackEl.classList.remove('hidden');
+                input.classList.remove('border-green-500');
+                input.classList.add('border-red-500');
+            }
+            return isValid;
+        };
+
+        input.addEventListener('input', validate);
+        input.addEventListener('blur', validate);
+        
+        // Retornar la función de validación para usarla en el submit
+        return validate;
+    };
+
 
     // --- 2. FUNCIONES AUXILIARES ---
     const getInitials = (name) => {
@@ -346,22 +841,22 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const showAuthForm = (formId, title) => {
-         hideAllAuthForms();
-         if (els.authTitle) els.authTitle.textContent = title;
+          hideAllAuthForms();
+          if (els.authTitle) els.authTitle.textContent = title;
 
-         const formElement = els[formId];
-         if (formElement) {
-               formElement.classList.remove('hidden');
-         } else {
-               console.error(`Auth form with ID "${formId}" not found in els.`);
+          const formElement = els[formId];
+          if (formElement) {
+              formElement.classList.remove('hidden');
+          } else {
+              console.error(`Auth form with ID "${formId}" not found in els.`);
+           }
+
+          if (formId === 'formLogin') {
+              els.registerLink?.classList.remove('hidden');
+          } else {
+              els.showLoginDiv?.classList.remove('hidden');
           }
-
-         if (formId === 'formLogin') {
-               els.registerLink?.classList.remove('hidden');
-         } else {
-               els.showLoginDiv?.classList.remove('hidden');
-         }
-      };
+       };
 
       const showLoginForm = () => {
         showAuthForm('formLogin', "Bienvenido. Por favor, inicia sesión.");
@@ -433,7 +928,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         puntosReforestacion.forEach(punto => {
              L.marker(punto.coords, { icon: greenIcon }).addTo(map)
-                    .bindPopup(`<b>${punto.nombre}</b><br>${punto.info}`);
+                      .bindPopup(`<b>${punto.nombre}</b><br>${punto.info}`);
         });
 
         map.on('click', (e) => {
@@ -442,24 +937,24 @@ document.addEventListener('DOMContentLoaded', () => {
              document.getElementById('longitud').value = lng.toFixed(6);
 
              if (marcadorTemporal) {
-                  marcadorTemporal.setLatLng(e.latlng);
+                 marcadorTemporal.setLatLng(e.latlng);
              } else {
-                  const redIcon = L.icon({
-                           iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-                           shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                           iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                 const redIcon = L.icon({
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
                       });
-                  marcadorTemporal = L.marker(e.latlng, { draggable: true, icon: redIcon }).addTo(map);
-                   marcadorTemporal.on('dragend', (ev) => {
-                        const movedLatLng = ev.target.getLatLng();
-                        document.getElementById('latitud').value = movedLatLng.lat.toFixed(6);
-                        document.getElementById('longitud').value = movedLatLng.lng.toFixed(6);
-                   });
+                 marcadorTemporal = L.marker(e.latlng, { draggable: true, icon: redIcon }).addTo(map);
+                      marcadorTemporal.on('dragend', (ev) => {
+                          const movedLatLng = ev.target.getLatLng();
+                          document.getElementById('latitud').value = movedLatLng.lat.toFixed(6);
+                          document.getElementById('longitud').value = movedLatLng.lng.toFixed(6);
+                      });
              }
-              map.panTo(e.latlng);
+             map.panTo(e.latlng);
         });
-         map.invalidateSize();
-        cargarArboles();
+          map.invalidateSize();
+          cargarArboles();
     };
 
     // --- 5. CARGA DE DATOS Y FILTRADO ---
@@ -470,15 +965,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         rows.forEach(row => {
              if (row.cells.length <= 1) {
-                   row.style.display = '';
-                   return;
+                  row.style.display = '';
+                  return;
              }
 
              const rowText = row.textContent || row.innerText;
              if (rowText.toLowerCase().includes(term)) {
-                   row.style.display = '';
+                  row.style.display = '';
              } else {
-                   row.style.display = 'none';
+                  row.style.display = 'none';
              }
         });
     };
@@ -499,28 +994,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
              arboles.forEach(arbol => {
                   const blueIcon = L.icon({
-                           iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                           shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                           iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
-                  });
+                            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                            iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41]
+                      });
 
                   const popupContent = `
-                        <div class="text-center">
-                             <b>Especie:</b> ${arbol.especie || 'N/A'}<br>
-                             <b>ID:</b> ${arbol.id}
-                             ${arbol.foto_url ? `<br><img src="${arbol.foto_url}" alt="${arbol.especie}" style="width:100%; max-width:200px; margin-top:8px; border-radius:4px;">` : ''}
-                        </div>
-                  `;
+                          <div class="text-center">
+                               <b>Especie:</b> ${arbol.especie || 'N/A'}<br>
+                               <b>ID:</b> ${arbol.id}
+                               ${arbol.foto_url ? `<br><img src="${arbol.foto_url}" alt="${arbol.especie}" style="width:100%; max-width:200px; margin-top:8px; border-radius:4px;">` : ''}
+                          </div>
+                      `;
 
                   L.marker([arbol.latitud, arbol.longitud], { icon: blueIcon })
-                        .addTo(map)
-                        .bindPopup(popupContent);
+                          .addTo(map)
+                          .bindPopup(popupContent);
              });
              console.log(`${arboles.length} árboles cargados en el mapa.`);
         } catch (error) {
              console.error("Error al cargar árboles:", error);
-             alert("Error al cargar los árboles en el mapa.");
-          }
+             showToast("Error al cargar los árboles en el mapa.", 'error');
+           }
     };
 
     const cargarStats = async () => {
@@ -534,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
              console.error("Error al cargar estadísticas:", error);
              if (els.statArboles) els.statArboles.textContent = '0';
              if (els.statHoras) els.statHoras.textContent = '0.0';
-          }
+           }
     };
 
     const loadTableData = async () => {
@@ -558,67 +1053,68 @@ document.addEventListener('DOMContentLoaded', () => {
              arboles.forEach(arbol => {
                   let fecha = 'Inválida';
                   try {
-                        fecha = new Date(arbol.fecha_siembra).toLocaleString('es-ES', {
-                             dateStyle: 'short',
-                             timeStyle: 'short',
-                             hour12: true
-                        });
+                       fecha = new Date(arbol.fecha_siembra).toLocaleString('es-ES', {
+                            dateStyle: 'short',
+                            timeStyle: 'short',
+                            hour12: true
+                       });
                   } catch (e) {
-                        console.warn(`Fecha inválida: ${arbol.fecha_siembra}`);
+                       console.warn(`Fecha inválida: ${arbol.fecha_siembra}`);
                   }
 
                   const usuario = arbol.user_email || 'Desconocido';
 
                   const fotoHtml = arbol.foto_url
-                        ? `<img src="${arbol.foto_url}" alt="${arbol.especie}" class="w-10 h-10 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform" onclick="window.open('${arbol.foto_url}', '_blank')" title="Click para ver en tamaño completo">`
-                        : `<div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center" title="Sin foto">
-                             <ion-icon name="image-outline" class="text-gray-400 text-xl"></ion-icon>
+                       ? `<img src="${arbol.foto_url}" alt="${arbol.especie}" class="w-10 h-10 rounded-lg object-cover cursor-pointer hover:scale-110 transition-transform" onclick="window.open('${arbol.foto_url}', '_blank')" title="Click para ver en tamaño completo">`
+                       : `<div class="w-10 h-10 rounded-lg bg-gray-200 flex items-center justify-center" title="Sin foto">
+                            <ion-icon name="image-outline" class="text-gray-400 text-xl"></ion-icon>
                           </div>`;
 
                   els.tableBody.innerHTML += `
-                        <tr class="hover:bg-gray-50 transition-colors" data-id="${arbol.id}">
-                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${arbol.id}</td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${arbol.especie || 'N/A'}</td>
-                             <td class="px-6 py-4 whitespace-nowrap">${fotoHtml}</td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.latitud?.toFixed(6) || 'N/A'}</td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.longitud?.toFixed(6) || 'N/A'}</td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fecha}</td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate" title="${usuario}">${usuario}</td>
-                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                  <button class="btn-delete text-red-600 hover:text-red-800 transition duration-150" data-id="${arbol.id}" title="Eliminar ${arbol.id}">
-                                       <ion-icon name="trash-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
-                                  </button>
-                                  <button class="btn-edit text-blue-600 hover:text-blue-800 transition duration-150 ml-3" data-id="${arbol.id}" title="Editar ${arbol.id}">
-                                       <ion-icon name="create-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
-                                  </button>
-                             </td>
-                        </tr>
-                  `;
+                       <tr class="hover:bg-gray-50 transition-colors" data-id="${arbol.id}">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">${arbol.id}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${arbol.especie || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${fotoHtml}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.latitud?.toFixed(6) || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${arbol.longitud?.toFixed(6) || 'N/A'}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${fecha}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 truncate" title="${usuario}">${usuario}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                 <button class="btn-delete text-red-600 hover:text-red-800 transition duration-150" data-id="${arbol.id}" title="Eliminar ${arbol.id}">
+                                      <ion-icon name="trash-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
+                                 </button>
+                                 <button class="btn-edit text-blue-600 hover:text-blue-800 transition duration-150 ml-3" data-id="${arbol.id}" title="Editar ${arbol.id}">
+                                      <ion-icon name="create-outline" class="text-lg align-middle pointer-events-none"></ion-icon>
+                                 </button>
+                            </td>
+                       </tr>
+                   `;
              });
              console.log(`${arboles.length} filas añadidas a la tabla.`);
         } catch (error) {
              console.error("Error al cargar la tabla:", error);
+             showToast("Error al cargar datos de la tabla.", 'error');
              els.tableBody.innerHTML = '<tr><td colspan="8" class="text-center p-4 text-red-600">Error al cargar datos.</td></tr>';
-         }
+           }
     };
 
-     const loadAppData = async () => {
+      const loadAppData = async () => {
            console.log("Cargando datos iniciales de la aplicación...");
            try {
-                 await Promise.all([
-                      cargarStats(),
-                      loadTableData()
-                 ]);
+                await Promise.all([
+                     cargarStats(),
+                     loadTableData()
+                ]);
            } catch(error) {
-                console.error("Error al cargar datos de la app:", error);
-                alert("Error al cargar los datos iniciales de la aplicación.");
-             }
-      };
+                 console.error("Error al cargar datos de la app:", error);
+                 showToast("Error al cargar los datos iniciales de la aplicación.", 'error');
+               }
+       };
 
     // --- 6. DIÁLOGO DE CONFIRMACIÓN ---
     const showConfirmDialog = (message, onConfirm) => {
-         const existingDialog = document.getElementById('confirm-dialog');
-         if (existingDialog) existingDialog.remove();
+          const existingDialog = document.getElementById('confirm-dialog');
+          if (existingDialog) existingDialog.remove();
 
         const dialog = document.createElement('div');
         dialog.id = 'confirm-dialog';
@@ -636,17 +1132,17 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         document.body.appendChild(dialog);
 
-         const closeDialog = (callback) => {
-              dialog.remove();
-              document.removeEventListener('keydown', escKeyHandler);
-              if (callback) callback();
-         };
+          const closeDialog = (callback) => {
+               dialog.remove();
+               document.removeEventListener('keydown', escKeyHandler);
+               if (callback) callback();
+          };
 
         dialog.querySelector('.btn-cancel').onclick = () => closeDialog();
         dialog.querySelector('.btn-confirm').onclick = () => closeDialog(onConfirm);
         dialog.addEventListener('click', (e) => { if (e.target === dialog) closeDialog(); });
 
-         const escKeyHandler = (e) => { if (e.key === 'Escape') closeDialog(); };
+          const escKeyHandler = (e) => { if (e.key === 'Escape') closeDialog(); };
         document.addEventListener('keydown', escKeyHandler);
     };
 
@@ -692,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', () => {
              if (els.checkEn) els.checkEn.classList.toggle('hidden', selectedLang !== 'en');
 
              console.log(`Idioma seleccionado: ${selectedLang}`);
-             alert(`Idioma cambiado a ${langText} (funcionalidad de traducción pendiente)`);
+             showToast(`Idioma cambiado a ${langText} (funcionalidad de traducción pendiente)`, 'info');
 
              els.langMenu?.classList.remove('active');
         });
@@ -746,7 +1242,7 @@ document.addEventListener('DOMContentLoaded', () => {
              const data = await response.json();
              if (!response.ok) throw new Error(data.error || 'Error desconocido');
 
-             alert('¡Registro exitoso! Revisa tu email para confirmar y luego inicia sesión.');
+             showToast('¡Registro exitoso! Revisa tu email para confirmar y luego inicia sesión.', 'success');
              els.formRegister?.reset();
              showLoginForm();
         } catch (error) {
@@ -755,7 +1251,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   els.registerErrorEl.textContent = error.message.includes("already registered") ? "Email ya registrado." : `Error: ${error.message}`;
                   els.registerErrorEl.classList.remove('hidden');
              } else {
-                  alert(`Error al registrar: ${error.message}`);
+                  showToast(`Error al registrar: ${error.message}`, 'error');
               }
         } 
     });
@@ -835,6 +1331,7 @@ document.addEventListener('DOMContentLoaded', () => {
             clearLockout();
             saveSession(data.user, data.session);
             showApp(data.user);
+            showToast('¡Bienvenido! Sesión iniciada correctamente.', 'success');
             
             if (!hasCompletedOnboarding()) {
                 setTimeout(() => startOnboarding(), 1000);
@@ -854,75 +1351,75 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // FORGOT PASSWORD
     els.formForgotPassword?.addEventListener('submit', async (e) => {
-         e.preventDefault();
-         if (els.forgotErrorEl) els.forgotErrorEl.classList.add('hidden');
-         if (els.forgotSuccessEl) els.forgotSuccessEl.classList.add('hidden');
-         const email = document.getElementById('forgot-email')?.value;
-         
-         if (!email || !email.includes('@')) {
-                 if(els.forgotErrorEl) {
-                        els.forgotErrorEl.textContent = 'Email inválido.';
-                        els.forgotErrorEl.classList.remove('hidden');
-                      }
-               return;
-          }
+          e.preventDefault();
+          if (els.forgotErrorEl) els.forgotErrorEl.classList.add('hidden');
+          if (els.forgotSuccessEl) els.forgotSuccessEl.classList.add('hidden');
+          const email = document.getElementById('forgot-email')?.value;
+          
+          if (!email || !email.includes('@')) {
+               if(els.forgotErrorEl) {
+                    els.forgotErrorEl.textContent = 'Email inválido.';
+                    els.forgotErrorEl.classList.remove('hidden');
+                  }
+              return;
+           }
 
-         try {
+          try {
                const response = await fetch('/api/forgot_password', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
-               });
+                  });
                const data = await response.json();
                if (!response.ok) throw new Error(data.error || 'Error del servidor');
 
                if (els.forgotSuccessEl) {
-                      els.forgotSuccessEl.textContent = data.message || "Correo enviado.";
-                      els.forgotSuccessEl.classList.remove('hidden');
+                    els.forgotSuccessEl.textContent = data.message || "Correo enviado.";
+                    els.forgotSuccessEl.classList.remove('hidden');
                 }
                els.formForgotPassword?.reset();
-         } catch (error) {
+          } catch (error) {
                console.error("Error forgot password:", error);
                if (els.forgotErrorEl) {
-                      els.forgotErrorEl.textContent = `Error: ${error.message}`;
-                      els.forgotErrorEl.classList.remove('hidden');
+                    els.forgotErrorEl.textContent = `Error: ${error.message}`;
+                    els.forgotErrorEl.classList.remove('hidden');
                } else {
-                      alert(`Error al solicitar recuperación: ${error.message}`);
+                    showToast(`Error al solicitar recuperación: ${error.message}`, 'error');
                   }
-         } 
-     });
+          } 
+        });
 
-     // UPDATE PASSWORD
-     els.formUpdatePassword?.addEventListener('submit', async (e) => {
-         e.preventDefault();
-         if (els.updateErrorEl) els.updateErrorEl.classList.add('hidden');
-         const new_password = document.getElementById('update-password')?.value;
-         const new_password_confirm = document.getElementById('update-password-confirm')?.value;
+      // UPDATE PASSWORD
+      els.formUpdatePassword?.addEventListener('submit', async (e) => {
+          e.preventDefault();
+          if (els.updateErrorEl) els.updateErrorEl.classList.add('hidden');
+          const new_password = document.getElementById('update-password')?.value;
+          const new_password_confirm = document.getElementById('update-password-confirm')?.value;
 
-         if (!currentAccessToken) {
-                 if (els.updateErrorEl) {
-                      els.updateErrorEl.textContent = 'Token inválido o expirado.';
-                      els.updateErrorEl.classList.remove('hidden');
-                 }
-               return;
-         }
-         
-         if (new_password !== new_password_confirm) {
-                 if (els.updateErrorEl) {
-                      els.updateErrorEl.textContent = 'Las contraseñas no coinciden.';
-                      els.updateErrorEl.classList.remove('hidden');
-                 }
-               return;
-         }
-         
-         if (!new_password || new_password.length < 8) {
-                 if (els.updateErrorEl) {
-                      els.updateErrorEl.textContent = 'Contraseña debe tener al menos 8 caracteres.';
-                      els.updateErrorEl.classList.remove('hidden');
-                 }
-                 return;
+          if (!currentAccessToken) {
+               if (els.updateErrorEl) {
+                    els.updateErrorEl.textContent = 'Token inválido o expirado.';
+                    els.updateErrorEl.classList.remove('hidden');
+               }
+              return;
           }
+          
+          if (new_password !== new_password_confirm) {
+               if (els.updateErrorEl) {
+                    els.updateErrorEl.textContent = 'Las contraseñas no coinciden.';
+                    els.updateErrorEl.classList.remove('hidden');
+               }
+              return;
+          }
+          
+          if (!new_password || new_password.length < 8) {
+               if (els.updateErrorEl) {
+                    els.updateErrorEl.textContent = 'Contraseña debe tener al menos 8 caracteres.';
+                    els.updateErrorEl.classList.remove('hidden');
+               }
+                return;
+           }
 
-         try {
+          try {
                const response = await fetch('/api/update_password', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ access_token: currentAccessToken, new_password })
@@ -930,19 +1427,19 @@ document.addEventListener('DOMContentLoaded', () => {
                const data = await response.json();
                if (!response.ok) throw new Error(data.error || 'Error del servidor');
 
-               alert(data.message || "Contraseña actualizada. Inicia sesión.");
+               showToast(data.message || "Contraseña actualizada. Inicia sesión.", 'success');
                currentAccessToken = null;
                showLoginForm();
-         } catch (error) {
+          } catch (error) {
                console.error("Error update password:", error);
                if (els.updateErrorEl) {
-                      els.updateErrorEl.textContent = `Error: ${error.message}`;
-                      els.updateErrorEl.classList.remove('hidden');
+                    els.updateErrorEl.textContent = `Error: ${error.message}`;
+                    els.updateErrorEl.classList.remove('hidden');
                } else {
-                      alert(`Error al actualizar contraseña: ${error.message}`);
+                    showToast(`Error al actualizar contraseña: ${error.message}`, 'error');
                 }
-         } 
-     });
+          } 
+        });
 
     // Auth Navigation Buttons
     els.showRegisterBtn?.addEventListener('click', showRegisterForm);
@@ -957,7 +1454,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearSession();
                 currentAccessToken = null;
                 showAuth();
-                alert('Has cerrado sesión correctamente.');
+                showToast('Has cerrado sesión correctamente.', 'info');
             }
         );
     });
@@ -983,7 +1480,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // --- FUNCIONALIDAD DE FOTO ---
+    // --- MANEJO MEJORADO DE FOTOS ---
     const fotoInput = document.getElementById('foto');
     const btnSelectFoto = document.getElementById('btn-select-foto');
     const btnRemoveFoto = document.getElementById('btn-remove-foto');
@@ -991,39 +1488,42 @@ document.addEventListener('DOMContentLoaded', () => {
     const fotoPreviewContainer = document.getElementById('foto-preview-container');
     const fotoInfo = document.getElementById('foto-info');
     const uploadProgress = document.getElementById('upload-progress');
-    let selectedFile = null;
+    // Mantiene la imagen validada y potencialmente comprimida
+    let selectedFile = null; 
     let uploadedFotoUrl = null;
 
     btnSelectFoto?.addEventListener('click', () => fotoInput?.click());
 
-    fotoInput?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    fotoInput?.addEventListener('change', async (e) => {
+        const originalFile = e.target.files[0];
+        if (!originalFile) return;
 
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-             alert('La foto no debe superar 5MB');
-             fotoInput.value = '';
-             return;
+        // Validar y comprimir usando la nueva función
+        const validFile = await validateImageFile(originalFile);
+
+        if (!validFile) {
+            selectedFile = null;
+            fotoInput.value = ''; // Limpiar input si no es válido
+            btnRemoveFoto?.click(); // Resetear UI
+            return;
         }
 
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-             alert('Formato no permitido. Use PNG, JPG o WEBP');
-             fotoInput.value = '';
-             return;
-        }
-
-        selectedFile = file;
+        selectedFile = validFile;
 
         const reader = new FileReader();
         reader.onload = (event) => {
-             fotoPreview.src = event.target.result;
-             fotoPreviewContainer?.classList.remove('hidden');
-             const sizeInKB = (file.size / 1024).toFixed(1);
-             fotoInfo.textContent = `${file.name} (${sizeInKB} KB)`;
+            fotoPreview.src = event.target.result;
+            fotoPreviewContainer?.classList.remove('hidden');
+            const sizeInKB = (validFile.size / 1024).toFixed(1);
+            const originalSizeKB = (originalFile.size / 1024).toFixed(1);
+            
+            if (originalFile.size > validFile.size) {
+                 fotoInfo.textContent = `${validFile.name} (${sizeInKB} KB, optimizado desde ${originalSizeKB} KB)`;
+            } else {
+                 fotoInfo.textContent = `${validFile.name} (${sizeInKB} KB)`;
+            }
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(validFile);
     });
 
     btnRemoveFoto?.addEventListener('click', () => {
@@ -1033,6 +1533,7 @@ document.addEventListener('DOMContentLoaded', () => {
         fotoPreview.src = '';
         fotoPreviewContainer?.classList.add('hidden');
         fotoInfo.textContent = '';
+        showToast('Foto eliminada del formulario', 'info');
     });
 
     const uploadFoto = async (file) => {
@@ -1042,25 +1543,27 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadProgress?.classList.remove('hidden');
 
         try {
-             const response = await fetch('/api/upload_foto', {
-                  method: 'POST',
-                  body: formData
-             });
+            const response = await fetch('/api/upload_foto', {
+                method: 'POST',
+                body: formData
+            });
 
-             const data = await response.json();
-             
-             if (!response.ok) {
-                  throw new Error(data.error || 'Error al subir la foto');
-             }
+            const data = await response.json();
+            
+            if (!response.ok) {
+                 throw new Error(data.error || 'Error al subir la foto');
+            }
 
-             return data.foto_url;
+            return data.foto_url;
         } catch (error) {
-             console.error('Error uploading foto:', error);
-             throw error;
+            console.error('Error uploading foto:', error);
+            showToast(`Error al subir la foto: ${error.message}`, 'error');
+            throw error;
         } finally {
-             uploadProgress?.classList.add('hidden');
+            uploadProgress?.classList.add('hidden');
         }
     };
+
 
     // --- 8. FUNCIONALIDAD DE EDICIÓN DE ÁRBOLES ---
     const modalEditTree = document.getElementById('modal-edit-tree');
@@ -1091,7 +1594,7 @@ document.addEventListener('DOMContentLoaded', () => {
              const arbol = arboles.find(a => a.id === parseInt(arbolId));
              
              if (!arbol) {
-                  alert('Árbol no encontrado');
+                  showToast('Árbol no encontrado', 'error');
                   return;
              }
              currentTreeData = arbol;
@@ -1116,10 +1619,10 @@ document.addEventListener('DOMContentLoaded', () => {
              editFotoPreviewContainer.classList.add('hidden');
              
              modalEditTree.classList.remove('hidden');
-                  
+                 
         } catch (error) {
              console.error('Error al abrir modal de edición:', error);
-             alert(`Error: ${error.message}`);
+             showToast(`Error al abrir modal de edición: ${error.message}`, 'error');
         }
     };
 
@@ -1141,49 +1644,54 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
-            if (modalEditTree && !modalEditTree.classList.contains('hidden')) {
-                 closeEditModal();
-            }
-            if (els.modalConfig && els.modalConfig.classList.contains('active')) {
-                els.modalConfig.classList.remove('active');
-                resetProfileForm();
-            }
-            if (els.modalHelp && els.modalHelp.classList.contains('active')) {
-                els.modalHelp.classList.remove('active');
-            }
+             if (modalEditTree && !modalEditTree.classList.contains('hidden')) {
+                  closeEditModal();
+             }
+             if (els.modalConfig && els.modalConfig.classList.contains('active')) {
+                 els.modalConfig.classList.remove('active');
+                 resetProfileForm();
+             }
+             if (els.modalHelp && els.modalHelp.classList.contains('active')) {
+                 els.modalHelp.classList.remove('active');
+             }
         }
     });
 
     btnSelectEditFoto?.addEventListener('click', () => editFotoInput?.click());
 
-    editFotoInput?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    editFotoInput?.addEventListener('change', async (e) => {
+        const originalFile = e.target.files[0];
+        if (!originalFile) return;
 
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-             alert('La foto no debe superar 5MB');
-             editFotoInput.value = '';
-             return;
-        }
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-             alert('Formato no permitido. Use PNG, JPG o WEBP');
-             editFotoInput.value = '';
-             return;
+        // Usar nueva validación y compresión
+        const validFile = await validateImageFile(originalFile);
+
+        if (!validFile) {
+            editSelectedFile = null;
+            editFotoInput.value = '';
+            btnRemoveEditFoto?.click(); // Resetear UI
+            return;
         }
         
-        editSelectedFile = file;
+        editSelectedFile = validFile;
 
         const reader = new FileReader();
         reader.onload = (event) => {
-             editFotoPreview.src = event.target.result;
-             editFotoPreviewContainer.classList.remove('hidden');
-             
-             const sizeInKB = (file.size / 1024).toFixed(1);
-             editFotoInfo.textContent = `${file.name} (${sizeInKB} KB) - Esta foto reemplazará la actual`;
+            editFotoPreview.src = event.target.result;
+            editFotoPreviewContainer.classList.remove('hidden');
+            
+            const sizeInKB = (validFile.size / 1024).toFixed(1);
+            const originalSizeKB = (originalFile.size / 1024).toFixed(1);
+
+            let infoText = `${validFile.name} (${sizeInKB} KB)`;
+            if (originalFile.size > validFile.size) {
+                 infoText += `, optimizado desde ${originalSizeKB} KB`;
+            }
+            infoText += ' - Esta foto reemplazará la actual';
+            
+            editFotoInfo.textContent = infoText;
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(validFile);
     });
 
     btnRemoveEditFoto?.addEventListener('click', () => {
@@ -1193,6 +1701,7 @@ document.addEventListener('DOMContentLoaded', () => {
         editFotoPreview.src = '';
         editFotoPreviewContainer.classList.add('hidden');
         editFotoInfo.textContent = '';
+        showToast('Nueva foto de edición cancelada', 'info');
     });
 
     formEditTree?.addEventListener('submit', async (e) => {
@@ -1202,7 +1711,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const especie = document.getElementById('edit-especie').value.trim();
         
         if (!especie || especie.length < 2) {
-             alert('La especie debe tener al menos 2 caracteres.');
+             showToast('La especie debe tener al menos 2 caracteres.', 'error');
              return;
         }
         
@@ -1215,56 +1724,47 @@ document.addEventListener('DOMContentLoaded', () => {
              let fotoUrlToSend = currentTreeData.foto_url; 
              
              if (editSelectedFile) {
-                  try {
-                       editUploadProgress.classList.remove('hidden');
-                       const formData = new FormData();
-                       formData.append('foto', editSelectedFile);
-                       
-                       const uploadResponse = await fetch('/api/upload_foto', {
-                            method: 'POST',
-                            body: formData
-                       });
-                       
-                       const uploadData = await uploadResponse.json();
-                       
-                       if (!uploadResponse.ok) {
-                            throw new Error(uploadData.error || 'Error al subir la foto');
-                       }
-                       
-                       fotoUrlToSend = uploadData.foto_url;
-                       console.log('Nueva foto subida:', fotoUrlToSend);
-                           
-                  } catch (error) {
-                       throw new Error(`Error al subir la foto: ${error.message}`);
-                  } finally {
-                       editUploadProgress.classList.add('hidden');
-                  }
+                 try {
+                     editUploadProgress.classList.remove('hidden');
+                     
+                     // 1. Subir la imagen validada/comprimida
+                     const uploadData = await uploadFoto(editSelectedFile);
+
+                     fotoUrlToSend = uploadData.foto_url;
+                     console.log('Nueva foto subida:', fotoUrlToSend);
+                              
+                 } catch (error) {
+                     // El error ya fue notificado en uploadFoto
+                      throw new Error(`Error al subir la foto: ${error.message}`);
+                 } finally {
+                     editUploadProgress.classList.add('hidden');
+                 }
              }
              
              const updateData = {
-                  especie: especie,
-                  foto_url: fotoUrlToSend
+                 especie: especie,
+                 foto_url: fotoUrlToSend
              };
              
              const response = await fetch(`/api/editar_arbol/${arbolId}`, {
-                  method: 'PUT',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify(updateData)
+                 method: 'PUT',
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify(updateData)
              });
              
              const data = await response.json();
              if (!response.ok) throw new Error(data.error || 'Error del servidor');
              
-             alert(`¡Árbol "${especie}" actualizado exitosamente!${editSelectedFile ? ' (foto actualizada)' : ''}`);
+             showToast(`¡Árbol "${especie}" actualizado exitosamente!${editSelectedFile ? ' (foto actualizada)' : ''}`, 'success');
              
              closeEditModal();
              
              await loadTableData();
              await cargarArboles(); 
-                  
+                 
         } catch (error) {
              console.error("Error al editar árbol:", error);
-             alert(`Error: ${error.message}`);
+             showToast(`Error al editar árbol: ${error.message}`, 'error');
         } finally {
              submitBtn.disabled = false;
              submitBtn.innerHTML = originalBtnText;
@@ -1278,11 +1778,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const [especie, latitud, longitud] = ['especie', 'latitud', 'longitud'].map(id => document.getElementById(id)?.value);
 
         if (!especie || !latitud || !longitud) {
-             alert('Completa la especie y selecciona un punto en el mapa.');
+             showToast('Completa la especie y selecciona un punto en el mapa.', 'error');
              return;
         }
         if (especie.trim().length < 2) {
-             alert('La especie debe tener al menos 2 caracteres.');
+             showToast('La especie debe tener al menos 2 caracteres.', 'error');
              return;
         }
 
@@ -1293,55 +1793,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
              if (selectedFile) {
-                  try {
-                       uploadedFotoUrl = await uploadFoto(selectedFile);
-                       console.log('Foto subida:', uploadedFotoUrl);
-                  } catch (error) {
-                       throw new Error(`Error al subir la foto: ${error.message}`);
-                  }
+                 try {
+                      uploadedFotoUrl = await uploadFoto(selectedFile);
+                      console.log('Foto subida:', uploadedFotoUrl);
+                 } catch (error) {
+                      // El error ya fue notificado en uploadFoto
+                      throw new Error(`Error al subir la foto: ${error.message}`);
+                 }
              }
 
              const response = await fetch('/api/plantar_arbol', {
-                  method: 'POST', 
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                       especie: especie.trim(),
-                       latitud: parseFloat(latitud),
-                       longitud: parseFloat(longitud),
-                       foto_url: uploadedFotoUrl || null
-                  })
+                 method: 'POST', 
+                 headers: { 'Content-Type': 'application/json' },
+                 body: JSON.stringify({
+                      especie: especie.trim(),
+                      latitud: parseFloat(latitud),
+                      longitud: parseFloat(longitud),
+                      foto_url: uploadedFotoUrl || null
+                 })
              });
              
              const data = await response.json();
              if (!response.ok) throw new Error(data.error || 'Error del servidor');
              
-             alert(`¡Árbol "${especie}" plantado exitosamente!${selectedFile ? ' (con foto)' : ''}`);
+             showToast(`¡Árbol "${especie}" plantado exitosamente!${selectedFile ? ' (con foto)' : ''}`, 'success');
              form.reset();
              
              if (btnRemoveFoto) btnRemoveFoto.click();
-             
-             if (map) {
-                  const blueIcon = L.icon({
-                           iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                           shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                           iconSize: [25, 41], 
-                           iconAnchor: [12, 41], 
-                           popupAnchor: [1, -34], 
-                           shadowSize: [41, 41]
-                  });
-                  
-                  const popupContent = `
-                        <div class="text-center">
-                             <b>Especie:</b> ${data.especie}<br>
-                             <b>ID:</b> ${data.id}
-                             ${data.foto_url ? `<br><img src="${data.foto_url}" alt="${data.especie}" style="width:100%; max-width:200px; margin-top:8px; border-radius:4px;">` : ''}
-                        </div>
-                  `;
-                  
-                  L.marker([data.latitud, data.longitud], { icon: blueIcon })
-                        .addTo(map)
-                        .bindPopup(popupContent);
-             }
              
              if (marcadorTemporal) { 
                   marcadorTemporal.remove(); 
@@ -1350,10 +1828,11 @@ document.addEventListener('DOMContentLoaded', () => {
              
              await cargarStats();
              await loadTableData();
+             await cargarArboles(); 
              
         } catch (error) {
              console.error("Error al plantar:", error);
-             alert(`Error: ${error.message}`);
+             showToast(`Error al plantar: ${error.message}`, 'error');
         } finally {
              submitBtn.disabled = false;
              submitBtn.innerHTML = originalBtnText;
@@ -1364,12 +1843,12 @@ document.addEventListener('DOMContentLoaded', () => {
     els.tableBody?.addEventListener('click', async (e) => {
         const deleteButton = e.target.closest('.btn-delete');
         const editButton = e.target.closest('.btn-edit');
-     
+      
         if (deleteButton) {
              const arbolId = deleteButton.dataset.id;
              const filaArbol = deleteButton.closest('tr');
              const especie = filaArbol?.cells[1]?.textContent || `ID ${arbolId}`;
-     
+      
              showConfirmDialog(
                   `¿Seguro que quieres eliminar "${especie}" (ID: ${arbolId})?`,
                   async () => { 
@@ -1378,15 +1857,15 @@ document.addEventListener('DOMContentLoaded', () => {
                             const result = await response.json();
                             if (!response.ok) throw new Error(result.error || 'Error del servidor');
                             
-                            alert(result.message || 'Árbol eliminado.');
+                            showToast(result.message || 'Árbol eliminado.', 'success');
                             await loadTableData(); 
                             await cargarStats(); 
                             await cargarArboles(); 
                        } catch (error) {
                             console.error("Error al eliminar:", error);
-                            alert(`Error al eliminar: ${error.message}`);
+                            showToast(`Error al eliminar: ${error.message}`, 'error');
                        }
-                  }
+                   }
              );
         } else if (editButton) {
              const arbolId = editButton.dataset.id;
@@ -1472,6 +1951,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
              console.error('Error al cargar gráficos:', error);
+             showToast('Error al cargar gráficos. Intenta nuevamente.', 'error');
              
              if (chartsLoading) chartsLoading.classList.add('hidden');
              if (chartsError) chartsError.classList.remove('hidden');
@@ -1661,13 +2141,13 @@ document.addEventListener('DOMContentLoaded', () => {
                                  font: { size: 13, weight: '500' },
                                  padding: 15,
                                  generateLabels: (chart) => {
-                                       const data = chart.data;
-                                       return data.labels.map((label, i) => ({
-                                            text: `${label} (${data.datasets[0].data[i]})`,
-                                            fillStyle: data.datasets[0].backgroundColor[i],
-                                            hidden: false,
-                                            index: i
-                                       }));
+                                      const data = chart.data;
+                                      return data.labels.map((label, i) => ({
+                                           text: `${label} (${data.datasets[0].data[i]})`,
+                                           fillStyle: data.datasets[0].backgroundColor[i],
+                                           hidden: false,
+                                           index: i
+                                      }));
                                  }
                             }
                        },
@@ -1678,9 +2158,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             bodyFont: { size: 13 },
                             callbacks: {
                                  label: (context) => {
-                                       const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                       const percentage = ((context.parsed / total) * 100).toFixed(1);
-                                       return `${context.parsed} árboles (${percentage}%)`;
+                                      const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                      const percentage = ((context.parsed / total) * 100).toFixed(1);
+                                      return `${context.parsed} árboles (${percentage}%)`;
                                  }
                             }
                        }
@@ -1789,9 +2269,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!currentUser) {
             console.error("No hay usuario logueado para cargar el perfil.");
-            els.profileName.value = "Usuario";
-            els.profileEmail.value = "correo@ejemplo.com";
-            els.avatarInitials.textContent = "U";
+            showToast("Debes iniciar sesión para acceder a la configuración.", 'error');
             return;
         }
 
@@ -1814,21 +2292,21 @@ document.addEventListener('DOMContentLoaded', () => {
         if (avatarUrl && els.avatarPreview) {
             // Mostrar imagen de avatar
             els.avatarPreview.innerHTML = `
-                <img src="${avatarUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                <div class="avatar-upload-overlay">
-                    <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
-                </div>
-            `;
+                 <img src="${avatarUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                 <div class="avatar-upload-overlay">
+                      <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
+                 </div>
+             `;
         } else {
             // Mostrar iniciales
             const initials = getInitials(userName);
             if (els.avatarPreview) {
                 els.avatarPreview.innerHTML = `
-                    <span id="avatar-initials">${initials}</span>
-                    <div class="avatar-upload-overlay">
-                        <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
-                    </div>
-                `;
+                     <span id="avatar-initials">${initials}</span>
+                     <div class="avatar-upload-overlay">
+                          <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
+                     </div>
+                 `;
             }
             if (els.avatarInitials) els.avatarInitials.textContent = initials;
         }
@@ -1858,10 +2336,10 @@ document.addEventListener('DOMContentLoaded', () => {
     [els.modalConfig, els.modalHelp].forEach(modal => {
         modal?.addEventListener('click', (e) => {
             if (e.target === modal) {
-                modal.classList.remove('active');
-                if (modal === els.modalConfig) {
-                    resetProfileForm();
-                }
+                 modal.classList.remove('active');
+                 if (modal === els.modalConfig) {
+                      resetProfileForm();
+                 }
             }
         });
     });
@@ -1871,22 +2349,22 @@ document.addEventListener('DOMContentLoaded', () => {
         els.avatarInput?.click();
     });
 
-    els.avatarInput?.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
+    els.avatarInput?.addEventListener('change', async (e) => {
+        const originalFile = e.target.files[0];
+        if (!originalFile) return;
 
-        if (file.size > 5 * 1024 * 1024) {
-            showProfileError('La imagen no debe superar 5MB');
+        // Validar y comprimir usando la nueva función
+        const validFile = await validateImageFile(originalFile);
+
+        if (!validFile) {
+            profileSelectedFile = null;
+            els.avatarInput.value = '';
+            // Forzar recarga de estado anterior si es que había
+            openConfigModal(); 
             return;
         }
-        
-        const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
-        if (!allowedTypes.includes(file.type)) {
-            showProfileError('Formato no permitido. Use PNG, JPG o WEBP');
-            return;
-        }
 
-        profileSelectedFile = file;
+        profileSelectedFile = validFile;
 
         const reader = new FileReader();
         reader.onload = (event) => {
@@ -1903,7 +2381,7 @@ document.addEventListener('DOMContentLoaded', () => {
             overlay.innerHTML = '<ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>';
             els.avatarPreview.appendChild(overlay);
         };
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(validFile);
     });
 
     // Enviar formulario de perfil
@@ -1950,23 +2428,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (profileSelectedFile) {
                 const savedSession = getSession();
                 if (!savedSession) {
-                    throw new Error('Sesión no válida');
+                     throw new Error('Sesión no válida');
                 }
                 
                 const formData = new FormData();
                 formData.append('avatar', profileSelectedFile);
                 
                 const uploadResponse = await fetch('/api/upload_avatar', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${savedSession.session.access_token}`
-                    },
-                    body: formData
+                     method: 'POST',
+                     headers: {
+                          'Authorization': `Bearer ${savedSession.session.access_token}`
+                     },
+                     body: formData
                 });
                 
                 const uploadData = await uploadResponse.json();
                 if (!uploadResponse.ok) {
-                    throw new Error(uploadData.error || 'Error al subir avatar');
+                     throw new Error(uploadData.error || 'Error al subir avatar');
                 }
                 
                 avatarUrl = uploadData.avatar_url;
@@ -1976,33 +2454,33 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Actualizar perfil
             const savedSession = getSession();
             if (!savedSession) {
-                throw new Error('Sesión no válida');
+                 throw new Error('Sesión no válida');
             }
             
             const updateData = {
-                name: name,
-                birthdate: birthdate,
-                avatar_url: avatarUrl
+                 name: name,
+                 birthdate: birthdate,
+                 avatar_url: avatarUrl
             };
             
             // Agregar contraseñas si se quiere cambiar
             if (currentPassword && newPassword) {
-                updateData.current_password = currentPassword;
-                updateData.new_password = newPassword;
+                 updateData.current_password = currentPassword;
+                 updateData.new_password = newPassword;
             }
             
             const response = await fetch('/api/update_profile', {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${savedSession.session.access_token}`
-                },
-                body: JSON.stringify(updateData)
+                 method: 'PUT',
+                 headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': `Bearer ${savedSession.session.access_token}`
+                 },
+                 body: JSON.stringify(updateData)
             });
             
             const data = await response.json();
             if (!response.ok) {
-                throw new Error(data.error || 'Error al actualizar perfil');
+                 throw new Error(data.error || 'Error al actualizar perfil');
             }
             
             console.log('✅ Perfil actualizado:', data);
@@ -2017,15 +2495,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // 5. Actualizar preview del avatar en el modal si cambió
             if (avatarUrl && els.avatarPreview) {
                 els.avatarPreview.innerHTML = `
-                    <img src="${avatarUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                    <div class="avatar-upload-overlay">
-                        <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
-                    </div>
-                `;
+                     <img src="${avatarUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                     <div class="avatar-upload-overlay">
+                          <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
+                     </div>
+                 `;
             }
             
             showProfileSuccess();
-            profileSelectedFile = null;
 
             setTimeout(() => {
                 els.modalConfig?.classList.remove('active');
@@ -2044,6 +2521,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function showProfileSuccess() {
         els.successMsg?.classList.add('show');
         els.errorMsg?.classList.remove('show');
+        showToast('Perfil actualizado correctamente', 'success');
         setTimeout(() => {
             els.successMsg?.classList.remove('show');
         }, 3000);
@@ -2053,6 +2531,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (els.errorText) els.errorText.textContent = message;
         els.errorMsg?.classList.add('show');
         els.successMsg?.classList.remove('show');
+        showToast(message, 'error');
         setTimeout(() => {
             els.errorMsg?.classList.remove('show');
         }, 5000);
@@ -2090,10 +2569,17 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         {
             title: "Registra tu primer árbol 🌱",
-            description: "Haz clic en el mapa para seleccionar la ubicación donde plantaste el árbol. Luego completa la especie y opcionalmente añade una foto.",
+            description: "Haz clic en el mapa para seleccionar la ubicación donde plantaste el árbol o usa el botón 'Usar mi ubicación'. Luego completa la especie.",
             icon: "location",
             target: "#map",
             position: "center-below" 
+        },
+        {
+            title: "Búsqueda y Foto 📸",
+            description: "Usa el buscador para seleccionar una especie nativa (con imágenes). Además, la app comprimirá automáticamente las fotos grandes para guardarlas más rápido.",
+            icon: "camera",
+            target: '#especie',
+            position: "left" 
         },
         {
             title: "Visualiza tus registros 📋",
@@ -2159,6 +2645,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
         }
         
+        // Navegar a la página correcta si es necesario
+        if (step.target && step.target.includes('[data-page')) {
+            const pageId = document.querySelector(step.target)?.dataset.page;
+            if (pageId) {
+                navigateToPage(pageId);
+            }
+        }
+        
         // Actualizar contenido del tooltip
         const titleEl = document.getElementById('onboarding-title');
         const descEl = document.getElementById('onboarding-description');
@@ -2214,6 +2708,8 @@ document.addEventListener('DOMContentLoaded', () => {
             el.classList.remove('onboarding-highlight');
             el.style.position = '';
             el.style.zIndex = '';
+            el.style.outline = ''; // Limpiar outline del mapa
+            el.style.outlineOffset = '';
         });
         
         if (step.target) {
@@ -2357,7 +2853,7 @@ document.addEventListener('DOMContentLoaded', () => {
             el.classList.remove('onboarding-highlight');
             el.style.position = '';
             el.style.zIndex = '';
-            el.style.outline = ''; // ✅ NUEVO: Limpiar outline del mapa
+            el.style.outline = ''; // NUEVO: Limpiar outline del mapa
             el.style.outlineOffset = '';
         });
         
@@ -2381,7 +2877,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('✅ Onboarding completado');
         
         // Mostrar mensaje de éxito
-        alert('¡Tour completado! 🎉\n\nYa conoces las funciones básicas de Reforesta Manabí.\nPuedes volver a ver este tour desde el menú de Ayuda.');
+        showToast('🎉 Tour completado. ¡Ahora estás listo para empezar a plantar!', 'success', 5000);
     };
 
     // Event listeners del onboarding
@@ -2437,14 +2933,14 @@ document.addEventListener('DOMContentLoaded', () => {
         restartButton.id = 'restart-onboarding-btn';
         restartButton.className = 'border-2 border-repsol-green rounded-lg p-4 bg-green-50 cursor-pointer hover:bg-green-100 transition-all duration-200 hover:shadow-md';
         restartButton.innerHTML = `
-            <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
-                <ion-icon name="refresh-outline" class="text-repsol-green mr-2 text-xl"></ion-icon>
-                Ver tour de bienvenida nuevamente
-            </h3>
-            <p class="text-gray-600 text-sm">
-                Si necesitas repasar cómo usar la plataforma, haz clic aquí para ver el tour interactivo otra vez.
-            </p>
-        `;
+             <h3 class="font-semibold text-gray-900 mb-2 flex items-center">
+                 <ion-icon name="refresh-outline" class="text-repsol-green mr-2 text-xl"></ion-icon>
+                 Ver tour de bienvenida nuevamente
+             </h3>
+             <p class="text-gray-600 text-sm">
+                 Si necesitas repasar cómo usar la plataforma, haz clic aquí para ver el tour interactivo otra vez.
+             </p>
+         `;
         
         restartButton.addEventListener('click', () => {
             document.getElementById('modal-help')?.classList.remove('active');
@@ -2463,7 +2959,31 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Ejecutar cuando el DOM esté listo
+    // ========================================
+    // INICIALIZACIÓN DE MEJORAS AL FINAL
+    // ========================================
+
+    // Inicializar buscador de especies
+    setTimeout(() => {
+        initEspecieSearch();
+        console.log('✅ Buscador de especies inicializado');
+    }, 500);
+
+    // Validaciones en tiempo real para formulario de plantar
+    addRealtimeValidation(
+        'especie',
+        (value) => value.length >= 2,
+        'Mínimo 2 caracteres'
+    );
+    
+    // Event listener para botón de geolocalización
+    document.getElementById('btn-geolocate')?.addEventListener('click', obtenerUbicacionActual);
+
+
+    // Agregar botón de reiniciar onboarding después de cargar todo
     setTimeout(addRestartOnboardingOption, 1000);
+
+    console.log('✅ Sistema de mejoras cargado completamente');
+
 
 }); // Fin DOMContentLoaded
