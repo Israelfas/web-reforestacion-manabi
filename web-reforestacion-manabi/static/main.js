@@ -688,13 +688,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return null;
         }
 
+        // Generar nombre con extensión .jpg asegurada para la salida comprimida
+        const newName = file.name.replace(/\.[^/.]+$/, "") + ".jpg";
+
         // Validar tamaño original
         if (file.size > maxSize) {
             showToast('⚠️ Imagen muy grande, comprimiendo automáticamente...', 'warning', 2000);
             try {
                 const compressed = await compressImage(file, 1, 1920);
                 showToast('✅ Imagen comprimida exitosamente', 'success');
-                return new File([compressed], file.name, { type: 'image/jpeg' });
+                // Retornar archivo con nombre .jpg y tipo image/jpeg
+                return new File([compressed], newName, { type: 'image/jpeg' });
             } catch (error) {
                 showToast('❌ Error al comprimir la imagen', 'error');
                 return null;
@@ -706,7 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const compressed = await compressImage(file, 1, 1920);
                 showToast('🎯 Imagen optimizada para carga rápida', 'info', 2000);
-                return new File([compressed], file.name, { type: 'image/jpeg' });
+                // Retornar archivo con nombre .jpg y tipo image/jpeg
+                return new File([compressed], newName, { type: 'image/jpeg' });
             } catch (error) {
                 console.error('Error al optimizar:', error);
                 return file; // Retornar original si falla
@@ -1178,21 +1183,7 @@ document.addEventListener('DOMContentLoaded', () => {
         els.userMenu?.classList.remove('active');
     });
 
-    els.langMenuItems?.forEach(item => {
-        item.addEventListener('click', () => {
-             const selectedLang = item.dataset.lang;
-             const langText = item.querySelector('span').textContent;
-
-             if (els.currentLangEl) els.currentLangEl.textContent = langText;
-             if (els.checkEs) els.checkEs.classList.toggle('hidden', selectedLang !== 'es');
-             if (els.checkEn) els.checkEn.classList.toggle('hidden', selectedLang !== 'en');
-
-             console.log(`Idioma seleccionado: ${selectedLang}`);
-             showToast(`Idioma cambiado a ${langText} (funcionalidad de traducción pendiente)`, 'info');
-
-             els.langMenu?.classList.remove('active');
-        });
-    });
+    // Event listener para el selector de idioma MOVIDO al final con el sistema de traducción
 
     els.headerSearch?.addEventListener('keyup', () => {
         const tablePage = document.getElementById('page-table');
@@ -1619,7 +1610,7 @@ document.addEventListener('DOMContentLoaded', () => {
              editFotoPreviewContainer.classList.add('hidden');
              
              modalEditTree.classList.remove('hidden');
-                 
+                  
         } catch (error) {
              console.error('Error al abrir modal de edición:', error);
              showToast(`Error al abrir modal de edición: ${error.message}`, 'error');
@@ -1648,11 +1639,11 @@ document.addEventListener('DOMContentLoaded', () => {
                   closeEditModal();
              }
              if (els.modalConfig && els.modalConfig.classList.contains('active')) {
-                 els.modalConfig.classList.remove('active');
-                 resetProfileForm();
+                  els.modalConfig.classList.remove('active');
+                  resetProfileForm();
              }
              if (els.modalHelp && els.modalHelp.classList.contains('active')) {
-                 els.modalHelp.classList.remove('active');
+                  els.modalHelp.classList.remove('active');
              }
         }
     });
@@ -1725,19 +1716,19 @@ document.addEventListener('DOMContentLoaded', () => {
              
              if (editSelectedFile) {
                  try {
-                     editUploadProgress.classList.remove('hidden');
-                     
-                     // 1. Subir la imagen validada/comprimida
-                     const uploadData = await uploadFoto(editSelectedFile);
+                      editUploadProgress.classList.remove('hidden');
+                      
+                      // 1. Subir la imagen validada/comprimida
+                      const uploadData = await uploadFoto(editSelectedFile);
 
-                     fotoUrlToSend = uploadData.foto_url;
-                     console.log('Nueva foto subida:', fotoUrlToSend);
-                              
+                      fotoUrlToSend = uploadData.foto_url;
+                      console.log('Nueva foto subida:', fotoUrlToSend);
+                                     
                  } catch (error) {
-                     // El error ya fue notificado en uploadFoto
-                      throw new Error(`Error al subir la foto: ${error.message}`);
+                      // El error ya fue notificado en uploadFoto
+                       throw new Error(`Error al subir la foto: ${error.message}`);
                  } finally {
-                     editUploadProgress.classList.add('hidden');
+                      editUploadProgress.classList.add('hidden');
                  }
              }
              
@@ -1761,7 +1752,7 @@ document.addEventListener('DOMContentLoaded', () => {
              
              await loadTableData();
              await cargarArboles(); 
-                 
+                  
         } catch (error) {
              console.error("Error al editar árbol:", error);
              showToast(`Error al editar árbol: ${error.message}`, 'error');
@@ -1794,11 +1785,11 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
              if (selectedFile) {
                  try {
-                      uploadedFotoUrl = await uploadFoto(selectedFile);
-                      console.log('Foto subida:', uploadedFotoUrl);
+                       uploadedFotoUrl = await uploadFoto(selectedFile);
+                       console.log('Foto subida:', uploadedFotoUrl);
                  } catch (error) {
-                      // El error ya fue notificado en uploadFoto
-                      throw new Error(`Error al subir la foto: ${error.message}`);
+                       // El error ya fue notificado en uploadFoto
+                       throw new Error(`Error al subir la foto: ${error.message}`);
                  }
              }
 
@@ -1806,10 +1797,10 @@ document.addEventListener('DOMContentLoaded', () => {
                  method: 'POST', 
                  headers: { 'Content-Type': 'application/json' },
                  body: JSON.stringify({
-                      especie: especie.trim(),
-                      latitud: parseFloat(latitud),
-                      longitud: parseFloat(longitud),
-                      foto_url: uploadedFotoUrl || null
+                       especie: especie.trim(),
+                       latitud: parseFloat(latitud),
+                       longitud: parseFloat(longitud),
+                       foto_url: uploadedFotoUrl || null
                  })
              });
              
@@ -1843,12 +1834,12 @@ document.addEventListener('DOMContentLoaded', () => {
     els.tableBody?.addEventListener('click', async (e) => {
         const deleteButton = e.target.closest('.btn-delete');
         const editButton = e.target.closest('.btn-edit');
-      
+       
         if (deleteButton) {
              const arbolId = deleteButton.dataset.id;
              const filaArbol = deleteButton.closest('tr');
              const especie = filaArbol?.cells[1]?.textContent || `ID ${arbolId}`;
-      
+       
              showConfirmDialog(
                   `¿Seguro que quieres eliminar "${especie}" (ID: ${arbolId})?`,
                   async () => { 
@@ -2302,11 +2293,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const initials = getInitials(userName);
             if (els.avatarPreview) {
                 els.avatarPreview.innerHTML = `
-                     <span id="avatar-initials">${initials}</span>
-                     <div class="avatar-upload-overlay">
-                          <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
-                     </div>
-                 `;
+                      <span id="avatar-initials">${initials}</span>
+                      <div class="avatar-upload-overlay">
+                           <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
+                      </div>
+                  `;
             }
             if (els.avatarInitials) els.avatarInitials.textContent = initials;
         }
@@ -2495,11 +2486,11 @@ document.addEventListener('DOMContentLoaded', () => {
             // 5. Actualizar preview del avatar en el modal si cambió
             if (avatarUrl && els.avatarPreview) {
                 els.avatarPreview.innerHTML = `
-                     <img src="${avatarUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                     <div class="avatar-upload-overlay">
-                          <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
-                     </div>
-                 `;
+                      <img src="${avatarUrl}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                      <div class="avatar-upload-overlay">
+                           <ion-icon name="camera-outline" class="text-4xl text-white"></ion-icon>
+                      </div>
+                  `;
             }
             
             showProfileSuccess();
@@ -2982,6 +2973,306 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Agregar botón de reiniciar onboarding después de cargar todo
     setTimeout(addRestartOnboardingOption, 1000);
+
+    // ========================================
+    // SISTEMA DE TRADUCCIÓN ESPAÑOL/INGLÉS
+    // ========================================
+    
+    const translations = {
+        es: {
+            // Header y navegación
+            'search_placeholder': 'Buscar...',
+            'config': 'Configuración',
+            'help': 'Ayuda',
+            'logout': 'Cerrar Sesión',
+            
+            // Sidebar
+            'register_planting': 'Registrar Siembra',
+            'view_records': 'Ver Registros',
+            'statistics': 'Estadísticas',
+            'version': 'Versión',
+            
+            // Página principal
+            'welcome_hello': '¡Hola',
+            'welcome_message': 'Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.',
+            'trees_planted': 'Árboles Plantados',
+            'estimated_hours': 'Horas de Trabajo Estimadas',
+            'interactive_map': 'Mapa Interactivo de Siembra',
+            'planting_form': 'Formulario de Siembra',
+            'tree_species': 'Especie del Árbol',
+            'species_placeholder': 'Ej: Guayacán, Ceibo, Algarrobo...',
+            'search_native_species': 'Escribe para buscar especies nativas',
+            'tree_photo': 'Foto del Árbol (Opcional)',
+            'photo_help': 'JPG, PNG o WEBP (máx. 5MB) • Se optimizará automáticamente',
+            'select_photo': 'Seleccionar Foto',
+            'gps_location': 'Ubicación GPS',
+            'gps_help': 'Usa tu GPS o haz clic en el mapa',
+            'use_location': 'Usar mi ubicación actual',
+            'latitude': 'Latitud',
+            'longitude': 'Longitud',
+            'plant_tree': 'Plantar Árbol',
+            
+            // Tabla
+            'planting_records': 'Registros de Siembra',
+            'history_message': 'Historial completo de todos los árboles plantados',
+            'id': 'ID',
+            'species': 'Especie',
+            'photo': 'Foto',
+            'planting_date': 'Fecha Siembra',
+            'planted_by': 'Plantado Por',
+            'actions': 'Acciones',
+            'no_records': 'No hay árboles registrados.',
+            'loading': 'Cargando...',
+            
+            // Estadísticas
+            'statistics_analysis': 'Estadísticas y Análisis',
+            'stats_message': 'Visualiza el progreso de reforestación con gráficos interactivos',
+            'loading_stats': 'Cargando estadísticas...',
+            'total_trees': 'Total Árboles',
+            'unique_species': 'Especies Únicas',
+            'most_active_month': 'Mes Más Activo',
+            'refresh_charts': 'Actualizar Gráficos',
+            
+            // Modales
+            'edit_tree': 'Editar Árbol',
+            'save_changes': 'Guardar Cambios',
+            'cancel': 'Cancelar',
+            'profile_settings': 'Configuración de Perfil',
+            'help_center': 'Centro de Ayuda',
+            
+            // Footer
+            'platform': 'Plataforma Reforesta Manabí',
+            'terms': 'Términos de Servicio',
+            'privacy': 'Política de Privacidad',
+            'contact': 'Contacto',
+            
+            // Mensajes
+            'language_changed': 'Idioma cambiado a',
+            'confirm_action': 'Confirmar Acción',
+            'confirm': 'Confirmar'
+        },
+        en: {
+            // Header and navigation
+            'search_placeholder': 'Search...',
+            'config': 'Settings',
+            'help': 'Help',
+            'logout': 'Log Out',
+            
+            // Sidebar
+            'register_planting': 'Register Planting',
+            'view_records': 'View Records',
+            'statistics': 'Statistics',
+            'version': 'Version',
+            
+            // Main page
+            'welcome_hello': 'Hello',
+            'welcome_message': 'Ready to register a new planting and contribute to Manabí reforestation.',
+            'trees_planted': 'Trees Planted',
+            'estimated_hours': 'Estimated Work Hours',
+            'interactive_map': 'Interactive Planting Map',
+            'planting_form': 'Planting Form',
+            'tree_species': 'Tree Species',
+            'species_placeholder': 'E.g.: Guayacán, Ceibo, Algarrobo...',
+            'search_native_species': 'Type to search native species',
+            'tree_photo': 'Tree Photo (Optional)',
+            'photo_help': 'JPG, PNG or WEBP (max. 5MB) • Will be optimized automatically',
+            'select_photo': 'Select Photo',
+            'gps_location': 'GPS Location',
+            'gps_help': 'Use your GPS or click on the map',
+            'use_location': 'Use my current location',
+            'latitude': 'Latitude',
+            'longitude': 'Longitude',
+            'plant_tree': 'Plant Tree',
+            
+            // Table
+            'planting_records': 'Planting Records',
+            'history_message': 'Complete history of all planted trees',
+            'id': 'ID',
+            'species': 'Species',
+            'photo': 'Photo',
+            'planting_date': 'Planting Date',
+            'planted_by': 'Planted By',
+            'actions': 'Actions',
+            'no_records': 'No trees registered.',
+            'loading': 'Loading...',
+            
+            // Statistics
+            'statistics_analysis': 'Statistics and Analysis',
+            'stats_message': 'Visualize reforestation progress with interactive charts',
+            'loading_stats': 'Loading statistics...',
+            'total_trees': 'Total Trees',
+            'unique_species': 'Unique Species',
+            'most_active_month': 'Most Active Month',
+            'refresh_charts': 'Refresh Charts',
+            
+            // Modals
+            'edit_tree': 'Edit Tree',
+            'save_changes': 'Save Changes',
+            'cancel': 'Cancel',
+            'profile_settings': 'Profile Settings',
+            'help_center': 'Help Center',
+            
+            // Footer
+            'platform': 'Reforesta Manabí Platform',
+            'terms': 'Terms of Service',
+            'privacy': 'Privacy Policy',
+            'contact': 'Contact',
+            
+            // Messages
+            'language_changed': 'Language changed to',
+            'confirm_action': 'Confirm Action',
+            'confirm': 'Confirm'
+        }
+    };
+
+    let currentLang = localStorage.getItem('app_language') || 'es';
+
+    const translate = (key) => {
+        return translations[currentLang][key] || key;
+    };
+
+    const updateUILanguage = () => {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (el.tagName === 'INPUT' && el.hasAttribute('placeholder')) {
+                el.placeholder = translate(key);
+            } else {
+                el.textContent = translate(key);
+            }
+        });
+    };
+
+    // Actualizar event listener del selector de idioma
+    els.langMenuItems?.forEach(item => {
+        item.addEventListener('click', () => {
+            const selectedLang = item.dataset.lang;
+            const langText = item.querySelector('span').textContent;
+
+            currentLang = selectedLang;
+            localStorage.setItem('app_language', selectedLang);
+
+            if (els.currentLangEl) els.currentLangEl.textContent = langText;
+            if (els.checkEs) els.checkEs.classList.toggle('hidden', selectedLang !== 'es');
+            if (els.checkEn) els.checkEn.classList.toggle('hidden', selectedLang !== 'en');
+
+            updateUILanguage();
+
+            console.log(`Idioma seleccionado: ${selectedLang}`);
+            showToast(`${translate('language_changed')} ${langText}`, 'success');
+
+            els.langMenu?.classList.remove('active');
+        });
+    });
+
+    // Inicializar idioma al cargar
+    setTimeout(() => {
+        const savedLang = localStorage.getItem('app_language') || 'es';
+        currentLang = savedLang;
+        if (savedLang === 'en') {
+            if (els.currentLangEl) els.currentLangEl.textContent = 'English';
+            if (els.checkEs) els.checkEs.classList.add('hidden');
+            if (els.checkEn) els.checkEn.classList.remove('hidden');
+        }
+        updateUILanguage();
+    }, 100);
+
+    // ========================================
+    // MODALES DEL FOOTER (TÉRMINOS, PRIVACIDAD, CONTACTO)
+    // ========================================
+    
+    const footerLinks = {
+        terms: document.getElementById('footer-terms'),
+        privacy: document.getElementById('footer-privacy'),
+        contact: document.getElementById('footer-contact')
+    };
+    
+    const footerModals = {
+        terms: document.getElementById('modal-terms'),
+        privacy: document.getElementById('modal-privacy'),
+        contact: document.getElementById('modal-contact')
+    };
+    
+    const closeFooterModals = {
+        terms: document.getElementById('close-terms-modal'),
+        privacy: document.getElementById('close-privacy-modal'),
+        contact: document.getElementById('close-contact-modal')
+    };
+    
+    // Abrir modales del footer
+    if (footerLinks.terms) {
+        footerLinks.terms.addEventListener('click', (e) => {
+            e.preventDefault();
+            footerModals.terms?.classList.add('active');
+        });
+    }
+    
+    if (footerLinks.privacy) {
+        footerLinks.privacy.addEventListener('click', (e) => {
+            e.preventDefault();
+            footerModals.privacy?.classList.add('active');
+        });
+    }
+    
+    if (footerLinks.contact) {
+        footerLinks.contact.addEventListener('click', (e) => {
+            e.preventDefault();
+            footerModals.contact?.classList.add('active');
+        });
+    }
+    
+    // Cerrar modales del footer
+    closeFooterModals.terms?.addEventListener('click', () => {
+        footerModals.terms?.classList.remove('active');
+    });
+    
+    closeFooterModals.privacy?.addEventListener('click', () => {
+        footerModals.privacy?.classList.remove('active');
+    });
+    
+    closeFooterModals.contact?.addEventListener('click', () => {
+        footerModals.contact?.classList.remove('active');
+    });
+    
+    // Cerrar al hacer clic fuera
+    Object.values(footerModals).forEach(modal => {
+        modal?.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('active');
+            }
+        });
+    });
+    
+    // Formulario de contacto
+    const contactForm = document.getElementById('contact-form');
+    contactForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const name = document.getElementById('contact-name').value.trim();
+        const email = document.getElementById('contact-email').value.trim();
+        const message = document.getElementById('contact-message').value.trim();
+        
+        if (!name || !email || !message) {
+            showToast(translate('error') + ': ' + (currentLang === 'es' ? 'Todos los campos son requeridos' : 'All fields are required'), 'error');
+            return;
+        }
+        
+        const submitBtn = contactForm.querySelector('button[type="submit"]');
+        const originalBtnText = submitBtn.innerHTML;
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<ion-icon name="hourglass-outline" class="inline animate-spin mr-2"></ion-icon>' + (currentLang === 'es' ? 'Enviando...' : 'Sending...');
+        
+        setTimeout(() => {
+            showToast(currentLang === 'es' 
+                ? '✅ Mensaje enviado correctamente. Te contactaremos pronto.' 
+                : '✅ Message sent successfully. We will contact you soon.', 'success');
+            
+            contactForm.reset();
+            footerModals.contact?.classList.remove('active');
+            
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalBtnText;
+        }, 1500);
+    });
 
     console.log('✅ Sistema de mejoras cargado completamente');
 

@@ -321,21 +321,35 @@ def upload_foto():
     if 'foto' not in request.files:
         raise ValueError("No se envió ninguna foto")
 
-    file = request.files['foto']
+    file = request.files['foto']    
     if file.filename == '':
         raise ValueError("Archivo sin nombre")
 
     allowed_extensions = {'png', 'jpg', 'jpeg', 'webp'}
+    # Obtener extensión con manejo de errores básico
     file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+    
     if file_ext not in allowed_extensions:
         raise ValueError(f"Formato no permitido. Use: {', '.join(allowed_extensions)}")
 
+    # Generar un nombre único. 
+    # El Frontend asegura que si comprime a JPEG, el archivo llegue con extensión .jpg
+    # El Backend confía en la extensión para el Content-Type.
     unique_filename = f"{uuid.uuid4()}.{file_ext}"
     logger.info(f"Subiendo foto: {unique_filename}")
 
     try:
         file_content = file.read()
-        content_type = f"image/{file_ext}" if file_ext != 'jpg' else 'image/jpeg'
+        
+        # Determinar el Content-Type correcto basado en la extensión
+        if file_ext == 'jpg' or file_ext == 'jpeg':
+            content_type = 'image/jpeg'
+        elif file_ext == 'png':
+            content_type = 'image/png'
+        elif file_ext == 'webp':
+            content_type = 'image/webp'
+        else:
+            content_type = 'application/octet-stream'
 
         supabase.storage.from_("arboles-fotos").upload(
             path=unique_filename,
@@ -399,7 +413,16 @@ def upload_avatar():
     
     try:
         file_content = file.read()
-        content_type = f"image/{file_ext}" if file_ext != 'jpg' else 'image/jpeg'
+        
+        # Content Type dinámico
+        if file_ext == 'jpg' or file_ext == 'jpeg':
+            content_type = 'image/jpeg'
+        elif file_ext == 'png':
+            content_type = 'image/png'
+        elif file_ext == 'webp':
+            content_type = 'image/webp'
+        else:
+            content_type = 'image/jpeg' # Default fallback
         
         response = supabase.storage.from_("arboles-fotos").upload(
             path=f"avatars/{unique_filename}",

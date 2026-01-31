@@ -31,8 +31,8 @@
         * { font-family: 'Poppins', sans-serif; }
         
     /* ============================================
-      SISTEMA DE MODO OSCURO
-      ============================================ */
+       SISTEMA DE MODO OSCURO
+       ============================================ */
 
     :root {
         /* MODO CLARO */
@@ -66,14 +66,14 @@
 
     [data-theme="dark"] {
         /* MODO OSCURO */
-        --bg-primary: #1e293b;     /* Cards, modales, header */
-        --bg-secondary: #0f172a;   /* Fondo principal */
-        --bg-tertiary: #334155;    /* Inputs, hover */
+        --bg-primary: #1e293b;      /* Cards, modales, header */
+        --bg-secondary: #0f172a;    /* Fondo principal */
+        --bg-tertiary: #334155;     /* Inputs, hover */
         --bg-hover: #475569;
-        --text-primary: #f1f5f9;   /* Texto principal - BLANCO BRILLANTE */
+        --text-primary: #f1f5f9;    /* Texto principal - BLANCO BRILLANTE */
         --text-secondary: #cbd5e1; /* Texto secundario - GRIS MUY CLARO */
         --text-tertiary: #94a3b8;
-        --border-color: #475569;   /* Bordes MÁS VISIBLES */
+        --border-color: #475569;    /* Bordes MÁS VISIBLES */
         --border-hover: #64748b;
         --input-bg: #1e293b;
         --input-border: #475569;
@@ -90,13 +90,13 @@
         --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
         --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6);
         --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7);
-        --sidebar-bg: #0f172a;     /* Sidebar MÁS OSCURO que el contenido */
+        --sidebar-bg: #0f172a;      /* Sidebar MÁS OSCURO que el contenido */
         --sidebar-text: #cbd5e1;
     }
 
     /* ============================================
-      APLICACIÓN DE VARIABLES
-      ============================================ */
+       APLICACIÓN DE VARIABLES
+       ============================================ */
 
     body {
         background-color: var(--bg-secondary);
@@ -752,8 +752,8 @@
         }
 
         /* ============================================
-          CORRECCIÓN: MAPA QUE SE DESBORDA (CORREGIDO)
-          ============================================ */
+           CORRECCIÓN: MAPA QUE SE DESBORDA (CORREGIDO)
+           ============================================ */
         #map { 
             height: 500px; 
             width: 100% !important;
@@ -776,8 +776,8 @@
         }
 
         /* ============================================
-          CORRECCIÓN: MAPA EN ONBOARDING
-          ============================================ */
+           CORRECCIÓN: MAPA EN ONBOARDING
+           ============================================ */
         /* El mapa debe estar DEBAJO del spotlight durante onboarding */
         #map {
             position: relative !important;
@@ -815,8 +815,8 @@
         }
 
         /* ============================================
-          CORRECCIÓN: CONTENEDOR DE MAPA RESPONSIVO
-          ============================================ */
+           CORRECCIÓN: CONTENEDOR DE MAPA RESPONSIVO
+           ============================================ */
         @media (max-width: 1024px) {
             #map {
                 height: 400px;
@@ -830,8 +830,8 @@
         }
 
         /* ============================================
-          CORRECCIÓN: HIGHLIGHT ONBOARDING
-          ============================================ */
+           CORRECCIÓN: HIGHLIGHT ONBOARDING
+           ============================================ */
         .onboarding-highlight {
             position: relative !important;
             z-index: 2001 !important;
@@ -901,8 +901,8 @@
         }
 
         /* ============================================
-          SISTEMA DE BLOQUEO TEMPORAL (RATE LIMITING)
-          ============================================ */
+           SISTEMA DE BLOQUEO TEMPORAL (RATE LIMITING)
+           ============================================ */
         /* Estilos para mensajes de bloqueo */
         #login-error {
             border-radius: 8px;
@@ -926,8 +926,8 @@
         }
 
         /* ============================================
-          SISTEMA DE BOTONES COMPACTOS Y ESTÉTICOS
-          ============================================ */
+           SISTEMA DE BOTONES COMPACTOS Y ESTÉTICOS
+           ============================================ */
 
         /* Override de clases .btn para hacerlas más compactas */
         .btn {
@@ -1025,8 +1025,8 @@
         }
 
         /* ============================================
-          MEJORAS ESPECÍFICAS PARA MODALES
-          ============================================ */
+           MEJORAS ESPECÍFICAS PARA MODALES
+           ============================================ */
 
         /* Botones en modal de configuración */
         #modal-config button[type="submit"],
@@ -1047,8 +1047,8 @@
         }
 
         /* ============================================
-          ANIMACIONES SUTILES
-          ============================================ */
+           ANIMACIONES SUTILES
+           ============================================ */
 
         @keyframes button-press {
             0%, 100% { transform: scale(1); }
@@ -1060,8 +1060,8 @@
         }
 
         /* ============================================
-          RESPONSIVE - Mantener compactos en móvil
-          ============================================ */
+           RESPONSIVE - Mantener compactos en móvil
+           ============================================ */
 
         @media (max-width: 640px) {
             .btn {
@@ -1088,8 +1088,8 @@
         }
 
         /* ============================================
-          ESTADO HOVER MEJORADO
-          ============================================ */
+           ESTADO HOVER MEJORADO
+           ============================================ */
 
         .btn:not(:disabled):hover {
             filter: brightness(1.05);
@@ -1100,8 +1100,8 @@
         }
 
         /* ============================================
-          ICONOS DENTRO DE BOTONES
-          ============================================ */
+           ICONOS DENTRO DE BOTONES
+           ============================================ */
 
         .btn ion-icon {
             pointer-events: none; /* Evitar que el icono capture clics */
@@ -1115,8 +1115,8 @@
         }
 
         /* ============================================
-          FIX PARA BOTONES EN AUTH FORMS
-          ============================================ */
+           FIX PARA BOTONES EN AUTH FORMS
+           ============================================ */
 
         #form-login button[type="submit"],
         #form-register button[type="submit"],
@@ -1128,8 +1128,8 @@
         }
 
         /* ============================================
-          MEJORAS VISUALES ADICIONALES
-          ============================================ */
+           MEJORAS VISUALES ADICIONALES
+           ============================================ */
 
         /* Sombra sutil en hover */
         .btn:hover {
@@ -1154,8 +1154,8 @@
         }
 
         /* ============================================
-          PREVENIR OVERFLOW EN BOTONES
-          ============================================ */
+           PREVENIR OVERFLOW EN BOTONES
+           ============================================ */
 
         .btn {
             white-space: nowrap;
@@ -1164,8 +1164,8 @@
         }
 
         /* ============================================
-          ACCESIBILIDAD
-          ============================================ */
+           ACCESIBILIDAD
+           ============================================ */
 
         .btn:focus-visible {
             outline: 2px solid #007a33;
@@ -1173,8 +1173,8 @@
         }
 
         /* ============================================
-          DARK MODE COMPATIBILITY
-          ============================================ */
+           DARK MODE COMPATIBILITY
+           ============================================ */
 
         [data-theme="dark"] .btn-secondary {
             background-color: var(--bg-tertiary) !important;
@@ -1194,8 +1194,8 @@
         }
         
         /* ============================================
-          ESTILOS PARA FORMULARIO DE PLANTAR
-          ============================================ */
+           ESTILOS PARA FORMULARIO DE PLANTAR
+           ============================================ */
 
         /* Botón principal de plantar */
         #form-plantar button[type="submit"] {
@@ -1554,7 +1554,7 @@
                     <label for="register-name" class="block text-sm font-medium text-gray-700 mb-2">Nombre Completo</label>
                     <div class="input-wrapper">
                         <ion-icon name="person-outline" class="input-icon"></ion-icon>
-                        <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Juan Pérez" class="input-styled with-icon">
+                        <input type="text" id="register-name" name="name" required autocomplete="name" placeholder="Israel Mejía" class="input-styled with-icon">
                     </div>
                 </div>
                 <div>
@@ -1663,7 +1663,7 @@
              </div>
              <div class="flex items-center space-x-4">
                  <div class="relative flex-1 max-w-md mx-4">
-                     <input type="text" id="header-search" placeholder="Buscar..." class="search-input w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none">
+                     <input type="text" id="header-search" placeholder="Buscar..." class="search-input w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg text-sm focus:outline-none" data-i18n="search_placeholder">
                      <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg"></ion-icon>
                  </div>
                  <button id="btn-toggle-dark-mode" class="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors" title="Cambiar tema">
@@ -1701,16 +1701,16 @@
                          <div class="user-menu-divider"></div>
                          <div class="user-menu-item" id="btn-config">
                              <ion-icon name="settings-outline" class="text-lg mr-3"></ion-icon>
-                             <span>Configuración</span>
+                             <span data-i18n="config">Configuración</span>
                          </div>
                          <div class="user-menu-item" id="btn-help">
                              <ion-icon name="help-circle-outline" class="text-lg mr-3"></ion-icon>
-                             <span>Ayuda</span>
+                             <span data-i18n="help">Ayuda</span>
                          </div>
                          <div class="user-menu-divider"></div>
                          <div class="user-menu-item danger" id="btn-logout">
                              <ion-icon name="log-out-outline" class="text-lg mr-3"></ion-icon>
-                             <span>Cerrar Sesión</span>
+                             <span data-i18n="logout">Cerrar Sesión</span>
                          </div>
                      </div>
                  </div>
@@ -1722,19 +1722,19 @@
                  <nav class="flex-1 space-y-1">
                      <button data-page="page-map" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
                            <ion-icon name="map-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                           <span class="relative z-10 font-medium">Registrar Siembra</span>
+                           <span class="relative z-10 font-medium" data-i18n="register_planting">Registrar Siembra</span>
                      </button>
                      <button data-page="page-table" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
                            <ion-icon name="list-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                           <span class="relative z-10 font-medium">Ver Registros</span>
+                           <span class="relative z-10 font-medium" data-i18n="view_records">Ver Registros</span>
                      </button>
                      <button data-page="page-charts" class="sidebar-link w-full flex items-center p-3 rounded-lg hover:bg-gray-800 hover:text-white transition-all duration-200 relative">
                            <ion-icon name="stats-chart-outline" class="mr-3 text-xl relative z-10"></ion-icon>
-                           <span class="relative z-10 font-medium">Estadísticas</span>
+                           <span class="relative z-10 font-medium" data-i18n="statistics">Estadísticas</span>
                      </button>
                  </nav>
                  <div class="mt-auto pt-4 border-t border-gray-800">
-                     <p class="text-xs text-gray-500 text-center">Versión 1.2</p>
+                     <p class="text-xs text-gray-500 text-center"><span data-i18n="version">Versión</span> 1.2</p>
                      <p class="text-xs text-gray-600 text-center mt-1">© 2025 Reforesta Manabí</p>
                  </div>
              </aside>
@@ -1743,16 +1743,16 @@
                 <div id="page-map" class="page-content">
                     <div class="mb-8">
                          <h2 class="text-4xl font-bold mb-2 text-gray-900">
-                              ¡Hola, <span id="welcome-user-name" class="text-repsol-green">Usuario</span>! 👋
+                             <span data-i18n="welcome_hello">¡Hola</span>, <span id="welcome-user-name" class="text-repsol-green">Usuario</span>! 👋
                          </h2>
-                         <p class="text-gray-600 text-lg">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
+                         <p class="text-gray-600 text-lg" data-i18n="welcome_message">Listo para registrar una nueva siembra y contribuir a la reforestación de Manabí.</p>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                          <div class="stat-card">
                              <div class="flex items-center justify-between">
                                  <div>
                                      <div class="stat-number" id="stat-arboles">0</div>
-                                     <div class="stat-label">Árboles Plantados</div>
+                                     <div class="stat-label" data-i18n="trees_planted">Árboles Plantados</div>
                                  </div>
                                  <ion-icon name="leaf" class="text-6xl opacity-20"></ion-icon>
                              </div>
@@ -1761,7 +1761,7 @@
                              <div class="flex items-center justify-between">
                                  <div>
                                      <div class="stat-number" id="stat-horas">0.0</div>
-                                     <div class="stat-label">Horas de Trabajo Estimadas</div>
+                                     <div class="stat-label" data-i18n="estimated_hours">Horas de Trabajo Estimadas</div>
                                  </div>
                                  <ion-icon name="time" class="text-6xl opacity-20"></ion-icon>
                              </div>
@@ -1788,113 +1788,113 @@
                                  <form id="form-plantar" class="space-y-5">
                                      <div>
                                          <label for="especie" class="block text-sm font-semibold text-gray-700 mb-2">
-                                             Especie del Árbol
+                                              Especie del Árbol
                                          </label>
                                          <div class="relative">
-                                             <input 
-                                                 type="text" 
-                                                 id="especie" 
-                                                 name="especie" 
-                                                 required 
-                                                 class="input-styled pr-10" 
-                                                 placeholder="Ej: Guayacán, Ceibo, Algarrobo..."
-                                                 autocomplete="off">
-                                             <ion-icon name="search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                                              <input 
+                                                  type="text" 
+                                                  id="especie" 
+                                                  name="especie" 
+                                                  required 
+                                                  class="input-styled pr-10" 
+                                                  placeholder="Ej: Guayacán, Ceibo, Algarrobo..."
+                                                  autocomplete="off">
+                                              <ion-icon name="search" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
                                          </div>
                                          
                                          <div id="especie-results" class="hidden mt-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden max-h-80 overflow-y-auto"></div>
                                          
                                          <p class="help-text mt-2">
-                                             <ion-icon name="leaf-outline" class="text-base"></ion-icon>
-                                             Escribe para buscar especies nativas
+                                              <ion-icon name="leaf-outline" class="text-base"></ion-icon>
+                                              Escribe para buscar especies nativas
                                          </p>
                                      </div>
                                      
                                      <div>
                                          <label for="foto" class="block text-sm font-semibold text-gray-700 mb-2">
-                                             Foto del Árbol (Opcional)
+                                              Foto del Árbol (Opcional)
                                          </label>
                                          <p class="help-text mb-3">
-                                             <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
-                                             JPG, PNG o WEBP (máx. 5MB) • Se optimizará automáticamente
+                                              <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
+                                              JPG, PNG o WEBP (máx. 5MB) • Se optimizará automáticamente
                                          </p>
                                          <div class="relative">
-                                             <input type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
-                                             
-                                             <button type="button" id="btn-select-foto" 
-                                                     class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-all flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer text-sm font-medium hover:bg-green-50 group">
-                                                 <ion-icon name="camera-outline" class="text-xl group-hover:scale-110 transition-transform"></ion-icon>
-                                                 <span>Seleccionar Foto</span>
-                                             </button>
+                                              <input type="file" id="foto" name="foto" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden">
+                                              
+                                              <button type="button" id="btn-select-foto" 
+                                                   class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-lg hover:border-repsol-green transition-all flex items-center justify-center space-x-2 text-gray-600 hover:text-repsol-green cursor-pointer text-sm font-medium hover:bg-green-50 group">
+                                                   <ion-icon name="camera-outline" class="text-xl group-hover:scale-110 transition-transform"></ion-icon>
+                                                   <span>Seleccionar Foto</span>
+                                              </button>
                                          </div>
                                          
                                          <div id="foto-preview-container" class="hidden mt-3">
-                                             <div class="relative rounded-lg overflow-hidden border-2 border-gray-200 group">
-                                                 <img id="foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
-                                                 <button type="button" id="btn-remove-foto" 
-                                                         class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition-all shadow-lg opacity-0 group-hover:opacity-100">
-                                                     <ion-icon name="close-outline" class="text-lg"></ion-icon>
-                                                 </button>
-                                                 <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
-                                                     <p id="foto-info" class="text-xs text-white font-medium"></p>
-                                                 </div>
-                                             </div>
+                                              <div class="relative rounded-lg overflow-hidden border-2 border-gray-200 group">
+                                                   <img id="foto-preview" src="" alt="Preview" class="w-full h-40 object-cover">
+                                                   <button type="button" id="btn-remove-foto" 
+                                                        class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1.5 hover:bg-red-700 transition-all shadow-lg opacity-0 group-hover:opacity-100">
+                                                        <ion-icon name="close-outline" class="text-lg"></ion-icon>
+                                                   </button>
+                                                   <div class="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2">
+                                                        <p id="foto-info" class="text-xs text-white font-medium"></p>
+                                                   </div>
+                                              </div>
                                          </div>
                                          
                                          <div id="upload-progress" class="hidden mt-3">
-                                             <div class="flex items-center space-x-2 text-sm text-repsol-green">
-                                                 <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
-                                                 <span>Subiendo foto...</span>
-                                             </div>
+                                              <div class="flex items-center space-x-2 text-sm text-repsol-green">
+                                                   <div class="animate-spin rounded-full h-4 w-4 border-2 border-repsol-green border-t-transparent"></div>
+                                                   <span>Subiendo foto...</span>
+                                              </div>
                                          </div>
                                      </div>
                                      
                                      <div>
                                          <label class="block text-sm font-semibold text-gray-700 mb-2">
-                                             Ubicación GPS
+                                              Ubicación GPS
                                          </label>
                                          <p class="help-text mb-3">
-                                             <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
-                                             Usa tu GPS o haz clic en el mapa
+                                              <ion-icon name="information-circle-outline" class="text-base"></ion-icon>
+                                              Usa tu GPS o haz clic en el mapa
                                          </p>
                                          
                                          <button 
-                                             type="button" 
-                                             id="btn-geolocate"
-                                             class="w-full mb-3 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-medium text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg group">
-                                             <ion-icon name="locate" class="text-lg group-hover:scale-110 transition-transform"></ion-icon>
-                                             Usar mi ubicación actual
+                                              type="button" 
+                                              id="btn-geolocate"
+                                              class="w-full mb-3 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all font-medium text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg group">
+                                              <ion-icon name="locate" class="text-lg group-hover:scale-110 transition-transform"></ion-icon>
+                                              Usar mi ubicación actual
                                          </button>
                                          
                                          <div class="space-y-3">
-                                             <div class="relative">
-                                                 <input 
-                                                     type="text" 
-                                                     id="latitud" 
-                                                     name="latitud" 
-                                                     placeholder="Latitud" 
-                                                     readonly 
-                                                     class="input-styled pl-10">
-                                                 <ion-icon name="navigate-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
-                                             </div>
-                                             <div class="relative">
-                                                 <input 
-                                                     type="text" 
-                                                     id="longitud" 
-                                                     name="longitud" 
-                                                     placeholder="Longitud" 
-                                                     readonly 
-                                                     class="input-styled pl-10">
-                                                 <ion-icon name="compass-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
-                                             </div>
+                                              <div class="relative">
+                                                   <input 
+                                                        type="text" 
+                                                        id="latitud" 
+                                                        name="latitud" 
+                                                        placeholder="Latitud" 
+                                                        readonly 
+                                                        class="input-styled pl-10">
+                                                   <ion-icon name="navigate-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                                              </div>
+                                              <div class="relative">
+                                                   <input 
+                                                        type="text" 
+                                                        id="longitud" 
+                                                        name="longitud" 
+                                                        placeholder="Longitud" 
+                                                        readonly 
+                                                        class="input-styled pl-10">
+                                                   <ion-icon name="compass-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></ion-icon>
+                                              </div>
                                          </div>
                                      </div>
                                      
                                      <button 
-                                         type="submit" 
-                                         class="w-full px-4 py-3 bg-gradient-to-r from-repsol-green to-green-600 hover:from-green-600 hover:to-repsol-green text-white rounded-lg transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-100 group">
-                                         <ion-icon name="leaf-outline" class="text-xl group-hover:rotate-12 transition-transform"></ion-icon>
-                                         Plantar Árbol
+                                          type="submit" 
+                                          class="w-full px-4 py-3 bg-gradient-to-r from-repsol-green to-green-600 hover:from-green-600 hover:to-repsol-green text-white rounded-lg transition-all font-semibold text-sm flex items-center justify-center gap-2 shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-100 group">
+                                          <ion-icon name="leaf-outline" class="text-xl group-hover:rotate-12 transition-transform"></ion-icon>
+                                          Plantar Árbol
                                      </button>
                                  </form>
                              </div>
@@ -2078,15 +2078,15 @@
         </div>
 
         <footer class="w-full bg-white text-gray-600 text-center py-6 text-sm border-t border-gray-200 shadow-inner">
-             <p class="font-medium">Plataforma Reforesta Manabí © 2025</p>
+             <p class="font-medium" data-i18n="platform">Plataforma Reforesta Manabí © 2025</p>
              <p class="mt-2">
-                 <a href="#" class="hover:text-repsol-green hover:underline">Términos de Servicio</a>
+                 <a href="#" id="footer-terms" class="hover:text-repsol-green hover:underline" data-i18n="terms">Términos de Servicio</a>
                  <span class="mx-2">•</span>
-                 <a href="#" class="hover:text-repsol-green hover:underline">Política de Privacidad</a>
+                 <a href="#" id="footer-privacy" class="hover:text-repsol-green hover:underline" data-i18n="privacy">Política de Privacidad</a>
                  <span class="mx-2">•</span>
-                 <a href="#" class="hover:text-repsol-green hover:underline">Contacto</a>
+                 <a href="#" id="footer-contact" class="hover:text-repsol-green hover:underline" data-i18n="contact">Contacto</a>
              </p>
-            </footer>
+        </footer>
     </div>
     
     <script>
@@ -2184,12 +2184,12 @@
 
                  <div class="flex gap-3 pt-4">
                       <button type="button" id="btn-cancel-edit" 
-                               class="flex-1 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-semibold text-sm flex items-center justify-center gap-2">
+                              class="flex-1 px-4 py-2.5 bg-gray-200 hover:bg-gray-300 rounded-lg transition text-gray-800 font-semibold text-sm flex items-center justify-center gap-2">
                            <ion-icon name="close-outline" class="text-lg"></ion-icon>
                            Cancelar
                       </button>
                       <button type="submit" 
-                               class="flex-1 px-4 py-2.5 bg-repsol-green hover:bg-opacity-90 text-white rounded-lg transition font-semibold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
+                              class="flex-1 px-4 py-2.5 bg-repsol-green hover:bg-opacity-90 text-white rounded-lg transition font-semibold text-sm flex items-center justify-center gap-2 shadow-md hover:shadow-lg">
                            <ion-icon name="checkmark-outline" class="text-lg"></ion-icon>
                            Guardar Cambios
                       </button>
@@ -2243,7 +2243,7 @@
                     <label for="profile-name" class="block text-sm font-semibold text-gray-700 mb-2">
                         Nombre Completo
                     </label>
-                    <input type="text" id="profile-name" class="input-styled" placeholder="Juan Pérez">
+                    <input type="text" id="profile-name" class="input-styled" placeholder="Israel Mejía">
                 </div>
                 
                 <div>
@@ -2431,6 +2431,240 @@
                 <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
                 <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
                 <div class="onboarding-dot tour-indicator w-2 h-2 rounded-full bg-gray-300 transition-all duration-300"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-terms" class="modal">
+        <div class="modal-content p-8 max-w-3xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <ion-icon name="document-text-outline" class="text-repsol-green text-3xl mr-3"></ion-icon>
+                    <span data-i18n="terms">Términos de Servicio</span>
+                </h2>
+                <button id="close-terms-modal" class="text-gray-400 hover:text-gray-600 transition">
+                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-gray-700 max-h-[70vh] overflow-y-auto pr-4">
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">1. Aceptación de Términos</h3>
+                    <p class="text-sm leading-relaxed">
+                        Al acceder y usar la plataforma Reforesta Manabí, usted acepta estar sujeto a estos términos de servicio, todas las leyes y regulaciones aplicables, y acepta que es responsable del cumplimiento de las leyes locales aplicables.
+                    </p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">2. Uso de la Plataforma</h3>
+                    <p class="text-sm leading-relaxed mb-2">
+                        Esta plataforma está destinada al registro y monitoreo de actividades de reforestación en la provincia de Manabí, Ecuador. Los usuarios se comprometen a:
+                    </p>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li>Proporcionar información verídica y precisa sobre las siembras realizadas</li>
+                        <li>No utilizar la plataforma para fines ilegales o no autorizados</li>
+                        <li>Respetar los derechos de propiedad intelectual de la plataforma</li>
+                        <li>No cargar contenido ofensivo, inapropiado o que viole derechos de terceros</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">3. Registro de Cuenta</h3>
+                    <p class="text-sm leading-relaxed">
+                        Para utilizar ciertas funciones de la plataforma, es necesario crear una cuenta. Usted es responsable de mantener la confidencialidad de su contraseña y de todas las actividades que ocurran bajo su cuenta.
+                    </p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">4. Contenido del Usuario</h3>
+                    <p class="text-sm leading-relaxed">
+                        Al cargar fotos o información sobre árboles plantados, usted otorga a Reforesta Manabí una licencia no exclusiva para usar, reproducir y mostrar dicho contenido con fines relacionados al proyecto de reforestación.
+                    </p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">5. Limitación de Responsabilidad</h3>
+                    <p class="text-sm leading-relaxed">
+                        Reforesta Manabí no será responsable de ningún daño directo, indirecto, incidental, especial o consecuente que resulte del uso o la imposibilidad de usar la plataforma.
+                    </p>
+                </section>
+                
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p class="text-xs text-gray-600">
+                        <strong>Última actualización:</strong> 15 de diciembre de 2025
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-privacy" class="modal">
+        <div class="modal-content p-8 max-w-3xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <ion-icon name="shield-checkmark-outline" class="text-repsol-green text-3xl mr-3"></ion-icon>
+                    <span data-i18n="privacy">Política de Privacidad</span>
+                </h2>
+                <button id="close-privacy-modal" class="text-gray-400 hover:text-gray-600 transition">
+                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-gray-700 max-h-[70vh] overflow-y-auto pr-4">
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">1. Información que Recopilamos</h3>
+                    <p class="text-sm leading-relaxed mb-2">Reforesta Manabí recopila la siguiente información:</p>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li><strong>Información de cuenta:</strong> Nombre, correo electrónico, fecha de nacimiento</li>
+                        <li><strong>Datos de siembra:</strong> Ubicación GPS, especies plantadas, fechas</li>
+                        <li><strong>Fotografías:</strong> Imágenes de árboles plantados (opcionales)</li>
+                        <li><strong>Información técnica:</strong> Dirección IP, tipo de navegador, datos de uso</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">2. Cómo Usamos su Información</h3>
+                    <p class="text-sm leading-relaxed mb-2">Utilizamos la información para:</p>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li>Gestionar su cuenta y proporcionar acceso a la plataforma</li>
+                        <li>Registrar y monitorear actividades de reforestación</li>
+                        <li>Generar estadísticas y reportes de impacto ambiental</li>
+                        <li>Mejorar la funcionalidad y experiencia de usuario</li>
+                    </ul>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">3. Seguridad de Datos</h3>
+                    <p class="text-sm leading-relaxed">
+                        Implementamos medidas de seguridad técnicas y organizativas para proteger su información. Utilizamos cifrado SSL/TLS y almacenamiento seguro con Supabase.
+                    </p>
+                </section>
+                
+                <section>
+                    <h3 class="text-lg font-semibold text-gray-900 mb-2">4. Sus Derechos</h3>
+                    <p class="text-sm leading-relaxed mb-2">Usted tiene derecho a:</p>
+                    <ul class="list-disc list-inside text-sm space-y-1 ml-4">
+                        <li>Acceder a su información personal</li>
+                        <li>Corregir información inexacta</li>
+                        <li>Solicitar la eliminación de su cuenta</li>
+                        <li>Exportar sus datos</li>
+                    </ul>
+                </section>
+                
+                <div class="mt-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                    <p class="text-xs text-gray-600">
+                        <strong>Última actualización:</strong> 15 de diciembre de 2025
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal-contact" class="modal">
+        <div class="modal-content p-8 max-w-2xl">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-900 flex items-center">
+                    <ion-icon name="mail-outline" class="text-repsol-green text-3xl mr-3"></ion-icon>
+                    <span data-i18n="contact">Contacto</span>
+                </h2>
+                <button id="close-contact-modal" class="text-gray-400 hover:text-gray-600 transition">
+                    <ion-icon name="close-outline" class="text-3xl"></ion-icon>
+                </button>
+            </div>
+            
+            <div class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-repsol-green transition">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                <ion-icon name="call-outline" class="text-xl text-repsol-green"></ion-icon>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-1">Teléfono</h3>
+                                <p class="text-sm text-gray-600">+593 5 262-0123</p>
+                                <p class="text-xs text-gray-500 mt-1">Lun - Vie: 8:00 AM - 5:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-repsol-green transition">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                <ion-icon name="mail-outline" class="text-xl text-blue-600"></ion-icon>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-1">Email</h3>
+                                <a href="mailto:info@reforestamanabi.com" class="text-sm text-repsol-green hover:underline">info@reforestamanabi.com</a>
+                                <p class="text-xs text-gray-500 mt-1">Respuesta en 24-48 horas</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-repsol-green transition">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                <ion-icon name="location-outline" class="text-xl text-purple-600"></ion-icon>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-1">Oficina</h3>
+                                <p class="text-sm text-gray-600">Portoviejo, Manabí</p>
+                                <p class="text-xs text-gray-500 mt-1">Ecuador</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="border border-gray-200 rounded-lg p-4 hover:border-repsol-green transition">
+                        <div class="flex items-start">
+                            <div class="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                                <ion-icon name="time-outline" class="text-xl text-orange-600"></ion-icon>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-gray-900 mb-1">Horario</h3>
+                                <p class="text-sm text-gray-600">Lunes a Viernes</p>
+                                <p class="text-xs text-gray-500 mt-1">8:00 AM - 5:00 PM</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="border-t border-gray-200 pt-6">
+                    <h3 class="text-lg font-semibold text-gray-900 mb-4">Envíanos un Mensaje</h3>
+                    <form id="contact-form" class="space-y-4">
+                        <div>
+                            <label for="contact-name" class="block text-sm font-semibold text-gray-700 mb-2">Nombre Completo</label>
+                            <input type="text" id="contact-name" required class="input-styled" placeholder="Israel Mejía">
+                        </div>
+                        
+                        <div>
+                            <label for="contact-email" class="block text-sm font-semibold text-gray-700 mb-2">Correo Electrónico</label>
+                            <input type="email" id="contact-email" required class="input-styled" placeholder="correo@ejemplo.com">
+                        </div>
+                        
+                        <div>
+                            <label for="contact-message" class="block text-sm font-semibold text-gray-700 mb-2">Mensaje</label>
+                            <textarea id="contact-message" required rows="4" class="input-styled resize-none" placeholder="Escribe tu mensaje aquí..."></textarea>
+                        </div>
+                        
+                        <button type="submit" class="w-full btn btn-primary">
+                            <ion-icon name="send-outline" class="text-xl"></ion-icon>
+                            Enviar Mensaje
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <h4 class="font-semibold text-green-900 mb-2 flex items-center">
+                        <ion-icon name="leaf-outline" class="mr-2"></ion-icon>
+                        ¿Quieres colaborar con el proyecto?
+                    </h4>
+                    <p class="text-sm text-green-800 mb-3">
+                        Si estás interesado en participar activamente en actividades de reforestación, donaciones o alianzas institucionales, contáctanos directamente.
+                    </p>
+                    <a href="mailto:colaboraciones@reforestamanabi.com" class="text-sm font-medium text-repsol-green hover:underline flex items-center">
+                        colaboraciones@reforestamanabi.com
+                        <ion-icon name="arrow-forward-outline" class="ml-1"></ion-icon>
+                    </a>
+                </div>
             </div>
         </div>
     </div>
